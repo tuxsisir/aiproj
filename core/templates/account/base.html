@@ -1,0 +1,92 @@
+{% load tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {% tailwind_css %}
+
+        <script>
+            if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        </script>
+
+        <meta charset="UTF-8">
+        <meta name="viewport"
+              content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}StrataCorp{% endblock %}</title>
+
+    </head>
+    <body class="bg-background text-foreground antialiased min-h-screen flex items-center justify-center p-4 relative overflow-hidden selection:bg-blue-500/30">
+        <!-- Background Gradient Effect -->
+        <div class="absolute inset-0 z-0 pointer-events-none">
+            <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-900/10 rounded-full blur-[100px]"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-900/10 rounded-full blur-[100px]"></div>
+        </div>
+
+        <main class="z-10 w-full max-w-md animate-in fade-in duration-500 slide-in-from-bottom-4">
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Theme Toggle -->
+        <button id="theme-toggle"
+                class="fixed bottom-6 right-6 z-50 p-3 rounded-full bg-secondary text-secondary-foreground border border-border shadow-lg transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring"
+                aria-label="Toggle Dark Mode">
+            <svg id="theme-toggle-light-icon"
+                 class="hidden w-5 h-5"
+                 fill="none"
+                 stroke="currentColor"
+                 viewBox="0 0 24 24"
+                 xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
+                </path>
+            </svg>
+            <svg id="theme-toggle-dark-icon"
+                 class="hidden w-5 h-5"
+                 fill="none"
+                 stroke="currentColor"
+                 viewBox="0 0 24 24"
+                 xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z">
+                </path>
+            </svg>
+        </button>
+        <script>
+            var themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+            var themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+
+            if (document.documentElement.classList.contains('dark')) {
+                themeToggleLightIcon.classList.remove('hidden');
+            } else {
+                themeToggleDarkIcon.classList.remove('hidden');
+            }
+
+            var themeToggleBtn = document.getElementById('theme-toggle');
+
+            themeToggleBtn.addEventListener('click', function() {
+                themeToggleDarkIcon.classList.toggle('hidden');
+                themeToggleLightIcon.classList.toggle('hidden');
+
+                if (localStorage.getItem('color-theme')) {
+                    if (localStorage.getItem('color-theme') === 'light') {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('color-theme', 'dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('color-theme', 'light');
+                    }
+                } else {
+                    if (document.documentElement.classList.contains('dark')) {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('color-theme', 'light');
+                    } else {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('color-theme', 'dark');
+                    }
+                }
+            });
+        </script>
+
+    </body>
+</html>
