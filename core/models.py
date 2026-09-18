@@ -1,106 +1,43 @@
 import uuid
-
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from pgvector.django import VectorField
-
-
-class Company(models.Model):
-    """Boutique Property Management agency profile."""
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=255)
-
-    def __str__(self):
-        return self.name
-
-
-class StrataCorp(models.Model):
-    """The individual building/townhouse tenant instance."""
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey(
-        Company, on_delete=models.CASCADE, related_name="strata_corps"
-    )
-    strata_plan_number = models.CharField(max_length=50, unique=True)
-    name = models.CharField(max_length=255, blank=True)
-
-    def __str__(self):
-        return (
-            f"{self.strata_plan_number} - {self.name}"
-            if self.name
-            else self.strata_plan_number
-        )
 
 
 class User(AbstractUser):
-    """Custom User Model linked to StrataCorp."""
-
-    class Role(models.TextChoices):
-        RESIDENT = "resident", "Resident"
-        COUNCIL = "council", "Council"
-        MANAGER = "manager", "Manager"
-        SUPERADMIN = "superadmin", "Superadmin"
-
+    """Custom User Model for the base project."""
+    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    strata_corp = models.ForeignKey(
-        StrataCorp,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="users",
-    )
-    role = models.CharField(max_length=20, choices=Role.choices, default=Role.RESIDENT)
-
+    avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
+    stripe_customer_id = models.CharField(max_length=255, null=True, blank=True)
+    
     def __str__(self):
         return self.username
 
 
-class Document(models.Model):
-    """Uploaded PDFs of bylaws/minutes."""
-
+class Subscription(models.Model):
+    """Stores the active subscription for a user."""
+    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    strata_corp = models.ForeignKey(
-        StrataCorp, on_delete=models.CASCADE, related_name="documents"
-    )
-    title = models.CharField(max_length=255)
-    file = models.FileField(upload_to="documents/")
-    is_confidential = models.BooleanField(default=False)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="subscription")
+    stripe_subscription_id = models.CharField(max_length=255, unique=True)
+    status = models.CharField(max_length=50) # e.g., active, past_due, canceled
+    current_period_end = models.DateTimeField(null=True, blank=True)
+    
     def __str__(self):
-        return self.title
+        return f"{self.user.username} - {self.status}"
 
 
-class DocumentChunk(models.Model):
-    """Extracted text from documents."""
-
+class Payment(models.Model):
+    """Logs individual payments."""
+    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    document = models.ForeignKey(
-        Document, on_delete=models.CASCADE, related_name="chunks"
-    )
-    page_number = models.IntegerField()
-    text = models.TextField()
-    embedding = VectorField(dimensions=1536)
-
-    def __str__(self):
-        return f"Chunk from {self.document.title} - Page {self.page_number}"
-
-
-class InteractionLog(models.Model):
-    """Secure audit for resident queries."""
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="interactions"
-    )
-    strata_corp = models.ForeignKey(
-        StrataCorp, on_delete=models.CASCADE, related_name="interactions"
-    )
-    raw_query = models.TextField()
-    response = models.TextField()
-    sources = models.JSONField(default=list)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="payments")
+    stripe_checkout_session_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    stripe_payment_intent_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=10, default="usd")
+    status = models.CharField(max_length=50) # e.g., succeeded, pending, failed
     created_at = models.DateTimeField(auto_now_add=True)
-
+    
     def __str__(self):
-        return f"Query by {self.user} at {self.created_at}"
+        return f"{self.user.username} - {self.amount} {self.currency} ({self.status})"

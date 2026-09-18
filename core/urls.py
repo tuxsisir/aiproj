@@ -3,8 +3,8 @@ from . import views
 
 urlpatterns = [
     path("", views.landing_page, name="landing"),
-    path("dashboard/", views.dashboard_demo, name="dashboard_demo"),
-    path("documents/", views.documents, name="documents"),
-    path("queries/", views.queries, name="queries"),
-    path("chat-response/", views.chat_response, name="chat_response"),
+    path("dashboard/", views.dashboard, name="dashboard"),
+    path("profile/", views.profile_edit, name="profile_edit"),
+    path("checkout/", views.create_checkout_session, name="create_checkout_session"),
+    path("webhooks/stripe/", views.stripe_webhook, name="stripe_webhook"),
 ]
