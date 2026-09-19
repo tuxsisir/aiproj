@@ -1,0 +1,39 @@
+<c-vars 
+    href="#" 
+    icon="" 
+    label=""
+    badge=""
+/>
+<a href="{{ href }}"
+   class="flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition 
+          {% if request.path == href %}
+              bg-slate-100 text-slate-900 shadow-sm border border-slate-200
+          {% else %}
+              text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent
+          {% endif %}">
+    <div class="flex items-center gap-3">
+        {% if icon == 'layout-dashboard' %}
+            {% heroicon_outline "squares-2x2" class="h-4 w-4 shrink-0" %}
+        {% elif icon == 'shield-alert' %}
+            {% heroicon_outline "shield-exclamation" class="h-4 w-4 shrink-0" %}
+        {% elif icon == 'check-check' %}
+            {% heroicon_outline "check-badge" class="h-4 w-4 shrink-0" %}
+        {% elif icon == 'clipboard-check' %}
+            {% heroicon_outline "clipboard-document-check" class="h-4 w-4 shrink-0" %}
+        {% elif icon == 'folder-archive' %}
+            {% heroicon_outline "folder-open" class="h-4 w-4 shrink-0" %}
+        {% elif icon == 'sliders' %}
+            {% heroicon_outline "adjustments-horizontal" class="h-4 w-4 shrink-0" %}
+        {% elif icon == 'credit-card' %}
+            {% heroicon_outline "credit-card" class="h-4 w-4 shrink-0" %}
+        {% else %}
+            {% heroicon_outline "document" class="h-4 w-4 shrink-0" %}
+        {% endif %}
+        <span>{{ label }}</span>
+    </div>
+    {% if badge %}
+        <span class="inline-flex items-center justify-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700 leading-none h-5 min-w-[20px]">
+            {{ badge }}
+        </span>
+    {% endif %}
+</a>

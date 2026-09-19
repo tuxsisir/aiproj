@@ -33,6 +33,11 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     "core",
     
+    # UI
+    "django_cotton",
+    "django_cotton_ui",
+    "heroicons",
+    
     # Auth
     "allauth",
     "allauth.account",
@@ -66,6 +71,9 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
             ],
+            "builtins": [
+                "heroicons.templatetags.heroicons",
+            ]
         },
     },
 ]

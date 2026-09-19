@@ -1,8 +1,16 @@
-{% extends "base_dashboard.html" %}
+{% extends "base_public.html" %}
 
 {% block content %}
-<div class="max-w-md mx-auto">
-    {% block account_content %}
-    {% endblock %}
+<div class="flex min-h-[calc(100vh-16rem)] flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
+        <a href="/" class="font-extrabold text-slate-900 text-3xl tracking-tight inline-block mb-2">CivicDesk</a>
+    </div>
+
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10 border border-slate-200">
+            {% block account_content %}
+            {% endblock %}
+        </div>
+    </div>
 </div>
 {% endblock %}

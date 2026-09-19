@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/mask@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="{% static 'django_cotton_ui/cotton-ui.css' %}">
+    <script defer src="{% static 'django_cotton_ui/cotton-ui.min.js' %}"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicDesk - Built for Strata & Condo Boards</title>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen font-sans">
+    
+    <nav class="sticky top-0 z-50 bg-slate-50/80 backdrop-blur-md border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <a href="/" class="font-extrabold text-slate-900 text-xl tracking-tight">CivicDesk</a>
+                    <span class="hidden sm:block text-[10px] font-bold tracking-widest text-slate-500 uppercase px-2 py-0.5 rounded-full bg-slate-200">For Strata & Condo Boards</span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600">
+                    <a href="/#how-it-works" class="hover:text-slate-900">Section 135 Compliance</a>
+                    <a href="/#how-it-works" class="hover:text-slate-900">How It Works</a>
+                    <a href="/#managers" class="hover:text-slate-900">For Strata Managers</a>
+                    <a href="/#pricing" class="hover:text-slate-900">Pricing</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'dashboard' %}" class="text-sm font-medium text-slate-900 hover:text-blue-600">Dashboard</a>
+                    {% else %}
+                        <a href="{% url 'account_login' %}" class="text-sm font-medium text-slate-600 hover:text-slate-900">Sign In</a>
+                        <a href="{% url 'account_signup' %}" class="text-sm font-medium px-4 py-2 bg-slate-900 text-white rounded-full hover:bg-slate-800 transition shadow-sm">Start 45-Day Trial</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="w-full">
+        {% block content %}
+        {% endblock %}
+    </main>
+    
+    <footer class="bg-slate-900 text-slate-400 py-16 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div class="col-span-2 md:col-span-1">
+                <div class="font-extrabold text-white text-xl tracking-tight mb-4">CivicDesk</div>
+                <p class="text-sm">The operational standard for residential community governance.</p>
+                <p class="text-sm mt-6">&copy; 2026 CivicDesk. All rights reserved.</p>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-4">Product</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#" class="hover:text-white transition">Features</a></li>
+                    <li><a href="#" class="hover:text-white transition">Section 135 Engine</a></li>
+                    <li><a href="/#pricing" class="hover:text-white transition">Pricing</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-4">Resources</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#" class="hover:text-white transition">Free S.135 Generator</a></li>
+                    <li><a href="#" class="hover:text-white transition">Tribunal Case Studies</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-4">Legal</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#" class="hover:text-white transition">Privacy Policy</a></li>
+                    <li><a href="#" class="hover:text-white transition">Terms of Service</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

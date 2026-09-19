@@ -1,36 +1,76 @@
 {% extends "base_dashboard.html" %}
 
+{% block breadcrumb_active %}Profile Settings{% endblock %}
+
 {% block content %}
-<div class="bg-white p-6 rounded shadow-sm border border-gray-200 max-w-md">
-    <h2 class="text-2xl font-bold mb-4">Edit Profile</h2>
+<c-ui.card class="max-w-xl mx-auto mt-8 shadow-sm">
+    <h2 class="text-2xl font-extrabold mb-6 tracking-tight text-slate-900">Edit Profile</h2>
     
-    <form method="POST" enctype="multipart/form-data" class="space-y-4">
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
         {% csrf_token %}
         
-        <div>
-            <label class="block font-medium mb-1">Avatar</label>
-            {% if user.avatar %}
-                <img src="{{ user.avatar.url }}" class="w-16 h-16 rounded object-cover mb-2" alt="Avatar">
-            {% endif %}
-            <input type="file" name="avatar" accept="image/*" class="w-full">
+        <!-- Image Picker with Alpine.js Preview -->
+        <div x-data="{ 
+                photoName: null, 
+                photoPreview: null,
+                updatePreview(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        this.photoName = file.name;
+                        const reader = new FileReader();
+                        reader.onload = (e) => { this.photoPreview = e.target.result; };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            }">
+            
+            <c-ui.label class="mb-2 block">Avatar</c-ui.label>
+            
+            <div class="flex items-center gap-4">
+                <!-- Current or Preview Avatar -->
+                <div x-show="!photoPreview" class="relative">
+                    {% if user.avatar %}
+                        <c-ui.avatar src="{{ user.avatar.url }}" alt="{{ user.username }}" size="xl" />
+                    {% else %}
+                        <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-xl">
+                            {{ user.username|make_list|first|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div x-show="photoPreview" style="display: none;" class="relative">
+                    <img :src="photoPreview" class="w-16 h-16 rounded-full object-cover shadow-sm border border-gray-200" />
+                </div>
+
+                <!-- File Input -->
+                <div class="flex-1">
+                    <c-ui.input 
+                        type="file" 
+                        name="avatar" 
+                        accept="image/*" 
+                        @change="updatePreview"
+                        class="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-gray-700 dark:file:text-gray-200"
+                    />
+                </div>
+            </div>
         </div>
         
-        <div>
-            <label class="block font-medium mb-1">First Name</label>
-            <input type="text" name="first_name" value="{{ user.first_name }}" class="w-full border border-gray-300 rounded px-3 py-2">
-        </div>
+        <c-ui.field>
+            <c-ui.label>First Name</c-ui.label>
+            <c-ui.input name="first_name" value="{{ user.first_name }}" />
+        </c-ui.field>
         
-        <div>
-            <label class="block font-medium mb-1">Last Name</label>
-            <input type="text" name="last_name" value="{{ user.last_name }}" class="w-full border border-gray-300 rounded px-3 py-2">
-        </div>
+        <c-ui.field>
+            <c-ui.label>Last Name</c-ui.label>
+            <c-ui.input name="last_name" value="{{ user.last_name }}" />
+        </c-ui.field>
         
-        <div>
-            <label class="block font-medium mb-1">Email</label>
-            <input type="email" value="{{ user.email }}" disabled class="w-full border border-gray-300 bg-gray-100 rounded px-3 py-2">
-        </div>
+        <c-ui.field>
+            <c-ui.label>Email</c-ui.label>
+            <c-ui.input type="email" value="{{ user.email }}" disabled />
+        </c-ui.field>
         
-        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+        <c-ui.button type="submit" class="w-full">Save Profile</c-ui.button>
     </form>
-</div>
+</c-ui.card>
 {% endblock %}

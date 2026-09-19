@@ -1,0 +1,40 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block account_content %}
+<div class="text-center">
+    <!-- Google Logo or generic provider placeholder -->
+    <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-50 border border-slate-100 mb-6 shadow-sm">
+        {% if provider.id == 'google' %}
+            <svg class="h-7 w-7" aria-hidden="true" viewBox="0 0 24 24"><path d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z" fill="#EA4335"></path><path d="M23.49 12.275C23.49 11.49 23.415 10.73 23.3 10H12V14.51H18.47C18.18 15.99 17.34 17.25 16.08 18.1L19.945 21.1C22.2 19.01 23.49 15.92 23.49 12.275Z" fill="#4285F4"></path><path d="M5.26498 14.2949C5.02498 13.5699 4.88501 12.7999 4.88501 11.9999C4.88501 11.1999 5.01998 10.4299 5.26498 9.7049L1.275 6.60986C0.46 8.22986 0 10.0599 0 11.9999C0 13.9399 0.46 15.7699 1.28 17.3899L5.26498 14.2949Z" fill="#FBBC05"></path><path d="M12.0004 24.0001C15.2404 24.0001 17.9654 22.935 19.9454 21.095L16.0804 18.095C15.0054 18.82 13.6204 19.245 12.0004 19.245C8.8704 19.245 6.21537 17.135 5.2654 14.29L1.27539 17.385C3.25539 21.31 7.3104 24.0001 12.0004 24.0001Z" fill="#34A853"></path></svg>
+        {% else %}
+            <div class="h-7 w-7 text-slate-500 font-bold text-xl">{{ provider.name|make_list|first|upper }}</div>
+        {% endif %}
+    </div>
+
+    {% if process == "connect" %}
+        <h2 class="text-2xl font-extrabold text-slate-900 mb-2">
+            {% blocktrans with provider.name as provider %}Connect {{ provider }}{% endblocktrans %}
+        </h2>
+        <p class="text-sm text-slate-500 mb-8">
+            {% blocktrans with provider.name as provider %}You are about to connect a new third-party account from {{ provider }}.{% endblocktrans %}
+        </p>
+    {% else %}
+        <h2 class="text-2xl font-extrabold text-slate-900 mb-2">
+            {% blocktrans with provider.name as provider %}Sign In Via {{ provider }}{% endblocktrans %}
+        </h2>
+        <p class="text-sm text-slate-500 mb-8">
+            {% blocktrans with provider.name as provider %}You are about to sign in using a third-party account from {{ provider }}.{% endblocktrans %}
+        </p>
+    {% endif %}
+
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <c-ui.button type="submit" class="w-full">Continue to {{ provider.name }}</c-ui.button>
+    </form>
+    
+    <div class="mt-6 text-center text-sm">
+        <a href="{% url 'account_login' %}" class="font-medium text-slate-500 hover:text-slate-900 transition">Cancel & Return</a>
+    </div>
+</div>
+{% endblock %}
