@@ -1,5 +1,4 @@
 {% extends "base_dashboard.html" %}
-{% load heroicons %}
 
 {% block title %}Dashboard | CivicDesk{% endblock %}
 {% block breadcrumb_active %}Dashboard{% endblock %}
@@ -8,10 +7,10 @@
 <div class="space-y-6">
     <!-- Header -->
     <div class="flex items-center justify-between">
-        <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Dashboard</h2>
-        <c-ui.button variant="outline" size="sm" class="shadow-sm border-slate-300">
-            {% heroicon_outline "arrow-down-tray" class="h-4 w-4 mr-2" %}
-            Download Report
+        <h2 class="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Dashboard</h2>
+        <c-ui.button variant="outline" size="sm" class="inline-flex items-center justify-center gap-1.5 shadow-sm border-slate-300 dark:border-slate-700 whitespace-nowrap">
+            {% heroicon_outline "arrow-down-tray" class="h-4 w-4" %}
+            <span>Download Report</span>
         </c-ui.button>
     </div>
 
@@ -20,86 +19,86 @@
         <!-- Card 1 -->
         <c-ui.card padding="sm">
             <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-semibold text-slate-500">Active Incidents</span>
-                {% heroicon_outline "shield-exclamation" class="h-4 w-4 text-slate-400" %}
+                <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">Active Incidents</span>
+                {% heroicon_outline "shield-exclamation" class="h-4 w-4 text-slate-400 dark:text-slate-500" %}
             </div>
-            <div class="text-2xl font-extrabold text-slate-900">12</div>
-            <p class="text-xs text-slate-500 mt-1"><span class="text-emerald-600 font-medium">+2</span> from last month</p>
+            <div class="text-2xl font-extrabold text-slate-900 dark:text-slate-100">12</div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1"><span class="text-emerald-600 dark:text-emerald-400 font-medium">+2</span> from last month</p>
         </c-ui.card>
         
         <!-- Card 2 -->
         <c-ui.card padding="sm">
             <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-semibold text-slate-500">Pending Votes</span>
-                {% heroicon_outline "check-badge" class="h-4 w-4 text-slate-400" %}
+                <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">Pending Votes</span>
+                {% heroicon_outline "check-badge" class="h-4 w-4 text-slate-400 dark:text-slate-500" %}
             </div>
-            <div class="text-2xl font-extrabold text-slate-900">3</div>
-            <p class="text-xs text-slate-500 mt-1">Requires quorum (4/5)</p>
+            <div class="text-2xl font-extrabold text-slate-900 dark:text-slate-100">3</div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Requires quorum (4/5)</p>
         </c-ui.card>
 
         <!-- Card 3 -->
         <c-ui.card padding="sm">
             <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-semibold text-slate-500">Caretaker Sweeps</span>
-                {% heroicon_outline "clipboard-document-check" class="h-4 w-4 text-slate-400" %}
+                <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">Caretaker Sweeps</span>
+                {% heroicon_outline "clipboard-document-check" class="h-4 w-4 text-slate-400 dark:text-slate-500" %}
             </div>
-            <div class="text-2xl font-extrabold text-slate-900">98%</div>
-            <p class="text-xs text-slate-500 mt-1">Completion rate this week</p>
+            <div class="text-2xl font-extrabold text-slate-900 dark:text-slate-100">98%</div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Completion rate this week</p>
         </c-ui.card>
     </div>
 
     <!-- Table -->
-    <c-ui.card title="Recent Incidents" subheading="Latest bylaw infractions and their Section 135 status." padding="none" class="mt-6 shadow-sm overflow-hidden border-slate-200">
-        <c-ui.table class="bg-white">
-            <thead class="bg-slate-50/50">
+    <c-ui.card title="Recent Incidents" subheading="Latest bylaw infractions and their Section 135 status." padding="none" class="mt-6 shadow-sm overflow-hidden border-slate-200 dark:border-slate-800">
+        <c-ui.table class="bg-white dark:bg-slate-900">
+            <thead class="bg-slate-50/50 dark:bg-slate-800/50">
                 <tr>
-                    <th class="!text-slate-500 !font-semibold uppercase tracking-wider text-xs">ID</th>
-                    <th class="!text-slate-500 !font-semibold uppercase tracking-wider text-xs">Unit</th>
-                    <th class="!text-slate-500 !font-semibold uppercase tracking-wider text-xs">Bylaw Category</th>
-                    <th class="!text-slate-500 !font-semibold uppercase tracking-wider text-xs">Status</th>
-                    <th class="!text-slate-500 !font-semibold uppercase tracking-wider text-xs">Date</th>
-                    <th class="text-right !text-slate-500 !font-semibold uppercase tracking-wider text-xs">Action</th>
+                    <th class="!text-slate-500 dark:!text-slate-400 !font-semibold uppercase tracking-wider text-xs">ID</th>
+                    <th class="!text-slate-500 dark:!text-slate-400 !font-semibold uppercase tracking-wider text-xs">Unit</th>
+                    <th class="!text-slate-500 dark:!text-slate-400 !font-semibold uppercase tracking-wider text-xs">Bylaw Category</th>
+                    <th class="!text-slate-500 dark:!text-slate-400 !font-semibold uppercase tracking-wider text-xs">Status</th>
+                    <th class="!text-slate-500 dark:!text-slate-400 !font-semibold uppercase tracking-wider text-xs">Date</th>
+                    <th class="text-right !text-slate-500 dark:!text-slate-400 !font-semibold uppercase tracking-wider text-xs">Action</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100">
-                <tr class="hover:bg-slate-50/50 transition">
-                    <td class="font-bold text-slate-900 font-mono text-xs">INC-1082</td>
-                    <td class="font-medium text-slate-700">402</td>
-                    <td class="text-slate-600">Noise Complaint (3.2)</td>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition">
+                    <td class="font-bold text-slate-900 dark:text-slate-100 font-mono text-xs">INC-1082</td>
+                    <td class="font-medium text-slate-700 dark:text-slate-300">402</td>
+                    <td class="text-slate-600 dark:text-slate-400">Noise Complaint (3.2)</td>
                     <td>
                         <c-ui.badge color="amber" variant="pill" size="xs" class="font-bold uppercase tracking-wider">14-Day Clock</c-ui.badge>
                     </td>
-                    <td class="text-slate-500 text-sm">Oct 14, 2026</td>
+                    <td class="text-slate-500 dark:text-slate-400 text-sm">Oct 14, 2026</td>
                     <td class="text-right">
-                        <button class="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded">
+                        <button class="p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
                             {% heroicon_outline "ellipsis-horizontal" class="h-5 w-5" %}
                         </button>
                     </td>
                 </tr>
-                <tr class="hover:bg-slate-50/50 transition">
-                    <td class="font-bold text-slate-900 font-mono text-xs">INC-1081</td>
-                    <td class="font-medium text-slate-700">108</td>
-                    <td class="text-slate-600">Parking (7.1)</td>
+                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition">
+                    <td class="font-bold text-slate-900 dark:text-slate-100 font-mono text-xs">INC-1081</td>
+                    <td class="font-medium text-slate-700 dark:text-slate-300">108</td>
+                    <td class="text-slate-600 dark:text-slate-400">Parking (7.1)</td>
                     <td>
                         <c-ui.badge color="blue" variant="pill" size="xs" class="font-bold uppercase tracking-wider">Vote Pending</c-ui.badge>
                     </td>
-                    <td class="text-slate-500 text-sm">Oct 12, 2026</td>
+                    <td class="text-slate-500 dark:text-slate-400 text-sm">Oct 12, 2026</td>
                     <td class="text-right">
-                        <button class="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded">
+                        <button class="p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
                             {% heroicon_outline "ellipsis-horizontal" class="h-5 w-5" %}
                         </button>
                     </td>
                 </tr>
-                <tr class="hover:bg-slate-50/50 transition">
-                    <td class="font-bold text-slate-900 font-mono text-xs">INC-1080</td>
-                    <td class="font-medium text-slate-700">204</td>
-                    <td class="text-slate-600">Short-Term Rental</td>
+                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition">
+                    <td class="font-bold text-slate-900 dark:text-slate-100 font-mono text-xs">INC-1080</td>
+                    <td class="font-medium text-slate-700 dark:text-slate-300">204</td>
+                    <td class="text-slate-600 dark:text-slate-400">Short-Term Rental</td>
                     <td>
                         <c-ui.badge color="emerald" variant="pill" size="xs" class="font-bold uppercase tracking-wider">Resolved</c-ui.badge>
                     </td>
-                    <td class="text-slate-500 text-sm">Oct 10, 2026</td>
+                    <td class="text-slate-500 dark:text-slate-400 text-sm">Oct 10, 2026</td>
                     <td class="text-right">
-                        <button class="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded">
+                        <button class="p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
                             {% heroicon_outline "ellipsis-horizontal" class="h-5 w-5" %}
                         </button>
                     </td>

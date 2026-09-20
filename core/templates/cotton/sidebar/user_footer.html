@@ -1,4 +1,4 @@
-<div x-data="{ open: false }" class="relative w-full border-t border-slate-200 p-4 mt-auto">
+<div x-data="{ open: false }" class="relative w-full border-t border-slate-200 dark:border-slate-800 p-4 mt-auto">
     <!-- Popover (Opens Upward) -->
     <div x-show="open" style="display: none;"
          @click.away="open = false"
@@ -8,24 +8,24 @@
          x-transition:leave="transition ease-in duration-75"
          x-transition:leave-start="transform opacity-100 translate-y-0 scale-100"
          x-transition:leave-end="transform opacity-0 translate-y-2 scale-95"
-         class="absolute bottom-full left-4 right-4 z-50 mb-2 rounded-lg border border-slate-200 bg-white shadow-lg overflow-hidden origin-bottom">
+         class="absolute bottom-full left-4 right-4 z-50 mb-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-lg overflow-hidden origin-bottom">
          
-         <div class="px-4 py-3 border-b border-slate-100 bg-slate-50">
-             <div class="text-sm font-semibold text-slate-900 truncate">{{ user.get_full_name|default:user.username }}</div>
-             <div class="text-xs text-slate-500 truncate">{{ user.email }}</div>
+         <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
+             <div class="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">{{ user.get_full_name|default:user.username }}</div>
+             <div class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ user.email }}</div>
          </div>
          <div class="p-1">
-             <a href="{% url 'profile_edit' %}" class="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition">
+             <a href="{% url 'profile_edit' %}" class="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition">
                  Profile Settings
              </a>
-             <a href="#" class="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition">
+             <a href="#" class="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition">
                  Notification Preferences
              </a>
          </div>
-         <div class="border-t border-slate-100 p-1">
+         <div class="border-t border-slate-100 dark:border-slate-800 p-1">
              <form method="post" action="{% url 'account_logout' %}">
                  {% csrf_token %}
-                 <button type="submit" class="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 transition">
+                 <button type="submit" class="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition">
                      Sign Out
                  </button>
              </form>
@@ -33,18 +33,18 @@
     </div>
 
     <!-- Trigger -->
-    <button @click="open = !open" class="flex w-full items-center justify-between rounded-lg p-2 text-left hover:bg-slate-100 transition focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <button @click="open = !open" class="flex w-full items-center justify-between rounded-lg p-2 text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition focus:outline-none focus:ring-2 focus:ring-blue-500">
         <div class="flex items-center gap-3 overflow-hidden">
             {% if user.avatar %}
-                <img src="{{ user.avatar.url }}" alt="{{ user.username }}" class="h-9 w-9 shrink-0 rounded-full object-cover shadow-sm border border-slate-200">
+                <img src="{{ user.avatar.url }}" alt="{{ user.username }}" class="h-9 w-9 shrink-0 rounded-full object-cover shadow-sm border border-slate-200 dark:border-slate-700">
             {% else %}
-                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600 font-bold shadow-sm border border-slate-300 text-sm">
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold shadow-sm border border-slate-300 dark:border-slate-600 text-sm">
                     {{ user.username|make_list|first|upper }}
                 </div>
             {% endif %}
             <div class="flex flex-col truncate">
-                <span class="text-sm font-semibold text-slate-900 truncate">{{ user.get_full_name|default:user.username }}</span>
-                <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 truncate">Council Admin</span>
+                <span class="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">{{ user.get_full_name|default:user.username }}</span>
+                <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400 truncate">Council Admin</span>
             </div>
         </div>
         <div class="text-slate-400 shrink-0 ml-2">

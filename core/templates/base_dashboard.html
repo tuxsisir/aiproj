@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     {% load static %}
-    {% load heroicons %}
     <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
@@ -15,8 +14,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}CivicDesk Dashboard{% endblock %}</title>
+    
+    <!-- Mode Toggle Head Script -->
+    <c-ui.mode_toggle.head />
+
+    <!-- Tailwind v4 Class-based Dark Mode Config -->
+    <style type="text/tailwindcss">
+        @custom-variant dark (&:is(.dark *));
+    </style>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen font-sans antialiased" x-data="{ sidebarOpen: window.innerWidth >= 1024 }" @resize.window="if (window.innerWidth >= 1024) { sidebarOpen = true; } else { sidebarOpen = false; }">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen font-sans antialiased" x-data="{ sidebarOpen: window.innerWidth >= 1024 }" @resize.window="if (window.innerWidth >= 1024) { sidebarOpen = true; } else { sidebarOpen = false; }">
     
     <!-- Mobile Sidebar Backdrop -->
     <div x-show="sidebarOpen" style="display: none;" 
@@ -29,17 +36,17 @@
 
     <!-- Sidebar -->
     <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" 
-           class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none flex flex-col">
+           class="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 transform transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none flex flex-col">
         
         <!-- Sidebar Header (Org Switcher) -->
-        <div class="h-16 flex items-center px-4 border-b border-slate-200 shrink-0">
+        <div class="h-16 flex items-center px-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
             <c-sidebar.org_switcher />
         </div>
 
         <!-- Sidebar Navigation -->
         <nav class="flex-1 overflow-y-auto p-4 space-y-8">
             <div>
-                <div class="px-3 mb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Governance & Operations</div>
+                <div class="px-3 mb-3 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Governance & Operations</div>
                 <div class="space-y-1">
                     <c-sidebar.nav_item href="{% url 'dashboard' %}" icon="layout-dashboard" label="Dashboard" />
                     <c-sidebar.nav_item href="#" icon="shield-alert" label="Incident Pipeline" badge="3" />
@@ -50,7 +57,7 @@
             </div>
             
             <div>
-                <div class="px-3 mb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Organization</div>
+                <div class="px-3 mb-3 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Organization</div>
                 <div class="space-y-1">
                     <c-sidebar.nav_item href="#" icon="sliders" label="Strata Settings" />
                     <c-sidebar.nav_item href="{% url 'profile_edit' %}" icon="credit-card" label="Subscription & Billing" />
@@ -63,25 +70,31 @@
     </aside>
 
     <!-- Main Content Area -->
-    <div :class="sidebarOpen ? 'lg:pl-64' : 'pl-0'" class="flex flex-col min-h-screen transition-all duration-300 ease-in-out bg-slate-50">
+    <div :class="sidebarOpen ? 'lg:pl-64' : 'pl-0'" class="flex flex-col min-h-screen transition-all duration-300 ease-in-out bg-slate-50 dark:bg-slate-900">
         
         <!-- Top Navbar -->
-        <header class="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-x-4 border-b border-slate-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+        <header class="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-x-4 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
             <!-- Sidebar Toggle Button (Always Visible) -->
-            <button @click="sidebarOpen = !sidebarOpen" type="button" class="-m-2.5 p-2.5 text-slate-700 hover:bg-slate-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition mr-2">
+            <button @click="sidebarOpen = !sidebarOpen" type="button" class="-m-2.5 p-2.5 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition mr-2">
                 <span class="sr-only">Toggle sidebar</span>
                 {% heroicon_outline "bars-3" class="h-6 w-6" %}
             </button>
 
+            <!-- Branding -->
+            <div class="flex items-center gap-3">
+                <a href="/" class="font-extrabold text-slate-900 dark:text-slate-100 text-xl tracking-tight">CivicDesk</a>
+                <span class="hidden lg:block text-[10px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800">For Strata & Condo Boards</span>
+            </div>
+
             <!-- Separator -->
-            <div class="h-6 w-px bg-slate-200" aria-hidden="true"></div>
+            <div class="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-2" aria-hidden="true"></div>
 
             <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
                 <!-- Breadcrumb / Context (Left) -->
-                <div class="flex flex-1 items-center font-medium text-sm text-slate-600 gap-2 ml-2">
+                <div class="flex flex-1 items-center font-medium text-sm text-slate-600 dark:text-slate-400 gap-2 ml-2">
                     <span class="hidden sm:inline-block">EPS 412</span>
-                    <span class="hidden sm:inline-block text-slate-300">/</span>
-                    <span class="text-slate-900">{% block breadcrumb_active %}Dashboard{% endblock %}</span>
+                    <span class="hidden sm:inline-block text-slate-300 dark:text-slate-600">/</span>
+                    <span class="text-slate-900 dark:text-slate-100">{% block breadcrumb_active %}Dashboard{% endblock %}</span>
                 </div>
                 
                 <!-- Navbar Actions (Right) -->
@@ -89,16 +102,16 @@
                     <!-- Search -->
                     <div class="relative hidden md:block">
                         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            {% heroicon_outline "magnifying-glass" class="h-4 w-4 text-slate-400" %}
+                            {% heroicon_outline "magnifying-glass" class="h-4 w-4 text-slate-400 dark:text-slate-500" %}
                         </div>
-                        <input type="text" placeholder="Search..." class="block w-64 rounded-md border border-slate-300 py-1.5 pl-9 pr-3 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 bg-slate-50 shadow-inner">
+                        <input type="text" placeholder="Search..." class="block w-64 rounded-md border border-slate-300 dark:border-slate-700 py-1.5 pl-9 pr-3 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 bg-slate-50 dark:bg-slate-900 shadow-inner">
                         <div class="absolute inset-y-0 right-0 flex py-1.5 pr-2.5">
-                            <kbd class="inline-flex items-center rounded border border-slate-200 bg-white px-1 font-sans text-xs text-slate-400 font-bold shadow-sm">⌘K</kbd>
+                            <kbd class="inline-flex items-center rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1 font-sans text-xs text-slate-400 dark:text-slate-500 font-bold shadow-sm">⌘K</kbd>
                         </div>
                     </div>
                     
                     <!-- Status Pill -->
-                    <div class="hidden sm:flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 shadow-sm">
+                    <div class="hidden sm:flex items-center gap-2 rounded-full border border-emerald-200 dark:border-emerald-900/30 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 shadow-sm">
                         <span class="relative flex h-2 w-2">
                           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                           <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -107,12 +120,15 @@
                     </div>
 
                     <!-- Separator -->
-                    <div class="hidden lg:block lg:h-6 lg:w-px lg:bg-slate-200" aria-hidden="true"></div>
+                    <div class="hidden lg:block lg:h-6 lg:w-px lg:bg-slate-200 dark:bg-slate-800" aria-hidden="true"></div>
+
+                    <!-- Mode Toggle -->
+                    <c-ui.mode_toggle variant="menu" />
 
                     <!-- Quick Action -->
-                    <c-ui.button variant="default" size="sm" class="gap-1 shadow-sm font-bold tracking-wide">
+                    <c-ui.button variant="primary" size="sm" class="inline-flex items-center justify-center gap-1.5 shadow-sm font-bold tracking-wide whitespace-nowrap">
                         {% heroicon_outline "plus" class="h-4 w-4" %}
-                        Log Incident
+                        <span>Log Incident</span>
                     </c-ui.button>
                 </div>
             </div>
@@ -120,6 +136,16 @@
 
         <!-- Main Content Slot -->
         <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8" id="main-content">
+            {% if messages %}
+                <div class="mb-6 space-y-3">
+                    {% for message in messages %}
+                        <c-ui.alert variant="{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}" dismissible="True" class="shadow-sm">
+                            {{ message }}
+                        </c-ui.alert>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
             {% block content %}
             {% endblock %}
         </main>

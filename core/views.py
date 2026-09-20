@@ -1,6 +1,7 @@
 import json
 import stripe
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
@@ -31,14 +32,17 @@ def profile_edit(request):
             user.avatar = request.FILES['avatar']
             
         # Handle other info
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('last_name')
-        if first_name:
-            user.first_name = first_name
-        if last_name:
-            user.last_name = last_name
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        
+        if not first_name or not last_name:
+            messages.error(request, "First name and last name are required.")
+            return redirect('profile_edit')
             
+        user.first_name = first_name
+        user.last_name = last_name
         user.save()
+        messages.success(request, "Profile updated successfully.")
         return redirect('profile_edit')
         
     return render(request, "profile_edit.html")
