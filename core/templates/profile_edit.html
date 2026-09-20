@@ -73,4 +73,37 @@
         <c-ui.button type="submit" class="w-full">Save Profile</c-ui.button>
     </form>
 </c-ui.card>
+
+<!-- Subscription Management -->
+<c-ui.card class="max-w-xl mx-auto mt-8 shadow-sm border-slate-200 dark:border-slate-800">
+    <h3 class="text-lg font-bold mb-2 tracking-tight text-slate-900 dark:text-slate-100">Billing & Subscription</h3>
+    
+    {% if user.subscription and user.subscription.is_active %}
+        <div class="p-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-md mb-4 flex items-center justify-between">
+            <div>
+                <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Active Subscription</p>
+                <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-1">You are on the premium plan.</p>
+            </div>
+            <c-ui.badge color="emerald" variant="pill" size="sm" class="font-bold">Active</c-ui.badge>
+        </div>
+        
+        <form method="post" action="{% url 'payments:customer_portal' %}">
+            {% csrf_token %}
+            <c-ui.button type="submit" variant="outline" class="w-full sm:w-auto shadow-sm">
+                Manage Billing via Stripe
+            </c-ui.button>
+        </form>
+    {% else %}
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-md mb-4">
+            <p class="text-sm text-slate-600 dark:text-slate-400">You are currently not subscribed. Upgrade to unlock all features.</p>
+        </div>
+        
+        <form method="post" action="{% url 'payments:create_checkout_session' %}">
+            {% csrf_token %}
+            <c-ui.button type="submit" variant="primary" class="w-full sm:w-auto shadow-sm font-semibold">
+                Upgrade to Premium
+            </c-ui.button>
+        </form>
+    {% endif %}
+</c-ui.card>
 {% endblock %}

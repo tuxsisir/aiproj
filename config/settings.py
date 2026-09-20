@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "core",
+    "payments",
     
     # UI
     "django_cotton",
