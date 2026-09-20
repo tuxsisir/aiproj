@@ -136,14 +136,24 @@
 
         <!-- Main Content Slot -->
         <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8" id="main-content">
+            <!-- Toast Notifications Container -->
+            <c-ui.toast.container position="top-right" />
+            
             {% if messages %}
-                <div class="mb-6 space-y-3">
-                    {% for message in messages %}
-                        <c-ui.alert variant="{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}" dismissible="True" class="shadow-sm">
-                            {{ message }}
-                        </c-ui.alert>
-                    {% endfor %}
-                </div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        {% for message in messages %}
+                            setTimeout(() => {
+                                window.dispatchEvent(new CustomEvent('toast', {
+                                    detail: {
+                                        message: "{{ message|escapejs }}",
+                                        variant: "{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}"
+                                    }
+                                }));
+                            }, 100 * {{ forloop.counter }});
+                        {% endfor %}
+                    });
+                </script>
             {% endif %}
             
             {% block content %}
