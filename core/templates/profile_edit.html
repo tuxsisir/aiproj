@@ -1,6 +1,5 @@
 {% extends "base_dashboard.html" %}
 
-{% block breadcrumb_active %}Profile Settings{% endblock %}
 
 {% block content %}
 <c-ui.card class="max-w-xl mx-auto mt-8 shadow-sm">
@@ -66,44 +65,67 @@
         </c-ui.field>
         
         <c-ui.field>
-            <c-ui.label>Email</c-ui.label>
+            <div class="flex justify-between items-center mb-1">
+                <c-ui.label class="mb-0">Email</c-ui.label>
+                {% for account in user.socialaccount_set.all %}
+                    {% if account.provider == 'google' %}
+                        <span class="inline-flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm">
+                            <svg class="h-3 w-3" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                            </svg>
+                            Google Auth
+                        </span>
+                    {% endif %}
+                {% endfor %}
+            </div>
             <c-ui.input type="email" value="{{ user.email }}" disabled />
+            {% if user.socialaccount_set.exists %}
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Your email address is synced from your authentication provider.</p>
+            {% endif %}
         </c-ui.field>
         
         <c-ui.button type="submit" class="w-full">Save Profile</c-ui.button>
     </form>
 </c-ui.card>
 
-<!-- Subscription Management -->
-<c-ui.card class="max-w-xl mx-auto mt-8 shadow-sm border-slate-200 dark:border-slate-800">
-    <h3 class="text-lg font-bold mb-2 tracking-tight text-slate-900 dark:text-slate-100">Billing & Subscription</h3>
-    
-    {% if user.subscription and user.subscription.is_active %}
-        <div class="p-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-md mb-4 flex items-center justify-between">
-            <div>
-                <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Active Subscription</p>
-                <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-1">You are on the premium plan.</p>
-            </div>
-            <c-ui.badge color="emerald" variant="pill" size="sm" class="font-bold">Active</c-ui.badge>
-        </div>
-        
-        <form method="post" action="{% url 'payments:customer_portal' %}">
-            {% csrf_token %}
-            <c-ui.button type="submit" variant="outline" class="w-full sm:w-auto shadow-sm">
-                Manage Billing via Stripe
+{% if request.membership and request.membership.role == 'MANAGER' %}
+<c-ui.card class="max-w-xl mx-auto mt-6 shadow-sm border-rose-200 dark:border-rose-900/50">
+    <h3 class="text-lg font-bold text-rose-600 dark:text-rose-400 mb-2">Leave Strata Portfolio</h3>
+    <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+        You are currently managing <strong>{{ active_strata.plan_number }} - {{ active_strata.name }}</strong>. 
+        Leaving this strata will immediately revoke your management access and you will not be able to switch back without a new invitation.
+    </p>
+
+    <c-ui.dialog>
+        <c-slot name="trigger">
+            <c-ui.button type="button" variant="danger">
+                <div class="flex items-center gap-2">
+                    {% heroicon_outline "arrow-right-on-rectangle" class="h-4 w-4 shrink-0" %}
+                    Leave Strata
+                </div>
             </c-ui.button>
-        </form>
-    {% else %}
-        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-md mb-4">
-            <p class="text-sm text-slate-600 dark:text-slate-400">You are currently not subscribed. Upgrade to unlock all features.</p>
-        </div>
-        
-        <form method="post" action="{% url 'payments:create_checkout_session' %}">
-            {% csrf_token %}
-            <c-ui.button type="submit" variant="primary" class="w-full sm:w-auto shadow-sm font-semibold">
-                Upgrade to Premium
-            </c-ui.button>
-        </form>
-    {% endif %}
+        </c-slot>
+
+        <c-slot name="header">
+            <c-ui.dialog.title>Confirm Leave Strata</c-ui.dialog.title>
+            <c-ui.dialog.description>
+                Are you sure you want to leave <strong>{{ active_strata.plan_number }}</strong>? 
+                You will lose all management privileges and will not be able to switch back to this portfolio.
+            </c-ui.dialog.description>
+        </c-slot>
+
+        <c-slot name="footer">
+            <c-ui.button variant="ghost" @click="show = false">Cancel</c-ui.button>
+            <form method="POST" action="{% url 'leave_strata' active_strata.pk %}" class="inline-block">
+                {% csrf_token %}
+                <button type="submit" class="inline-flex items-center justify-center rounded-md bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-rose-500 transition">Confirm Leave</button>
+            </form>
+        </c-slot>
+    </c-ui.dialog>
 </c-ui.card>
+{% endif %}
+
 {% endblock %}

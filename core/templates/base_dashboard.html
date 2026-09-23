@@ -6,9 +6,13 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/mask@3.x.x/dist/cdn.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    
+    <!-- Load Cotton UI components before Alpine core so they catch alpine:init -->
     <link rel="stylesheet" href="{% static 'django_cotton_ui/cotton-ui.css' %}">
     <script defer src="{% static 'django_cotton_ui/cotton-ui.min.js' %}"></script>
+    
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
     <meta charset="UTF-8">
@@ -49,18 +53,34 @@
                 <div class="px-3 mb-3 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Governance & Operations</div>
                 <div class="space-y-1">
                     <c-sidebar.nav_item href="{% url 'dashboard' %}" icon="layout-dashboard" label="Dashboard" />
-                    <c-sidebar.nav_item href="#" icon="shield-alert" label="Incident Pipeline" badge="3" />
-                    <c-sidebar.nav_item href="#" icon="check-check" label="Council Votes" />
-                    <c-sidebar.nav_item href="#" icon="clipboard-check" label="Caretaker Sweeps" />
-                    <c-sidebar.nav_item href="#" icon="folder-archive" label="Document Binders" />
+                    <c-sidebar.nav_item 
+                        href="{% url 'dockets:incident_list' %}" 
+                        icon="shield-alert" 
+                        label="Dockets" 
+                        active="{% if 'dockets' in request.resolver_match.url_name and 'bylaw' not in request.resolver_match.url_name %}true{% else %}false{% endif %}"
+                    />
+                    <c-sidebar.nav_item 
+                        href="{% url 'dockets:bylaw_list' %}" 
+                        icon="book-open" 
+                        label="Bylaw Rules" 
+                        active="{% if 'bylaw' in request.resolver_match.url_name %}true{% else %}false{% endif %}"
+                    />
+
                 </div>
             </div>
             
             <div>
                 <div class="px-3 mb-3 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Organization</div>
                 <div class="space-y-1">
-                    <c-sidebar.nav_item href="#" icon="sliders" label="Strata Settings" />
-                    <c-sidebar.nav_item href="{% url 'profile_edit' %}" icon="credit-card" label="Subscription & Billing" />
+                    <c-sidebar.nav_item 
+                      href="{% url 'building_members' %}" 
+                      icon="users" 
+                      label="Strata Members"
+                      active="{% if request.resolver_match.url_name == 'building_members' %}true{% else %}false{% endif %}"
+                    />
+
+                    <c-sidebar.nav_item href="{% url 'payments:subscription_dashboard' %}" icon="credit-card" label="Subscription & Billing" />
+                    <c-sidebar.nav_item href="{% url 'profile_edit' %}" icon="user" label="Profile Settings" />
                 </div>
             </div>
         </nav>
@@ -90,11 +110,26 @@
             <div class="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-2" aria-hidden="true"></div>
 
             <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-                <!-- Breadcrumb / Context (Left) -->
+                <!-- Context (Left) -->
                 <div class="flex flex-1 items-center font-medium text-sm text-slate-600 dark:text-slate-400 gap-2 ml-2">
-                    <span class="hidden sm:inline-block">EPS 412</span>
+                    <span class="hidden sm:inline-block">{{ active_strata.plan_number|default:"No Plan" }}</span>
                     <span class="hidden sm:inline-block text-slate-300 dark:text-slate-600">/</span>
-                    <span class="text-slate-900 dark:text-slate-100">{% block breadcrumb_active %}Dashboard{% endblock %}</span>
+                    <span class="text-slate-900 dark:text-slate-100">{{ active_strata.name|default:"Unassigned" }}</span>
+                    
+                    {% if request.membership %}
+                        <span class="ml-3 hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border
+                            {% if request.membership.role == 'MANAGER' %}
+                                bg-emerald-50 text-emerald-700 border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800
+                            {% else %}
+                                bg-indigo-50 text-indigo-700 border-indigo-200/60 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800
+                            {% endif %}">
+                            {% if request.membership.role == 'MANAGER' %}
+                                🏢 Licensed Manager
+                            {% else %}
+                                🏛️ Council Board
+                            {% endif %}
+                        </span>
+                    {% endif %}
                 </div>
                 
                 <!-- Navbar Actions (Right) -->
@@ -109,27 +144,24 @@
                             <kbd class="inline-flex items-center rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1 font-sans text-xs text-slate-400 dark:text-slate-500 font-bold shadow-sm">⌘K</kbd>
                         </div>
                     </div>
-                    
-                    <!-- Status Pill -->
-                    <div class="hidden sm:flex items-center gap-2 rounded-full border border-emerald-200 dark:border-emerald-900/30 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 shadow-sm">
-                        <span class="relative flex h-2 w-2">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                        </span>
-                        Quorum Online: 4/5
-                    </div>
 
                     <!-- Separator -->
                     <div class="hidden lg:block lg:h-6 lg:w-px lg:bg-slate-200 dark:bg-slate-800" aria-hidden="true"></div>
 
                     <!-- Mode Toggle -->
                     <c-ui.mode_toggle variant="menu" />
+                    
+                    <!-- Admin Link (Superusers Only) -->
+                    {% if user.is_superuser %}
+                        <c-ui.button href="{% url 'admin:index' %}" target="_blank" variant="outline" size="sm" class="hidden sm:inline-block shadow-sm font-bold tracking-wide whitespace-nowrap text-slate-700 dark:text-slate-300">
+                            <div class="inline-flex items-center justify-center gap-1.5 w-full h-full">
+                                <span>Admin</span>
+                                {% heroicon_outline "arrow-top-right-on-square" class="h-4 w-4 shrink-0" %}
+                            </div>
+                        </c-ui.button>
+                    {% endif %}
 
-                    <!-- Quick Action -->
-                    <c-ui.button variant="primary" size="sm" class="inline-flex items-center justify-center gap-1.5 shadow-sm font-bold tracking-wide whitespace-nowrap">
-                        {% heroicon_outline "plus" class="h-4 w-4" %}
-                        <span>Log Incident</span>
-                    </c-ui.button>
+
                 </div>
             </div>
         </header>

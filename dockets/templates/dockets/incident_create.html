@@ -1,0 +1,63 @@
+{% extends 'base_dashboard.html' %}
+
+{% block title %}Log New Docket • {{ active_strata.plan_number }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+  <div class="border-b border-slate-200 dark:border-slate-800 pb-5">
+    <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Log New Docket</h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Submit a new bylaw infraction or property deficiency for {{ active_strata.name }}.</p>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-6 space-y-6">
+    {% csrf_token %}
+    
+    <div>
+      <label class="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">Title</label>
+      <input type="text" name="title" required class="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-slate-500 focus:ring-slate-500">
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">Incident Type</label>
+        <select name="incident_type" required class="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-slate-500 focus:ring-slate-500">
+          {% for value, label in types %}
+            <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">Unit Number <span class="text-slate-400 font-normal">(Optional)</span></label>
+        <input type="text" name="unit_number" class="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-slate-500 focus:ring-slate-500">
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">Violated Bylaw <span class="text-slate-400 font-normal">(If applicable)</span></label>
+      <select name="bylaw" class="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-slate-500 focus:ring-slate-500">
+        <option value="">-- Select a Bylaw --</option>
+        {% for bylaw in bylaws %}
+          <option value="{{ bylaw.id }}">{{ bylaw.code }} - {{ bylaw.title }} (Fine: ${{ bylaw.standard_fine }})</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">Description / Factual Allegation</label>
+      <textarea name="description" required rows="4" class="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-slate-500 focus:ring-slate-500"></textarea>
+    </div>
+
+    <div>
+      <label class="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">Evidence Photo <span class="text-slate-400 font-normal">(Optional)</span></label>
+      <input type="file" name="evidence_image" accept="image/*" class="w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 dark:file:bg-slate-800 dark:file:text-slate-300">
+    </div>
+
+    <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3">
+      <a href="{% url 'dockets:incident_list' %}" class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition">Cancel</a>
+      <button type="submit" class="px-4 py-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-sm font-semibold rounded-md shadow hover:bg-slate-800 dark:hover:bg-slate-200 transition">
+        Submit Docket
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'base_public.html' %}
+
+{% block title %}Manager Action Portal{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
+ <div class="max-w-xl mx-auto">
+ <div class="text-center mb-8">
+ <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 ">Strata Manager Action Portal</h1>
+ <p class="text-sm text-slate-500 mt-2">Secure zero-login link for {{ incident.strata.name }} ({{ incident.strata.plan_number }})</p>
+ </div>
+
+ <div class="bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+ <div class="p-6 border-b border-slate-100 ">
+ <div class="flex items-center gap-2 mb-4">
+ <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200 ">Review Required</span>
+ </div>
+ <h2 class="text-xl font-bold text-slate-900 mb-2">{{ incident.title }}</h2>
+ <div class="text-sm text-slate-600 mb-4">{{ incident.description|linebreaks }}</div>
+ 
+ <div class="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg">
+ <div>
+ <div class="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Target Unit</div>
+ <div class="font-mono text-sm font-semibold text-slate-900 ">{{ incident.unit_number|default:"N/A" }}</div>
+ </div>
+ {% if incident.bylaw %}
+ <div>
+ <div class="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Bylaw Violated</div>
+ <div class="text-sm font-semibold text-slate-900 ">{{ incident.bylaw.code }}</div>
+ </div>
+ {% endif %}
+ </div>
+ </div>
+
+ <div class="p-6 bg-slate-50 ">
+ {% if incident.notice_issued_at %}
+ <div class="text-center">
+ <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-emerald-100 mb-4">
+ {% heroicon_outline "check" class="h-6 w-6 text-emerald-600 " %}
+ </div>
+ <h3 class="text-lg font-bold text-slate-900 ">Notice Issued</h3>
+ <p class="text-sm text-slate-500 mt-2">Official notice was dispatched to {{ incident.recipient_email }} on {{ incident.notice_issued_at|date:"M j, Y" }}. Statutory clock is ticking.</p>
+ </div>
+ {% else %}
+ <form method="post" class="space-y-4">
+ {% csrf_token %}
+ <div>
+ <label class="block text-sm font-semibold text-slate-900 mb-1">Issue Formal Section 135 Notice</label>
+ <p class="text-xs text-slate-500 mb-3">Provide the owner's email address. The system will automatically compute the 4-day deemed service plus the 14-day statutory response window, set the deadline, and log the dispatch.</p>
+ 
+ <div class="flex gap-3">
+ <input type="email" name="recipient_email" required placeholder="owner@example.com" class="flex-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:ring-blue-500 shadow-sm">
+ <button type="submit" class="px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-md shadow hover:bg-slate-800 transition">
+ Dispatch Notice
+ </button>
+ </div>
+ </div>
+ </form>
+ {% endif %}
+ </div>
+ </div>
+ </div>
+</div>
+{% endblock %}

@@ -1,0 +1,185 @@
+{% extends 'base_dashboard.html' %}
+
+{% block title %}Docket Details • {{ active_strata.plan_number }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{{ incident.title }}</h1>
+        <span class="px-2 py-0.5 rounded-full text-[11px] font-medium border bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+          {{ incident.get_status_display }}
+        </span>
+      </div>
+      <p class="text-sm text-slate-500 dark:text-slate-400">
+        Logged on {{ incident.created_at|date:"M j, Y" }}
+      </p>
+    </div>
+    <div class="flex items-center gap-4">
+
+      <a href="{% url 'dockets:incident_list' %}" class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition">
+        {% heroicon_outline "arrow-left" class="w-4 h-4" %}
+        Back to Dockets
+      </a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Left Column: Details & Evidence -->
+    <div class="md:col-span-2 space-y-6">
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-6">
+        <h3 class="text-sm font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase mb-4">Factual Allegation</h3>
+        
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <div class="text-[11px] text-slate-400 uppercase tracking-wider mb-1">Type</div>
+            <div class="text-sm font-medium text-slate-900 dark:text-slate-100">{{ incident.get_incident_type_display }}</div>
+          </div>
+          <div>
+            <div class="text-[11px] text-slate-400 uppercase tracking-wider mb-1">Unit</div>
+            <div class="text-sm font-mono text-slate-900 dark:text-slate-100">{{ incident.unit_number|default:"Common Property" }}</div>
+          </div>
+        </div>
+
+        {% if incident.bylaw %}
+          <div class="mb-4 p-3 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/50 rounded-md">
+            <div class="text-xs font-bold text-rose-800 dark:text-rose-400 mb-1">Violated Bylaw: {{ incident.bylaw.code }}</div>
+            <div class="text-sm text-rose-700 dark:text-rose-300">{{ incident.bylaw.title }} (Fine: ${{ incident.bylaw.standard_fine }})</div>
+          </div>
+        {% endif %}
+
+        <div class="prose prose-sm dark:prose-invert text-slate-700 dark:text-slate-300">
+          {{ incident.description|linebreaks }}
+        </div>
+
+        {% if incident.evidence_image %}
+          <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <h4 class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Evidence Photo</h4>
+            <a href="{{ incident.evidence_image.url }}" target="_blank">
+              <img src="{{ incident.evidence_image.url }}" class="rounded-md border border-slate-200 dark:border-slate-700 max-h-64 object-cover" alt="Evidence">
+            </a>
+          </div>
+        {% endif %}
+      </div>
+
+      {% if incident.response %}
+        <div class="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 rounded-lg shadow-sm p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold tracking-wider text-blue-800 dark:text-blue-400 uppercase">Owner Response</h3>
+            <span class="text-xs font-medium text-blue-600 dark:text-blue-500">{{ incident.response.submitted_at|date:"M j, Y g:i a" }}</span>
+          </div>
+          <div class="mb-2">
+            <span class="inline-flex px-2 py-0.5 rounded text-[11px] font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+              {{ incident.response.get_response_type_display }}
+            </span>
+          </div>
+          <div class="prose prose-sm dark:prose-invert text-blue-900 dark:text-blue-100 mb-4">
+            {{ incident.response.statement|linebreaks }}
+          </div>
+          {% if incident.response.counter_evidence %}
+            <a href="{{ incident.response.counter_evidence.url }}" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 dark:text-blue-400 hover:underline">
+              {% heroicon_outline "document-arrow-down" class="w-4 h-4" %}
+              View Attached Evidence
+            </a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Right Column: Statutory Status & Voting -->
+    <div class="space-y-6">
+      
+      {% if request.membership and request.membership.role in 'MANAGER,COUNCIL,PRESIDENT' %}
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-6">
+        <h3 class="text-sm font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase mb-4">Docket Creator</h3>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-sm font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+            {{ incident.created_by.first_name|slice:":1"|default:incident.created_by.email|slice:":1"|upper }}
+          </div>
+          <div>
+            <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ incident.created_by.get_full_name|default:incident.created_by.email }}</div>
+            <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ incident.created_by.email }}</div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-6">
+        <h3 class="text-sm font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase mb-4">Timeline & Status</h3>
+        
+        <div class="space-y-4">
+          {% if incident.notice_issued_at %}
+            <div>
+              <div class="text-[11px] text-slate-400 uppercase tracking-wider mb-1">Notice Issued</div>
+              <div class="text-sm font-medium text-slate-900 dark:text-slate-100">{{ incident.notice_issued_at|date:"M j, Y" }}</div>
+              <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Sent to: {{ incident.recipient_email }}</div>
+            </div>
+            <div>
+              <div class="text-[11px] text-slate-400 uppercase tracking-wider mb-1">Statutory Deadline</div>
+              <div class="text-sm font-medium {% if incident.days_remaining <= 3 %}text-red-600 dark:text-red-400{% else %}text-slate-900 dark:text-slate-100{% endif %}">
+                {{ incident.statutory_deadline|date:"M j, Y" }} ({{ incident.days_remaining }} days left)
+              </div>
+            </div>
+          {% else %}
+            <div class="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-md text-sm text-amber-800 dark:text-amber-400">
+              Notice has not been formally issued to the owner yet.
+            </div>
+          {% endif %}
+          
+          <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+            <div class="text-[11px] text-slate-400 uppercase tracking-wider mb-2">Magic Links</div>
+            <div class="space-y-2">
+              <a href="{% url 'dockets:manager_magic_action' incident.manager_token %}" target="_blank" class="block text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">Open Manager Portal</a>
+              <a href="{% url 'dockets:owner_response_portal' incident.owner_token %}" target="_blank" class="block text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline">Open Owner Portal</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Voting Panel -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-6">
+        <h3 class="text-sm font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase mb-4">Council Vote</h3>
+        
+        <div class="space-y-2 mb-4">
+          {% for vote in votes %}
+            <div class="flex items-center justify-between p-2 rounded-md {% if vote.approve_fine %}bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400{% else %}bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300{% endif %}">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold border border-slate-200 dark:border-slate-700">
+                  {{ vote.member.user.first_name|slice:":1"|default:vote.member.user.email|slice:":1"|upper }}
+                </div>
+                <span class="text-xs font-medium">{{ vote.member.user.get_full_name|default:vote.member.user.email }}</span>
+              </div>
+              <span class="text-xs font-bold uppercase">{{ vote.approve_fine|yesno:"Levy Fine,Dismiss" }}</span>
+            </div>
+          {% empty %}
+            <div class="text-xs text-slate-500 dark:text-slate-400 italic">No votes cast yet.</div>
+          {% endfor %}
+        </div>
+
+        {% if request.membership and request.membership.role in 'COUNCIL_MEMBER,PRESIDENT' %}
+          <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+            <form method="post" action="{% url 'dockets:cast_council_vote' incident.pk %}" class="space-y-3">
+              {% csrf_token %}
+              {% if user_vote %}
+                <div class="text-xs text-emerald-600 dark:text-emerald-400 font-medium mb-2">You have already voted, but you may revise it.</div>
+              {% endif %}
+              <select name="approve_fine" required class="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 text-sm text-slate-900 dark:text-slate-100 focus:border-slate-500">
+                <option value="">-- Cast Your Ballot --</option>
+                <option value="true" {% if user_vote and user_vote.approve_fine %}selected{% endif %}>Vote: Levy Standard Fine</option>
+                <option value="false" {% if user_vote and not user_vote.approve_fine %}selected{% endif %}>Vote: Dismiss / Issue Warning</option>
+              </select>
+              <textarea name="notes" placeholder="Optional deliberative notes..." rows="2" class="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 focus:border-slate-500">{{ user_vote.notes }}</textarea>
+              <button type="submit" class="w-full py-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-sm font-semibold rounded-md shadow hover:bg-slate-800 dark:hover:bg-slate-200 transition">
+                Record Vote
+              </button>
+            </form>
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

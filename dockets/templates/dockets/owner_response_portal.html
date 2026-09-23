@@ -1,0 +1,93 @@
+{% extends 'base_public.html' %}
+
+{% block title %}Owner Response Portal{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
+ <div class="max-w-2xl mx-auto space-y-6">
+ 
+ <div class="text-center">
+ <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 ">Notice of Complaint</h1>
+ <p class="text-sm text-slate-500 mt-2">Pursuant to Section 135 of the BC Strata Property Act</p>
+ </div>
+
+ {% if already_submitted %}
+ <div class="bg-white border border-emerald-200 rounded-xl shadow-lg p-8 text-center">
+ <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-emerald-100 mb-6">
+ {% heroicon_outline "check-badge" class="h-8 w-8 text-emerald-600 " %}
+ </div>
+ <h2 class="text-xl font-bold text-slate-900 mb-2">Response Successfully Lodged</h2>
+ <p class="text-sm text-slate-600 ">Your response has been formally recorded and will be presented to the strata council for deliberation. You will be notified of their decision once the vote concludes.</p>
+ </div>
+ {% else %}
+ <div class="bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+ <div class="p-6 border-b border-slate-100 bg-red-50/50 ">
+ <div class="flex items-center justify-between mb-4">
+ <h2 class="text-lg font-bold text-slate-900 ">Particulars of Complaint</h2>
+ <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-red-100 text-red-800 border border-red-200 ">
+ Deadline: {{ incident.statutory_deadline|date:"F j, Y" }}
+ </span>
+ </div>
+ 
+ <div class="space-y-4">
+ {% if incident.bylaw %}
+ <div class="p-4 bg-white border border-slate-200 rounded-lg">
+ <div class="text-xs font-bold text-red-600 uppercase tracking-wider mb-1">Alleged Bylaw Violation</div>
+ <div class="font-semibold text-slate-900 ">{{ incident.bylaw.code }} - {{ incident.bylaw.title }}</div>
+ <div class="text-xs text-slate-500 mt-1">Maximum Standard Fine: ${{ incident.bylaw.standard_fine }}</div>
+ </div>
+ {% endif %}
+
+ <div class="prose prose-sm text-slate-700 bg-white p-4 border border-slate-200 rounded-lg">
+ <strong>Factual Allegation:</strong><br>
+ {{ incident.description|linebreaks }}
+ </div>
+ </div>
+ </div>
+
+ <div class="p-6">
+ <h3 class="text-lg font-bold text-slate-900 mb-4">Submit Your Response</h3>
+ <p class="text-sm text-slate-500 mb-6">Under Section 135 of the Act, you have the right to answer this complaint before the council imposes a fine or restricts access to recreational facilities.</p>
+
+ <form method="post" enctype="multipart/form-data" class="space-y-6">
+ {% csrf_token %}
+ 
+ <div class="space-y-3" x-data="{ responseType: 'WRITTEN' }">
+ <label class="block text-sm font-semibold text-slate-900 mb-2">How would you like to respond?</label>
+ 
+ {% for value, label in types %}
+ <label class="flex items-start gap-3 p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition has-[:checked]:ring-2 has-[:checked]:ring-blue-500 has-[:checked]:border-transparent has-[:checked]:bg-blue-50/50 ">
+ <input type="radio" name="response_type" value="{{ value }}" x-model="responseType" required class="mt-0.5 text-blue-600 focus:ring-blue-500">
+ <div>
+ <div class="text-sm font-bold text-slate-900 ">{{ label }}</div>
+ <div class="text-xs text-slate-500 mt-0.5">
+ {% if value == 'WRITTEN' %}Submit your explanation and evidence digitally right now.{% else %}Request to attend the next council meeting in person.{% endif %}
+ </div>
+ </div>
+ </label>
+ {% endfor %}
+
+ <div x-show="responseType === 'WRITTEN'" x-collapse class="pt-4 space-y-4">
+ <div>
+ <label class="block text-sm font-semibold text-slate-900 mb-1">Written Statement</label>
+ <textarea name="statement" rows="5" placeholder="Provide your explanation..." class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:ring-blue-500"></textarea>
+ </div>
+ <div>
+ <label class="block text-sm font-semibold text-slate-900 mb-1">Upload Evidence <span class="text-slate-400 font-normal">(Optional)</span></label>
+ <input type="file" name="counter_evidence" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 ">
+ </div>
+ </div>
+ </div>
+
+ <div class="pt-6 border-t border-slate-200 ">
+ <button type="submit" class="w-full py-3 bg-slate-900 text-white text-sm font-bold rounded-lg shadow-md hover:bg-slate-800 transition">
+ Submit Official Response
+ </button>
+ </div>
+ </form>
+ </div>
+ </div>
+ {% endif %}
+ </div>
+</div>
+{% endblock %}

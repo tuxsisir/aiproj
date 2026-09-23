@@ -6,29 +6,37 @@
 />
 <a href="{{ href }}"
    class="flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition 
-          {% if request.path == href %}
-              bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200 dark:border-slate-700
+          {% if request.path == href or active == 'true' %}
+              {% if request.membership.role == 'MANAGER' %}
+                  bg-emerald-50/70 text-emerald-900 border-r-2 border-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-200
+              {% else %}
+                  bg-indigo-50/70 text-indigo-900 border-r-2 border-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-200
+              {% endif %}
           {% else %}
-              text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent
+              text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent border-r-2
           {% endif %}">
     <div class="flex items-center gap-3">
-        {% if icon == 'layout-dashboard' %}
-            {% heroicon_outline "squares-2x2" class="h-4 w-4 shrink-0" %}
-        {% elif icon == 'shield-alert' %}
-            {% heroicon_outline "shield-exclamation" class="h-4 w-4 shrink-0" %}
-        {% elif icon == 'check-check' %}
-            {% heroicon_outline "check-badge" class="h-4 w-4 shrink-0" %}
-        {% elif icon == 'clipboard-check' %}
-            {% heroicon_outline "clipboard-document-check" class="h-4 w-4 shrink-0" %}
-        {% elif icon == 'folder-archive' %}
-            {% heroicon_outline "folder-open" class="h-4 w-4 shrink-0" %}
-        {% elif icon == 'sliders' %}
-            {% heroicon_outline "adjustments-horizontal" class="h-4 w-4 shrink-0" %}
-        {% elif icon == 'credit-card' %}
-            {% heroicon_outline "credit-card" class="h-4 w-4 shrink-0" %}
-        {% else %}
-            {% heroicon_outline "document" class="h-4 w-4 shrink-0" %}
-        {% endif %}
+        <span class="{% if request.path == href or active == 'true' %}{% if request.membership.role == 'MANAGER' %}text-emerald-600 dark:text-emerald-400{% else %}text-indigo-600 dark:text-indigo-400{% endif %}{% else %}text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300{% endif %}">
+            {% if icon == 'layout-dashboard' %}
+                {% heroicon_outline "squares-2x2" class="h-5 w-5 shrink-0" %}
+            {% elif icon == 'shield-alert' %}
+                {% heroicon_outline "shield-exclamation" class="h-5 w-5 shrink-0" %}
+            {% elif icon == 'check-check' %}
+                {% heroicon_outline "check-badge" class="h-5 w-5 shrink-0" %}
+            {% elif icon == 'clipboard-check' %}
+                {% heroicon_outline "clipboard-document-check" class="h-5 w-5 shrink-0" %}
+            {% elif icon == 'folder-archive' %}
+                {% heroicon_outline "folder-open" class="h-5 w-5 shrink-0" %}
+            {% elif icon == 'sliders' %}
+                {% heroicon_outline "adjustments-horizontal" class="h-5 w-5 shrink-0" %}
+            {% elif icon == 'credit-card' %}
+                {% heroicon_outline "credit-card" class="h-5 w-5 shrink-0" %}
+            {% elif icon == 'users' %}
+                {% heroicon_outline "users" class="h-5 w-5 shrink-0" %}
+            {% else %}
+                {% heroicon_outline "document" class="h-5 w-5 shrink-0" %}
+            {% endif %}
+        </span>
         <span>{{ label }}</span>
     </div>
     {% if badge %}

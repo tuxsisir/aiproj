@@ -1,0 +1,130 @@
+{% extends 'base_dashboard.html' %}
+
+{% block title %}Strata Members • {{ active_strata.plan_number }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 dark:border-slate-800 pb-5">
+    <div>
+      <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+        Strata Members
+      </h1>
+      <p class="text-xs text-slate-500 dark:text-slate-400">
+        Active governance council, licensed managers, and caretakers registered for <span class="font-semibold text-slate-700 dark:text-slate-300">{{ active_strata.plan_number }} - {{ active_strata.name }}</span>.
+      </p>
+    </div>
+    
+    <div class="flex items-center gap-2">
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
+        Total Roster: {{ memberships.paginator.count }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Members Table Card -->
+  <div class="overflow-hidden border rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+        <thead class="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+          <tr>
+            <th class="px-4 py-3">Member</th>
+            <th class="px-4 py-3">Role</th>
+            <th class="px-4 py-3">Unit / Assignment</th>
+            <th class="px-4 py-3">Term Joined</th>
+            <th class="px-4 py-3 text-right">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+          {% for m in memberships %}
+            <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
+              <!-- Name & Email -->
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center justify-center w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs shrink-0">
+                    {{ m.user.first_name|slice:":1"|default:m.user.email|slice:":1"|upper }}
+                  </div>
+                  <div class="flex flex-col">
+                    <span class="font-medium text-slate-900 dark:text-slate-100">
+                      {{ m.user.get_full_name|default:m.user.email }}
+                    </span>
+                    <span class="text-[11px] text-slate-400 font-mono">
+                      {{ m.user.email }}
+                    </span>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Role Pill -->
+              <td class="px-4 py-3 whitespace-nowrap">
+                {% if m.role == 'PRESIDENT' %}
+                  <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
+                    Council President
+                  </span>
+                {% elif m.role == 'MANAGER' %}
+                  <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
+                    Strata Manager
+                  </span>
+                {% elif m.role == 'CARETAKER' %}
+                  <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60">
+                    Building Staff
+                  </span>
+                {% else %}
+                  <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                    Council Member
+                  </span>
+                {% endif %}
+              </td>
+
+              <!-- Unit -->
+              <td class="px-4 py-3 font-mono text-slate-700 dark:text-slate-300">
+                {% if m.unit_number %}
+                  Unit #{{ m.unit_number }}
+                {% else %}
+                  <span class="text-slate-400 italic">Common / External</span>
+                {% endif %}
+              </td>
+
+              <!-- Joined Date -->
+              <td class="px-4 py-3 text-slate-500 dark:text-slate-400">
+                {{ m.joined_at|date:"M j, Y" }}
+              </td>
+
+              <!-- Status -->
+              <td class="px-4 py-3 text-right">
+                <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  Active
+                </span>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" class="px-4 py-8 text-center text-slate-400">
+                No active members found for this strata plan.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if memberships.has_other_pages %}
+    <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-between">
+      <span class="text-sm text-slate-500 dark:text-slate-400">
+        Page {{ memberships.number }} of {{ memberships.paginator.num_pages }}
+      </span>
+      <div class="flex gap-2">
+        {% if memberships.has_previous %}
+          <a href="?page={{ memberships.previous_page_number }}" class="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition">Previous</a>
+        {% endif %}
+        {% if memberships.has_next %}
+          <a href="?page={{ memberships.next_page_number }}" class="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition">Next</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

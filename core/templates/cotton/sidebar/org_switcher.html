@@ -1,45 +1,79 @@
-<div x-data="{ open: false }" class="relative w-full">
-    <button @click="open = !open" @click.away="open = false" class="flex w-full items-center justify-between rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <div class="flex items-center gap-3">
-            <div class="flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow">
-                {% heroicon_outline "building-office" class="h-4 w-4" %}
+<div class="w-full">
+  {% if can_switch_strata %}
+    <div x-data="{ open: false }" class="relative w-full">
+        <button @click="open = !open" @click.away="open = false" class="flex w-full items-center justify-between rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div class="flex items-center gap-3">
+                <div class="flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow">
+                    {% heroicon_outline "building-office" class="h-4 w-4" %}
+                </div>
+                <div class="flex flex-col min-w-0">
+                    <span class="text-sm font-semibold truncate text-slate-900 dark:text-slate-100 leading-none mb-1">
+                        {{ active_strata.name|default:"Select Strata" }}
+                    </span>
+                    <span class="text-xs truncate text-slate-500 dark:text-slate-400 leading-none">
+                        Strata {{ active_strata.plan_number|default:"" }}
+                    </span>
+                </div>
             </div>
-            <div class="flex flex-col">
-                <span class="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-none mb-1">Kingsview Manor</span>
-                <span class="text-xs text-slate-500 dark:text-slate-400 leading-none">Strata EPS 412</span>
+            <div class="text-slate-400 dark:text-slate-500 shrink-0">
+                {% heroicon_outline "chevron-up-down" class="h-4 w-4" %}
             </div>
-        </div>
-        <div class="text-slate-400 dark:text-slate-500">
-            {% heroicon_outline "chevron-up-down" class="h-4 w-4" %}
-        </div>
-    </button>
+        </button>
 
-    <div x-show="open" style="display: none;"
-         x-transition:enter="transition ease-out duration-100"
-         x-transition:enter-start="transform opacity-0 scale-95"
-         x-transition:enter-end="transform opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-75"
-         x-transition:leave-start="transform opacity-100 scale-100"
-         x-transition:leave-end="transform opacity-0 scale-95"
-         class="absolute left-0 right-0 top-full z-50 mt-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-lg overflow-hidden">
-         
-         <div class="px-3 py-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-800">
-             Strata Corporations
-         </div>
-         <div class="p-1">
-             <button class="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                 <span>Kingsview Manor</span>
-                 {% heroicon_outline "check" class="h-4 w-4 text-slate-900 dark:text-slate-100" %}
-             </button>
-             <button class="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition">
-                 <span>Riverside Complex</span>
-             </button>
-         </div>
-         <div class="border-t border-slate-100 dark:border-slate-800 p-1">
-             <button class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition">
-                 {% heroicon_outline "plus" class="h-4 w-4" %}
-                 Register New Strata Plan
-             </button>
-         </div>
+        <div x-show="open" style="display: none;"
+             x-transition:enter="transition ease-out duration-100"
+             x-transition:enter-start="transform opacity-0 scale-95"
+             x-transition:enter-end="transform opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-75"
+             x-transition:leave-start="transform opacity-100 scale-100"
+             x-transition:leave-end="transform opacity-0 scale-95"
+             class="absolute left-0 right-0 top-full z-50 mt-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-lg overflow-hidden">
+             
+             <div class="px-3 py-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-800">
+                 Strata Corporations
+             </div>
+             <div class="p-1 max-h-60 overflow-y-auto">
+                 {% for m in user_memberships %}
+                    {% if m.role == 'MANAGER' %}
+                        <form method="post" action="{% url 'switch_strata' m.strata.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium transition {% if m.strata.id == active_strata.id %}bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100{% else %}text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100{% endif %}">
+                                <div class="flex flex-col truncate pr-2 text-left">
+                                    <span class="truncate">{{ m.strata.name }}</span>
+                                    {% if m.strata.plan_number != m.strata.name %}
+                                        <span class="text-[10px] font-normal text-slate-400">{{ m.strata.plan_number }}</span>
+                                    {% endif %}
+                                </div>
+                                {% if m.strata.id == active_strata.id %}
+                                    {% heroicon_outline "check" class="h-4 w-4 text-slate-900 dark:text-slate-100 shrink-0" %}
+                                {% endif %}
+                            </button>
+                        </form>
+                    {% endif %}
+                 {% endfor %}
+             </div>
+             <div class="border-t border-slate-100 dark:border-slate-800 p-1">
+                 <a href="{% url 'onboarding' %}" class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition">
+                     {% heroicon_outline "plus" class="h-4 w-4" %}
+                     Register New Strata Plan
+                 </a>
+             </div>
+        </div>
     </div>
+  {% else %}
+    <!-- Static Badge for Non-Managers -->
+    <div class="flex items-center w-full gap-3 p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 cursor-default">
+        <div class="flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow">
+            {% heroicon_outline "building-office" class="h-4 w-4" %}
+        </div>
+        <div class="flex flex-col flex-1 min-w-0">
+            <span class="text-sm font-semibold truncate text-slate-900 dark:text-slate-100 leading-none mb-1">
+                {{ active_strata.name|default:"Unassigned" }}
+            </span>
+            <span class="text-xs truncate text-slate-500 dark:text-slate-400 leading-none">
+                Strata {{ active_strata.plan_number|default:"" }} • {{ active_membership.get_role_display|default:"Council" }}
+            </span>
+        </div>
+    </div>
+  {% endif %}
 </div>

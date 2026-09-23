@@ -38,13 +38,37 @@
             {% if user.avatar %}
                 <img src="{{ user.avatar.url }}" alt="{{ user.username }}" class="h-9 w-9 shrink-0 rounded-full object-cover shadow-sm border border-slate-200 dark:border-slate-700">
             {% else %}
-                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold shadow-sm border border-slate-300 dark:border-slate-600 text-sm">
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-bold shadow-sm border border-transparent text-sm
+                    {% if request.membership.role == 'MANAGER' %}
+                        bg-emerald-100 text-emerald-700 ring-2 ring-emerald-500/20 dark:bg-emerald-950 dark:text-emerald-300
+                    {% else %}
+                        bg-indigo-100 text-indigo-700 ring-2 ring-indigo-500/20 dark:bg-indigo-950 dark:text-indigo-300
+                    {% endif %}">
                     {{ user.username|make_list|first|upper }}
                 </div>
             {% endif %}
             <div class="flex flex-col truncate">
                 <span class="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">{{ user.get_full_name|default:user.username }}</span>
-                <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400 truncate">Council Admin</span>
+                {% if request.membership %}
+                    <span class="text-[11px] font-medium mt-0.5 truncate
+                        {% if request.membership.role == 'MANAGER' %}
+                            text-emerald-600/90 dark:text-emerald-400
+                        {% else %}
+                            text-slate-500
+                        {% endif %}">
+                        {% if request.membership.role == 'PRESIDENT' %}
+                            Council President
+                        {% elif request.membership.role == 'MANAGER' %}
+                            Strata Manager
+                        {% elif request.membership.role == 'CARETAKER' %}
+                            Building Staff
+                        {% else %}
+                            Council Member
+                        {% endif %}
+                    </span>
+                {% else %}
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400 truncate mt-0.5">No Active Role</span>
+                {% endif %}
             </div>
         </div>
         <div class="text-slate-400 shrink-0 ml-2">

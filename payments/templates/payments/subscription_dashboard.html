@@ -1,0 +1,55 @@
+{% extends 'base_dashboard.html' %}
+
+{% block title %}Billing & Subscription{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-8">
+  <div class="border-b border-slate-200 dark:border-slate-800 pb-5">
+    <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Billing & Subscription</h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage your active plans, payment methods, and invoices.</p>
+  </div>
+
+  <c-ui.card class="shadow-sm border-slate-200 dark:border-slate-800">
+    <h3 class="text-lg font-bold mb-4 tracking-tight text-slate-900 dark:text-slate-100">Plan Overview</h3>
+    
+    {% if user.subscription and user.subscription.is_active %}
+        <div class="p-5 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-md mb-6 flex items-center justify-between">
+            <div>
+                <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Active Subscription</p>
+                <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-1">You are on the premium plan.</p>
+            </div>
+            <c-ui.badge color="emerald" variant="pill" size="sm" class="font-bold">Active</c-ui.badge>
+        </div>
+        
+        <div class="border-t border-slate-100 dark:border-slate-800 pt-6">
+            <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3">Billing Settings</h4>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">You can securely update your payment method, download past invoices, or modify your subscription directly via our Stripe integration.</p>
+            
+            <form method="post" action="{% url 'payments:customer_portal' %}">
+                {% csrf_token %}
+                <c-ui.button type="submit" variant="outline" class="w-full sm:w-auto shadow-sm">
+                    {% heroicon_outline "credit-card" class="h-4 w-4 mr-2" %}
+                    Manage Billing via Stripe
+                </c-ui.button>
+            </form>
+        </div>
+    {% else %}
+        <div class="p-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-md mb-6">
+            <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Free Tier</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">You are currently not subscribed. Upgrade to unlock premium governance features.</p>
+        </div>
+        
+        <div class="border-t border-slate-100 dark:border-slate-800 pt-6">
+            <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3">Upgrade Account</h4>
+            <form method="post" action="{% url 'payments:create_checkout_session' %}">
+                {% csrf_token %}
+                <c-ui.button type="submit" variant="primary" class="w-full sm:w-auto shadow-sm font-semibold">
+                    {% heroicon_outline "sparkles" class="h-4 w-4 mr-2" %}
+                    Upgrade to Premium
+                </c-ui.button>
+            </form>
+        </div>
+    {% endif %}
+  </c-ui.card>
+</div>
+{% endblock %}

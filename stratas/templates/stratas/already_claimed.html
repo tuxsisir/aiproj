@@ -1,0 +1,22 @@
+{% extends 'base_public.html' %}
+{% block title %}Strata Already Registered{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+    <div class="max-w-md w-full bg-white shadow-xl rounded-xl border border-slate-200 p-8 text-center">
+        <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            {% heroicon_outline "exclamation-triangle" class="w-8 h-8 text-amber-600" %}
+        </div>
+        <h2 class="text-2xl font-extrabold text-slate-900 mb-2">Workspace Already Exists</h2>
+        <p class="text-slate-600 mb-6">
+            The Strata Plan <strong>{{ strata.plan_number }}</strong> has already been registered on CivicDesk by another council member or manager.
+        </p>
+        <p class="text-sm text-slate-500 mb-8">
+            To prevent duplicate billing and split records, please contact your existing Council President or Strata Manager to request an email invitation to the active workspace.
+        </p>
+        <a href="{% url 'landing' %}" class="inline-flex justify-center w-full rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 transition">
+            Return to Homepage
+        </a>
+    </div>
+</div>
+{% endblock %}

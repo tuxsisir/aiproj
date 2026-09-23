@@ -1,0 +1,185 @@
+{% extends 'base_public.html' %}
+{% block title %}CivicDesk Onboarding{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50 flex flex-col py-12 px-4 sm:px-6 lg:px-8" x-data="{ persona: 'COUNCIL' }">
+    <!-- Header -->
+    <div class="sm:mx-auto sm:w-full sm:max-w-3xl flex justify-between items-center mb-8">
+        <div class="flex items-center gap-3">
+            <span class="font-extrabold text-slate-900 text-2xl tracking-tight">CivicDesk</span>
+            <span class="text-xs font-bold tracking-widest text-slate-500 uppercase px-2 py-0.5 rounded-full bg-slate-200">Setup Workspace</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">
+                    {{ request.user.first_name|slice:":1"|default:request.user.email|slice:":1"|upper }}
+                </div>
+                <span class="text-sm font-medium text-slate-700 hidden sm:block">{{ request.user.email }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Card -->
+    <div class="sm:mx-auto sm:w-full sm:max-w-3xl">
+        <div class="bg-white py-8 px-4 shadow-xl border border-slate-200 sm:rounded-xl sm:px-10">
+            
+            <form method="POST" action="{% url 'onboarding' %}">
+                {% csrf_token %}
+                <input type="hidden" name="persona" x-model="persona">
+                
+                <div class="mb-8 text-center">
+                    <h2 class="text-2xl font-bold tracking-tight text-slate-900">Welcome to CivicDesk</h2>
+                    <p class="mt-2 text-sm text-slate-600">Select your role to configure your initial strata workspace.</p>
+                </div>
+
+                <!-- Persona Selector -->
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-8">
+                    <!-- Council Card -->
+                    <div @click="persona = 'COUNCIL'" 
+                         :class="persona === 'COUNCIL' ? 'border-blue-600 ring-1 ring-blue-600 bg-blue-50/50' : 'border-slate-300 hover:border-slate-400 bg-white'"
+                         class="relative flex cursor-pointer rounded-lg border p-5 shadow-sm focus:outline-none transition">
+                        <div class="flex w-full items-start justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="text-blue-600 shrink-0">
+                                    {% heroicon_outline "building-library" class="w-6 h-6" %}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-slate-900">Strata Council or Executive</p>
+                                    <p class="mt-1 text-xs text-slate-500">For elected council presidents, treasurers, and council members managing bylaw disputes, compliance, and records for their own building.</p>
+                                    <div class="mt-3 flex flex-wrap gap-1">
+                                        <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">Single Property</span>
+                                        <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">Quorum Voting</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Manager Card -->
+                    <div @click="persona = 'MANAGER'"
+                         :class="persona === 'MANAGER' ? 'border-emerald-600 ring-1 ring-emerald-600 bg-emerald-50/50' : 'border-slate-300 hover:border-slate-400 bg-white'"
+                         class="relative flex cursor-pointer rounded-lg border p-5 shadow-sm focus:outline-none transition">
+                        <div class="flex w-full items-start justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="text-emerald-600 shrink-0">
+                                    {% heroicon_outline "briefcase" class="w-6 h-6" %}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-slate-900">Licensed Strata Manager</p>
+                                    <p class="mt-1 text-xs text-slate-500">For property managers at licensed brokerages managing a portfolio of strata corporations who need automated S.135 notice dispatches.</p>
+                                    <div class="mt-3 flex flex-wrap gap-1">
+                                        <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">Multi-Building Portfolio</span>
+                                        <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">1-Click Dispatch</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if messages %}
+                    <div class="mb-8">
+                        {% for message in messages %}
+                            <div class="rounded-md bg-rose-50 p-4 border border-rose-200 mb-2">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        {% heroicon_outline "x-circle" class="h-5 w-5 text-rose-400" %}
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-rose-800">{{ message }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="border-t border-slate-200 pt-8 pb-4">
+                    <h3 class="text-lg font-bold text-slate-900 mb-6">Building Details</h3>
+                    
+                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6 mb-6">
+                        <!-- Common Fields -->
+                        <div class="sm:col-span-3">
+                            <label for="plan_number" class="block text-sm font-medium text-slate-700">Strata Plan Number</label>
+                            <div class="mt-1">
+                                <input type="text" name="plan_number" id="plan_number" required placeholder="e.g. EPS 8291" class="block w-full rounded-md border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm uppercase">
+                            </div>
+                        </div>
+                        
+                        <div class="sm:col-span-3">
+                            <label for="name" class="block text-sm font-medium text-slate-700">Complex / Building Name</label>
+                            <div class="mt-1">
+                                <input type="text" name="name" id="name" required placeholder="e.g. Kingsview Landing" class="block w-full rounded-md border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Conditional Council Fields -->
+                    <div x-show="persona === 'COUNCIL'" x-collapse>
+                        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                            <div class="sm:col-span-3">
+                                <label for="unit_number" class="block text-sm font-medium text-slate-700">Your Strata Lot / Unit Number</label>
+                                <div class="mt-1">
+                                    <input type="text" name="unit_number" id="unit_number" :required="persona === 'COUNCIL'" placeholder="e.g. Unit 304" class="block w-full rounded-md border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm">
+                                </div>
+                            </div>
+                            
+                            <div class="sm:col-span-3">
+                                <label for="role" class="block text-sm font-medium text-slate-700">Your Council Role</label>
+                                <div class="mt-1">
+                                    <select id="role" name="role" :required="persona === 'COUNCIL'" class="block w-full rounded-md border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm">
+                                        <option value="PRESIDENT">Council President / Chair</option>
+                                        <option value="COUNCIL">Council Member</option>
+                                        <option value="COUNCIL">Treasurer</option>
+                                        <option value="COUNCIL">Secretary</option>
+                                        <option value="COUNCIL">Member-at-Large</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-6">
+                                <label for="phone_number_council" class="block text-sm font-medium text-slate-700">Contact Phone (For Notifications)</label>
+                                <div class="mt-1">
+                                    <input type="text" name="phone_number" id="phone_number_council" :disabled="persona !== 'COUNCIL'" x-mask="999-999-9999" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" placeholder="xxx-xxx-xxxx" class="block w-full rounded-md border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Conditional Manager Fields -->
+                    <div x-show="persona === 'MANAGER'" style="display: none;" x-collapse>
+                        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                            <div class="sm:col-span-3">
+                                <label for="brokerage_name" class="block text-sm font-medium text-slate-700">Property Management Brokerage</label>
+                                <div class="mt-1">
+                                    <input type="text" name="brokerage_name" id="brokerage_name" :required="persona === 'MANAGER'" placeholder="e.g. FirstService Residential" class="block w-full rounded-md border-slate-300 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm">
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-3">
+                                <label for="phone_number_manager" class="block text-sm font-medium text-slate-700">Work Direct / Mobile Phone</label>
+                                <div class="mt-1">
+                                    <input type="text" name="phone_number" id="phone_number_manager" :disabled="persona !== 'MANAGER'" x-mask="999-999-9999" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" placeholder="xxx-xxx-xxxx" class="block w-full rounded-md border-slate-300 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm">
+                                </div>
+                            </div>
+                            
+                            <div class="sm:col-span-6 flex items-start gap-2">
+                                <div class="mt-0.5 text-emerald-500">{% heroicon_outline "check-circle" class="w-5 h-5" %}</div>
+                                <p class="text-sm text-slate-600">Your profile will be permanently flagged as <span class="font-bold text-slate-900">Licensed Strata Manager</span> for compliance and S.135 dispatches.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex items-center justify-end">
+                    <button type="submit" class="inline-flex justify-center rounded-md px-6 py-3 text-sm font-semibold text-white shadow-sm transition"
+                            :class="persona === 'COUNCIL' ? 'bg-blue-600 hover:bg-blue-500 focus-visible:outline-blue-600' : 'bg-emerald-600 hover:bg-emerald-500 focus-visible:outline-emerald-600'">
+                        <span x-show="persona === 'COUNCIL'">Initialize Strata Workspace &rarr;</span>
+                        <span x-show="persona === 'MANAGER'" style="display: none;">Launch Manager Portfolio &rarr;</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

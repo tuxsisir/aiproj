@@ -1,110 +1,325 @@
 {% extends "base_dashboard.html" %}
 
 {% block title %}Dashboard | CivicDesk{% endblock %}
-{% block breadcrumb_active %}Dashboard{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-        <h2 class="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Dashboard</h2>
-        <c-ui.button variant="outline" size="sm" class="inline-flex items-center justify-center gap-1.5 shadow-sm border-slate-300 dark:border-slate-700 whitespace-nowrap">
-            {% heroicon_outline "arrow-down-tray" class="h-4 w-4" %}
-            <span>Download Report</span>
-        </c-ui.button>
+  
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Command Center</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Executive overview for {{ active_strata.name }}</p>
+    </div>
+  </div>
+
+  {% if active_strata %}
+  <!-- A. Executive KPI Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Card 1: Active Dockets -->
+    <div class="bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+      <div class="flex justify-between items-start">
+        <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Active Dockets</p>
+        <div class="h-8 w-8 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+          {% heroicon_outline "document-duplicate" class="h-5 w-5" %}
+        </div>
+      </div>
+      <div class="mt-4">
+        <h3 class="text-3xl font-bold text-slate-900 dark:text-slate-100">{{ active_incidents }}</h3>
+      </div>
     </div>
 
-    <!-- 3 Stat Metric Cards -->
-    <div class="grid gap-4 md:grid-cols-3">
-        <!-- Card 1 -->
-        <c-ui.card padding="sm">
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">Active Incidents</span>
-                {% heroicon_outline "shield-exclamation" class="h-4 w-4 text-slate-400 dark:text-slate-500" %}
-            </div>
-            <div class="text-2xl font-extrabold text-slate-900 dark:text-slate-100">12</div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1"><span class="text-emerald-600 dark:text-emerald-400 font-medium">+2</span> from last month</p>
-        </c-ui.card>
+    <!-- Card 2: Pending Votes -->
+    <div class="bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+      <div class="flex justify-between items-start">
+        <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Pending Votes</p>
+        <div class="h-8 w-8 rounded-md {% if pending_votes > 0 %}bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400{% else %}bg-slate-50 dark:bg-slate-800 text-slate-400{% endif %} flex items-center justify-center">
+          {% heroicon_outline "check-badge" class="h-5 w-5" %}
+        </div>
+      </div>
+      <div class="mt-4 flex items-center justify-between">
+        <h3 class="text-3xl font-bold text-slate-900 dark:text-slate-100">{{ pending_votes }}</h3>
+        {% if pending_votes > 0 %}
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">Action Required</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Card 3: Statutory Deadlines -->
+    <div class="bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+      <div class="flex justify-between items-start">
+        <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Clocks Running</p>
+        <div class="h-8 w-8 rounded-md bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+          {% heroicon_outline "clock" class="h-5 w-5" %}
+        </div>
+      </div>
+      <div class="mt-4">
+        <h3 class="text-3xl font-bold text-slate-900 dark:text-slate-100">{{ deadlines_active }}</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">14-Day statutory periods</p>
+      </div>
+    </div>
+
+    <!-- Card 4: Resolved This Month -->
+    <div class="bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+      <div class="flex justify-between items-start">
+        <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Resolved Files</p>
+        <div class="h-8 w-8 rounded-md bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+          {% heroicon_outline "shield-check" class="h-5 w-5" %}
+        </div>
+      </div>
+      <div class="mt-4">
+        <h3 class="text-3xl font-bold text-slate-900 dark:text-slate-100">{{ resolved_this_month }}</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Closed this month</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inject Chart Data -->
+  {{ activity_chart_data|json_script:"activity-data" }}
+  {{ breakdown_chart_data|json_script:"breakdown-data" }}
+
+  <!-- B. Visual Analytics Section -->
+  <div x-data="dashboardCharts()" class="grid grid-cols-1 lg:grid-cols-3 gap-5 my-6">
+    
+    <!-- 1. Main Trend Chart -->
+    <div class="lg:col-span-2 min-w-0 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm p-5">
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Infraction & Compliance Activity</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400">6-month volume of Section 135 notices vs resolutions</p>
+        </div>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 shrink-0">
+          Last 6 Months
+        </span>
+      </div>
+      <div x-ref="timelineChart" class="w-full min-h-[290px]"></div>
+    </div>
+
+    <!-- 2. Category Distribution Chart -->
+    <div class="lg:col-span-1 min-w-0 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm p-5">
+      <div class="mb-4">
+        <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Bylaw Distribution</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Breakdown by active categories</p>
+      </div>
+      <div x-ref="breakdownChart" class="w-full flex justify-center min-h-[290px]"></div>
+    </div>
+
+  </div>
+
+  <!-- C. Recent Activity Table -->
+  <div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+      <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Activity Monitor</h3>
+      <a href="{% url 'dockets:incident_list' %}" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 transition">View All Dockets &rarr;</a>
+    </div>
+    
+    {% if recent_incidents %}
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800/50">
+            {% for incident in recent_incidents %}
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition cursor-pointer group" onclick="window.location='{% url 'dockets:incident_detail' incident.pk %}'">
+              <td class="px-5 py-3.5">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="font-mono text-xs text-slate-500 dark:text-slate-400">{{ incident.unit_number|default:"Common Area" }}</span>
+                      <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                      {% if incident.incident_type == 'BYLAW' %}
+                        <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60">Bylaw {{ incident.bylaw.code }}</span>
+                      {% else %}
+                        <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">Deficiency</span>
+                      {% endif %}
+                    </div>
+                    <div class="font-medium text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">{{ incident.title }}</div>
+                  </div>
+                  <div class="text-right flex flex-col items-end">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold border
+                      {% if 'RESOLVED' in incident.status %}
+                        bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800
+                      {% elif incident.status == 'NOTICE_ISSUED' or incident.status == 'PENDING_MANAGER' %}
+                        bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800
+                        animate-pulse
+                      {% else %}
+                        bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800
+                      {% endif %}">
+                      {% if 'RESOLVED' in incident.status %}
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      {% elif incident.status == 'NOTICE_ISSUED' or incident.status == 'PENDING_MANAGER' %}
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                      {% else %}
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                      {% endif %}
+                      {{ incident.get_status_display }}
+                    </span>
+                    <span class="text-xs text-slate-400 mt-1">{{ incident.created_at|timesince }} ago</span>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-8 text-center">
+        <p class="text-sm text-slate-500 dark:text-slate-400">No recent activity found.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <script>
+    function dashboardCharts() {
+      return {
+        timelineChart: null,
+        breakdownChart: null,
         
-        <!-- Card 2 -->
-        <c-ui.card padding="sm">
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">Pending Votes</span>
-                {% heroicon_outline "check-badge" class="h-4 w-4 text-slate-400 dark:text-slate-500" %}
-            </div>
-            <div class="text-2xl font-extrabold text-slate-900 dark:text-slate-100">3</div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Requires quorum (4/5)</p>
-        </c-ui.card>
+        init() {
+          const activityData = JSON.parse(document.getElementById('activity-data').textContent);
+          const breakdownData = JSON.parse(document.getElementById('breakdown-data').textContent);
+          
+          const isDark = document.documentElement.classList.contains('dark');
+          const textColor = isDark ? '#94a3b8' : '#64748b'; // slate-400 : slate-500
+          const borderColor = isDark ? '#334155' : '#e2e8f0'; // slate-700 : slate-200
 
-        <!-- Card 3 -->
-        <c-ui.card padding="sm">
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">Caretaker Sweeps</span>
-                {% heroicon_outline "clipboard-document-check" class="h-4 w-4 text-slate-400 dark:text-slate-500" %}
-            </div>
-            <div class="text-2xl font-extrabold text-slate-900 dark:text-slate-100">98%</div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Completion rate this week</p>
-        </c-ui.card>
+          // Timeline Chart
+          const timelineOptions = {
+            series: activityData.series,
+            chart: {
+              type: 'area',
+              height: 290,
+              fontFamily: 'inherit',
+              toolbar: { show: false },
+              zoom: { enabled: false },
+              background: 'transparent',
+              width: '100%'
+            },
+            colors: ['#3b82f6', '#10b981'], // Blue, Emerald
+            dataLabels: { enabled: false },
+            stroke: {
+              curve: 'smooth',
+              width: 2
+            },
+            fill: {
+              type: 'gradient',
+              gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.35,
+                opacityTo: 0.05,
+                stops: [0, 100]
+              }
+            },
+            xaxis: {
+              categories: activityData.labels,
+              axisBorder: { show: false },
+              axisTicks: { show: false },
+              labels: {
+                style: { colors: textColor, fontSize: '12px' }
+              }
+            },
+            yaxis: {
+              labels: {
+                style: { colors: textColor, fontSize: '12px' },
+                formatter: (val) => { return Math.round(val) }
+              }
+            },
+            grid: {
+              borderColor: borderColor,
+              strokeDashArray: 4,
+              xaxis: { lines: { show: true } },
+              yaxis: { lines: { show: true } },
+              padding: { top: 0, right: 0, bottom: 0, left: 10 }
+            },
+            legend: {
+              position: 'top',
+              horizontalAlign: 'right',
+              labels: { colors: textColor }
+            },
+            theme: { mode: isDark ? 'dark' : 'light' }
+          };
+
+          // Breakdown Donut Chart
+          const breakdownOptions = {
+            series: breakdownData.series,
+            labels: breakdownData.labels,
+            chart: {
+              type: 'donut',
+              height: 290,
+              fontFamily: 'inherit',
+              background: 'transparent',
+              width: '100%'
+            },
+            colors: ['#3b82f6', '#6366f1', '#f59e0b', '#ec4899', '#64748b'],
+            plotOptions: {
+              pie: {
+                donut: {
+                  size: '75%',
+                  labels: {
+                    show: true,
+                    name: { show: false },
+                    value: {
+                      show: true,
+                      fontSize: '36px',
+                      fontWeight: 700,
+                      color: isDark ? '#f8fafc' : '#0f172a', // slate-50 : slate-900
+                      formatter: function (val) { return val }
+                    },
+                    total: {
+                      show: true,
+                      showAlways: true,
+                      label: 'Active',
+                      fontSize: '12px',
+                      color: textColor,
+                      formatter: function (w) {
+                        return breakdownData.total
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            dataLabels: { enabled: false },
+            stroke: { show: false },
+            legend: {
+              position: 'bottom',
+              labels: { colors: textColor },
+              markers: { width: 8, height: 8, radius: 12 }
+            },
+            theme: { mode: isDark ? 'dark' : 'light' }
+          };
+
+          setTimeout(() => {
+            this.timelineChart = new ApexCharts(this.$refs.timelineChart, timelineOptions);
+            this.timelineChart.render();
+
+            this.breakdownChart = new ApexCharts(this.$refs.breakdownChart, breakdownOptions);
+            this.breakdownChart.render();
+          }, 50);
+          
+          // Cleanup on HTMX swap
+          document.body.addEventListener('htmx:beforeSwap', () => {
+            if (this.timelineChart) this.timelineChart.destroy();
+            if (this.breakdownChart) this.breakdownChart.destroy();
+          }, { once: true });
+        }
+      }
+    }
+  </script>
+  
+  {% else %}
+  <div class="bg-white dark:bg-slate-900 p-8 rounded-lg border border-slate-200 dark:border-slate-800 text-center shadow-sm">
+    <div class="mx-auto h-12 w-12 text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+      {% heroicon_outline "building-office" class="h-6 w-6" %}
     </div>
+    <h3 class="text-lg font-medium text-slate-900 dark:text-slate-100">Welcome to CivicDesk</h3>
+    <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Please register or select a strata plan to view your portfolio analytics.</p>
+    <div class="mt-6">
+      <a href="{% url 'onboarding' %}" class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition">
+        Get Started
+      </a>
+    </div>
+  </div>
+  {% endif %}
 
-    <!-- Table -->
-    <c-ui.card title="Recent Incidents" subheading="Latest bylaw infractions and their Section 135 status." padding="none" class="mt-6 shadow-sm overflow-hidden border-slate-200 dark:border-slate-800">
-        <c-ui.table class="bg-white dark:bg-slate-900">
-            <thead class="bg-slate-50/50 dark:bg-slate-800/50">
-                <tr>
-                    <th class="!text-slate-500 dark:!text-slate-400 !font-semibold uppercase tracking-wider text-xs">ID</th>
-                    <th class="!text-slate-500 dark:!text-slate-400 !font-semibold uppercase tracking-wider text-xs">Unit</th>
-                    <th class="!text-slate-500 dark:!text-slate-400 !font-semibold uppercase tracking-wider text-xs">Bylaw Category</th>
-                    <th class="!text-slate-500 dark:!text-slate-400 !font-semibold uppercase tracking-wider text-xs">Status</th>
-                    <th class="!text-slate-500 dark:!text-slate-400 !font-semibold uppercase tracking-wider text-xs">Date</th>
-                    <th class="text-right !text-slate-500 dark:!text-slate-400 !font-semibold uppercase tracking-wider text-xs">Action</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition">
-                    <td class="font-bold text-slate-900 dark:text-slate-100 font-mono text-xs">INC-1082</td>
-                    <td class="font-medium text-slate-700 dark:text-slate-300">402</td>
-                    <td class="text-slate-600 dark:text-slate-400">Noise Complaint (3.2)</td>
-                    <td>
-                        <c-ui.badge color="amber" variant="pill" size="xs" class="font-bold uppercase tracking-wider">14-Day Clock</c-ui.badge>
-                    </td>
-                    <td class="text-slate-500 dark:text-slate-400 text-sm">Oct 14, 2026</td>
-                    <td class="text-right">
-                        <button class="p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
-                            {% heroicon_outline "ellipsis-horizontal" class="h-5 w-5" %}
-                        </button>
-                    </td>
-                </tr>
-                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition">
-                    <td class="font-bold text-slate-900 dark:text-slate-100 font-mono text-xs">INC-1081</td>
-                    <td class="font-medium text-slate-700 dark:text-slate-300">108</td>
-                    <td class="text-slate-600 dark:text-slate-400">Parking (7.1)</td>
-                    <td>
-                        <c-ui.badge color="blue" variant="pill" size="xs" class="font-bold uppercase tracking-wider">Vote Pending</c-ui.badge>
-                    </td>
-                    <td class="text-slate-500 dark:text-slate-400 text-sm">Oct 12, 2026</td>
-                    <td class="text-right">
-                        <button class="p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
-                            {% heroicon_outline "ellipsis-horizontal" class="h-5 w-5" %}
-                        </button>
-                    </td>
-                </tr>
-                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition">
-                    <td class="font-bold text-slate-900 dark:text-slate-100 font-mono text-xs">INC-1080</td>
-                    <td class="font-medium text-slate-700 dark:text-slate-300">204</td>
-                    <td class="text-slate-600 dark:text-slate-400">Short-Term Rental</td>
-                    <td>
-                        <c-ui.badge color="emerald" variant="pill" size="xs" class="font-bold uppercase tracking-wider">Resolved</c-ui.badge>
-                    </td>
-                    <td class="text-slate-500 dark:text-slate-400 text-sm">Oct 10, 2026</td>
-                    <td class="text-right">
-                        <button class="p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
-                            {% heroicon_outline "ellipsis-horizontal" class="h-5 w-5" %}
-                        </button>
-                    </td>
-                </tr>
-            </tbody>
-        </c-ui.table>
-    </c-ui.card>
 </div>
 {% endblock %}

@@ -1,0 +1,144 @@
+{% extends 'base_dashboard.html' %}
+
+{% block title %}Dockets • {{ active_strata.plan_number }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Dockets & Bylaws</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage infractions, deficiencies, and statutory notices for {{ active_strata.name }}.</p>
+    </div>
+    <div>
+      {% if request.membership and request.membership.role in 'COUNCIL_MEMBER,PRESIDENT' %}
+        <a href="{% url 'dockets:incident_create' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-sm font-semibold rounded-md shadow hover:bg-slate-800 dark:hover:bg-slate-200 transition">
+          {% heroicon_outline "plus" class="w-4 h-4 shrink-0" %}
+          Log New Docket
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Metrics Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
+      <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Total Open Dockets</div>
+      <div class="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">{{ total_open }}</div>
+    </div>
+    <div class="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
+      <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Awaiting Manager Action</div>
+      <div class="mt-2 text-3xl font-bold text-amber-600 dark:text-amber-500">{{ awaiting_manager }}</div>
+    </div>
+    <div class="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
+      <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Ready for Vote</div>
+      <div class="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-500">{{ ready_for_vote }}</div>
+    </div>
+  </div>
+
+  <!-- Controls: Search -->
+  <div class="flex items-center justify-between gap-4">
+    <form method="get" class="flex items-center gap-2 w-full max-w-3xl">
+      <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Search by title, unit, or description..." class="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-slate-500 focus:ring-slate-500">
+      <button type="submit" class="px-4 py-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-sm font-semibold rounded-md shadow hover:bg-slate-800 dark:hover:bg-slate-200 transition">
+        Search
+      </button>
+      {% if query %}
+        <span class="text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap ml-2">Showing results for: <strong>"{{ query }}"</strong></span>
+        <a href="{% url 'dockets:incident_list' %}" class="text-sm font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 ml-2">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+
+  <!-- Table -->
+  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
+    <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+      <thead class="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+        <tr>
+          <th class="px-4 py-3 font-semibold">Incident</th>
+          <th class="px-4 py-3 font-semibold">Unit / Type</th>
+          <th class="px-4 py-3 font-semibold">Creator</th>
+          <th class="px-4 py-3 font-semibold">Status</th>
+          <th class="px-4 py-3 font-semibold text-right">Deadline</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+        {% for incident in incidents %}
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition cursor-pointer group" onclick="window.location='{% url 'dockets:incident_detail' incident.pk %}'">
+          <td class="px-4 py-4">
+            <div class="block">
+              <div class="font-medium text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">{{ incident.title }}</div>
+              <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 truncate max-w-xs">{{ incident.description|truncatechars:60 }}</div>
+            </div>
+          </td>
+          <td class="px-4 py-4">
+            <div class="flex items-center gap-2">
+              {% if incident.incident_type == 'BYLAW' %}
+                <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60">Bylaw {{ incident.bylaw.code }}</span>
+              {% else %}
+                <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">Deficiency</span>
+              {% endif %}
+            </div>
+            <div class="text-xs font-mono text-slate-500 dark:text-slate-400 mt-1">
+              {{ incident.unit_number|default:"Common Property" }}
+            </div>
+          </td>
+          <td class="px-4 py-4">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                {{ incident.created_by.first_name|slice:":1"|default:incident.created_by.email|slice:":1"|upper }}
+              </div>
+              <div class="text-xs font-medium text-slate-900 dark:text-slate-100">{{ incident.created_by.get_full_name|default:incident.created_by.email }}</div>
+            </div>
+          </td>
+          <td class="px-4 py-4">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border
+              {% if 'RESOLVED' in incident.status %}
+                bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800
+              {% elif incident.status == 'NOTICE_ISSUED' or incident.status == 'PENDING_MANAGER' %}
+                bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800
+              {% else %}
+                bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800
+              {% endif %}">
+              {{ incident.get_status_display }}
+            </span>
+          </td>
+          <td class="px-4 py-4 text-right">
+            {% if incident.statutory_deadline %}
+              <div class="text-sm font-medium {% if incident.days_remaining <= 3 %}text-red-600 dark:text-red-400{% else %}text-slate-900 dark:text-slate-100{% endif %}">
+                {{ incident.days_remaining }} days
+              </div>
+              <div class="text-[10px] text-slate-400 uppercase tracking-wide mt-0.5">{{ incident.statutory_deadline|date:"M j" }}</div>
+            {% else %}
+              <span class="text-xs text-slate-400 italic">N/A</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+            No dockets found for this strata plan.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    
+    {% if incidents.has_other_pages %}
+    <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-between">
+      <span class="text-sm text-slate-500 dark:text-slate-400">
+        Page {{ incidents.number }} of {{ incidents.paginator.num_pages }}
+      </span>
+      <div class="flex gap-2">
+        {% if incidents.has_previous %}
+          <a href="?page={{ incidents.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" class="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition">Previous</a>
+        {% endif %}
+        {% if incidents.has_next %}
+          <a href="?page={{ incidents.next_page_number }}{% if query %}&q={{ query }}{% endif %}" class="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition">Next</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -2,7 +2,7 @@ import stripe
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 import datetime
@@ -10,6 +10,11 @@ import datetime
 from .models import UserSubscription
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+@login_required
+def subscription_dashboard(request):
+    """Render the billing and subscription management page."""
+    return render(request, 'payments/subscription_dashboard.html')
 
 
 @login_required

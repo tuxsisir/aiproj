@@ -10,3 +10,10 @@ gunicorn==22.0.0
 PyJWT==2.14.0
 cryptography==50.0.1
 heroicons[django]
+faker==40.39.0
+
+django-extensions
+ipdb
+ipython
+
+django-debug-toolbar==8.0.0
