@@ -2,6 +2,7 @@ import random
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from stratas.models import StrataPlan, Membership
+from dockets.models import Incident, IncidentEvent, Bylaw
 from faker import Faker
 
 User = get_user_model()
@@ -11,39 +12,25 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         fake = Faker()
-
         self.stdout.write(self.style.WARNING("Starting demo data generation..."))
 
-        # 2. Create Strata Plans
-        strata_1_data = {
-            "name": "kings landing 2",
-            "plan_number": "eps 8291",
-            "street_address": "13623 81A Ave",
-            "city": "Surrey",
+        # 1. Create a Single Demo Strata Plan
+        strata_data = {
+            "name": "DEMO STRATA",
+            "plan_number": "EPS 123",
+            "street_address": "123 Demo Street",
+            "city": "Vancouver",
             "state_province": "BC",
-            "postal_code": "v3w 3n7",
+            "postal_code": "V6B 1A1",
             "country": "CA",
-            "total_units": 120,
+            "total_units": 100,
         }
         
-        strata_2_data = {
-            "name": "kings landing (original)",
-            "plan_number": "eps 9112",
-            "street_address": "13291 82 Ave",
-            "city": "Surrey",
-            "state_province": "BC",
-            "postal_code": "v3w 3n7",
-            "country": "CA",
-            "total_units": 80,
-        }
+        s1, _ = StrataPlan.objects.get_or_create(plan_number=strata_data["plan_number"], defaults=strata_data)
+        self.stdout.write(self.style.SUCCESS(f"Created/Verified Strata Plan: {s1.name}"))
 
-        s1, _ = StrataPlan.objects.get_or_create(plan_number=strata_1_data["plan_number"], defaults=strata_1_data)
-        s2, _ = StrataPlan.objects.get_or_create(plan_number=strata_2_data["plan_number"], defaults=strata_2_data)
-        
-        self.stdout.write(self.style.SUCCESS(f"Created/Verified Strata Plans: {s1.name} and {s2.name}"))
-
-        # Helper to generate members
-        def create_members(strata, role, count):
+        # Helper to generate random members
+        def create_random_members(strata, role, count):
             for _ in range(count):
                 email = fake.unique.email()
                 user = User.objects.create_user(
@@ -51,88 +38,114 @@ class Command(BaseCommand):
                     email=email,
                     first_name=fake.first_name(),
                     last_name=fake.last_name(),
-                    password="password123"
+                    password="helloworld"
                 )
-                
-                # Generate a random unit number for owners/council
-                unit_num = str(random.randint(100, 999)) if role in [Membership.Role.COUNCIL_MEMBER, Membership.Role.COUNCIL_PRESIDENT] else ""
-                
+                unit_num = str(random.randint(100, 999))
                 Membership.objects.create(
                     user=user,
                     strata=strata,
                     role=role,
                     unit_number=unit_num
                 )
-            self.stdout.write(f"  -> Generated {count} {role}(s) for {strata.plan_number}")
+            self.stdout.write(f"  -> Generated {count} random {role}(s)")
 
-        # 3. Generate Memberships for Building 1
-        self.stdout.write(f"Generating members for {s1.name}...")
-        create_members(s1, Membership.Role.COUNCIL_PRESIDENT, 1)
-        create_members(s1, Membership.Role.COUNCIL_MEMBER, 5)
-        create_members(s1, Membership.Role.STRATA_MANAGER, 2)
-        create_members(s1, Membership.Role.CARETAKER, 1)
+        # 2. Create Specific Manager
+        manager_user, created = User.objects.get_or_create(
+            email="manager@manager.com",
+            defaults={
+                "username": "manager",
+                "first_name": "Mike",
+                "last_name": "M",
+            }
+        )
+        if created:
+            manager_user.set_password("helloworld")
+            manager_user.save()
+        else:
+            manager_user.set_password("helloworld")
+            manager_user.save()
 
-        # Generate Memberships for Building 2
-        self.stdout.write(f"Generating members for {s2.name}...")
-        create_members(s2, Membership.Role.COUNCIL_PRESIDENT, 1)
-        create_members(s2, Membership.Role.COUNCIL_MEMBER, 5)
-        create_members(s2, Membership.Role.STRATA_MANAGER, 2)
-        create_members(s2, Membership.Role.CARETAKER, 1)
+        Membership.objects.get_or_create(
+            user=manager_user,
+            strata=s1,
+            defaults={"role": Membership.Role.STRATA_MANAGER}
+        )
+        self.stdout.write(self.style.SUCCESS("  -> Created specific Manager: Mike M"))
 
-        # 4. Generate Mock Incidents for Kings Landing 2
-        from dockets.models import Incident, IncidentEvent, Bylaw
-        from django.utils import timezone
-        import datetime
+        # 3. Create Specific Council Member
+        council_user, created = User.objects.get_or_create(
+            email="council@council.com",
+            defaults={
+                "username": "council",
+                "first_name": "Sara",
+                "last_name": "G",
+            }
+        )
+        if created:
+            council_user.set_password("helloworld")
+            council_user.save()
+        else:
+            council_user.set_password("helloworld")
+            council_user.save()
+
+        Membership.objects.get_or_create(
+            user=council_user,
+            strata=s1,
+            defaults={
+                "role": Membership.Role.COUNCIL_PRESIDENT,
+                "unit_number": "PH1"
+            }
+        )
+        self.stdout.write(self.style.SUCCESS("  -> Created specific Council Member: Sara G"))
+
+        # 4. Create 7 random council members
+        create_random_members(s1, Membership.Role.COUNCIL_MEMBER, 7)
+
+        # 5. Generate 15 Mock Incidents
+        self.stdout.write(f"Generating 15 mock incidents for {s1.name}...")
         
-        self.stdout.write(f"Generating mock incidents for {s1.name}...")
-        admin_user = User.objects.filter(is_superuser=True).first() or User.objects.first()
         bylaws = list(Bylaw.objects.filter(strata=s1))
-        
-        # Fallback for pre-existing strata plans that missed the post_save signal
         if not bylaws:
             from dockets.signals import seed_default_bylaws
             seed_default_bylaws(s1)
             bylaws = list(Bylaw.objects.filter(strata=s1))
-        
+            
+        incident_titles = [
+            "Noise complaint - Loud music at night",
+            "Improper parking in visitor stall",
+            "Garbage left in hallway",
+            "Pet waste not picked up",
+            "Smoking on balcony",
+            "Unauthorized alterations to unit",
+            "Damage to common property",
+            "Short-term rental suspected",
+            "Water leak originating from unit",
+            "Items stored on patio",
+            "Moving without booking elevator",
+            "Harassment of strata staff",
+            "Propped open security door",
+            "Unregistered pet",
+            "Bicycles brought through lobby"
+        ]
+
         if bylaws:
-            # Incident 1: Notice Issued, clock running
-            i1 = Incident.objects.create(
-                strata=s1,
-                created_by=admin_user,
-                incident_type=Incident.Type.BYLAW,
-                title="Unauthorized Hardwood Flooring Installation",
-                unit_number="402",
-                bylaw=bylaws[3],  # 14(1)
-                description="Contractors observed bringing in hardwood flooring materials without council approval.",
-                recipient_email="unit402@example.com",
-            )
-            i1.calculate_and_set_deadline()
-            i1.save()
-            
-            # Incident 2: Response Received, ready for voting
-            i2 = Incident.objects.create(
-                strata=s1,
-                created_by=admin_user,
-                incident_type=Incident.Type.BYLAW,
-                title="Excessive Noise - Barking Dog",
-                unit_number="115",
-                bylaw=bylaws[0],  # 3(4)
-                description="Multiple reports of dog barking incessantly during quiet hours on weekend.",
-                recipient_email="unit115@example.com",
-            )
-            i2.calculate_and_set_deadline()
-            
-            # Wind back the deadline so it looks realistic
-            i2.notice_issued_at = timezone.now() - datetime.timedelta(days=10)
-            i2.statutory_deadline = i2.notice_issued_at + datetime.timedelta(days=14)
-            i2.status = Incident.Status.VOTING_OPEN
-            i2.save()
-            
-            IncidentEvent.objects.create(
-                incident=i2,
-                event_type=IncidentEvent.EventType.OWNER_STATEMENT,
-                description="I apologize for the noise. My dog was anxious because I was away at the hospital. I have now hired a dog sitter."
-            )
-            self.stdout.write(self.style.SUCCESS("  -> 2 Mock incidents created (1 Notice Issued, 1 Ready for Vote)."))
+            for i in range(15):
+                title = incident_titles[i % len(incident_titles)]
+                bylaw = random.choice(bylaws)
+                unit = str(random.randint(100, 999))
+                
+                incident = Incident.objects.create(
+                    strata=s1,
+                    created_by=manager_user,
+                    incident_type=Incident.Type.BYLAW,
+                    title=f"{title} (Unit {unit})",
+                    unit_number=unit,
+                    bylaw=bylaw,
+                    description=fake.paragraph(nb_sentences=3),
+                    recipient_email=f"unit{unit}@example.com",
+                    status=Incident.Status.IN_REVIEW
+                )
+                
+            self.stdout.write(self.style.SUCCESS("  -> 15 Mock incidents created (IN_REVIEW status)."))
 
         self.stdout.write(self.style.SUCCESS("Demo data generation complete!"))
