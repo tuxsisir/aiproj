@@ -134,6 +134,14 @@ class Command(BaseCommand):
                 bylaw = random.choice(bylaws)
                 unit = str(random.randint(100, 999))
                 
+                from django.utils import timezone
+                import datetime
+                
+                # Pick a random date in the last 60 days
+                random_days = random.randint(0, 60)
+                random_seconds = random.randint(0, 86400)
+                past_date = timezone.now() - datetime.timedelta(days=random_days, seconds=random_seconds)
+                
                 incident = Incident.objects.create(
                     strata=s1,
                     created_by=manager_user,
@@ -144,6 +152,12 @@ class Command(BaseCommand):
                     description=fake.paragraph(nb_sentences=3),
                     recipient_email=f"unit{unit}@example.com",
                     status=Incident.Status.IN_REVIEW
+                )
+                
+                # Update bypasses auto_now_add constraints
+                Incident.objects.filter(pk=incident.pk).update(
+                    created_at=past_date,
+                    updated_at=past_date
                 )
                 
             self.stdout.write(self.style.SUCCESS("  -> 15 Mock incidents created (IN_REVIEW status)."))
