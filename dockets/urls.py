@@ -14,6 +14,7 @@ urlpatterns = [
     path('<uuid:pk>/log-event/', views.log_incident_event, name='log_incident_event'),
     path('<uuid:pk>/dispatch-notice/', views.dispatch_section_135, name='dispatch_section_135'),
     path('<uuid:pk>/dispatch-fine/', views.dispatch_fine_notice, name='dispatch_fine_notice'),
+    path('<uuid:pk>/pdf/', views.generate_fine_pdf, name='generate_fine_pdf'),
 
     # Bylaw Management
     path('bylaws/', views.bylaw_list, name='bylaw_list'),

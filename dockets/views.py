@@ -554,3 +554,38 @@ def dispatch_fine_notice(request, pk):
     
     messages.success(request, f"Fine notice formally dispatched to {incident.recipient_email} and logged to the unit ledger.")
     return redirect('dockets:incident_detail', pk=pk)
+
+
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+import weasyprint
+
+@login_required
+def generate_fine_pdf(request, pk):
+    if not request.strata:
+        return redirect('dashboard')
+        
+    incident = get_object_or_404(Incident, pk=pk, strata=request.strata)
+    
+    if request.membership.role not in [Membership.Role.STRATA_MANAGER, Membership.Role.COUNCIL_MEMBER, Membership.Role.COUNCIL_PRESIDENT]:
+        messages.error(request, "Unauthorized to view this document.")
+        return redirect('dockets:incident_detail', pk=pk)
+
+    if incident.status != Incident.Status.RESOLVED_FINED:
+        messages.error(request, "No fine has been authorized for this docket.")
+        return redirect('dockets:incident_detail', pk=pk)
+
+    fine_dispatched_event = incident.events.filter(event_type=IncidentEvent.EventType.FINE_DISPATCHED).first()
+    
+    html_string = render_to_string('dockets/pdf/fine_notice.html', {
+        'incident': incident,
+        'fine_dispatched_event': fine_dispatched_event,
+    })
+    
+    html = weasyprint.HTML(string=html_string, base_url=request.build_absolute_uri('/'))
+    pdf = html.write_pdf()
+    
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="Strata_Fine_Notice_{incident.unit_number}.pdf"'
+    
+    return response

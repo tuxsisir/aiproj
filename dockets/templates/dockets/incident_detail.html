@@ -339,6 +339,12 @@
                             <strong>Official Notice Dispatched</strong><br>
                             <span class="text-[10px] text-rose-700 dark:text-rose-300">Sent to {{ incident.recipient_email }} on {{ fine_dispatched_event.occurred_at|date:"M j, Y @ g:i a" }}</span>
                         </div>
+                        
+                        <div class="mt-4 pt-4 border-t border-rose-100 dark:border-rose-800/40">
+                            <a href="{% url 'dockets:generate_fine_pdf' incident.pk %}" target="_blank" class="w-full flex justify-center items-center gap-2 rounded-md bg-white dark:bg-slate-800 px-3 py-2 text-xs font-bold text-rose-700 dark:text-rose-400 shadow-sm ring-1 ring-inset ring-rose-200 dark:ring-rose-800/60 hover:bg-rose-50 dark:hover:bg-slate-700 transition">
+                                {% heroicon_outline "document-arrow-down" class="w-4 h-4" %} Download PDF Notice
+                            </a>
+                        </div>
                     </div>
                 </div>
                 {% endif %}

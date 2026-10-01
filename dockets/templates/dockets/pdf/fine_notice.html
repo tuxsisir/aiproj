@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Formal Notice of Fine - {{ incident.strata.name }}</title>
+    <style>
+        @page {
+            size: letter;
+            margin: 1in;
+            @top-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 9pt;
+                color: #64748b;
+            }
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #0f172a;
+            line-height: 1.5;
+            font-size: 11pt;
+        }
+        .header {
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        .header h1 {
+            font-size: 24pt;
+            margin: 0;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+        }
+        .header h2 {
+            font-size: 14pt;
+            color: #64748b;
+            margin: 5px 0 0 0;
+            font-weight: normal;
+        }
+        .meta-box {
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        .meta-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .meta-table td {
+            padding: 4px 8px;
+            vertical-align: top;
+        }
+        .meta-label {
+            font-weight: bold;
+            color: #475569;
+            width: 120px;
+            text-transform: uppercase;
+            font-size: 9pt;
+            letter-spacing: 0.5px;
+        }
+        .fine-amount-box {
+            border: 2px solid #e11d48;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 2rem;
+            background-color: #fff1f2;
+        }
+        .fine-amount-box .title {
+            color: #e11d48;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12pt;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        .fine-amount-box .amount {
+            font-size: 36pt;
+            font-weight: 900;
+            color: #be123c;
+            margin: 0;
+        }
+        h3 {
+            font-size: 14pt;
+            color: #1e293b;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 5px;
+            margin-top: 2rem;
+        }
+        .content {
+            margin-bottom: 2rem;
+        }
+        .footer {
+            margin-top: 4rem;
+            font-size: 10pt;
+            color: #475569;
+        }
+        .signature-line {
+            margin-top: 4rem;
+            width: 250px;
+            border-top: 1px solid #0f172a;
+            padding-top: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>FORMAL NOTICE OF FINE</h1>
+        <h2>Strata Corporation {{ incident.strata.plan_number }}</h2>
+    </div>
+
+    <div class="meta-box">
+        <table class="meta-table">
+            <tr>
+                <td class="meta-label">Date Issued:</td>
+                <td>{{ fine_dispatched_event.occurred_at|date:"F j, Y"|default:incident.updated_at|date:"F j, Y" }}</td>
+                <td class="meta-label">Docket No:</td>
+                <td style="font-family: monospace;">#{{ incident.id|stringformat:"s"|slice:":8"|upper }}</td>
+            </tr>
+            <tr>
+                <td class="meta-label">To Owner of:</td>
+                <td>Unit {{ incident.unit_number }} (Strata Lot {{ incident.strata_lot|default:"-" }})</td>
+                <td class="meta-label">Email:</td>
+                <td>{{ incident.recipient_email }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="content">
+        <p>Dear Owner,</p>
+        <p>This document serves as formal statutory notice that the Strata Council for Strata Corporation <strong>{{ incident.strata.plan_number }}</strong> has concluded its adjudication regarding a reported bylaw contravention.</p>
+        <p>Pursuant to Section 135 of the Strata Property Act, you were provided with written particulars of the complaint and a reasonable opportunity to answer the allegations. The Council has now deliberated on the evidence (including any written statement or hearing you may have requested).</p>
+    </div>
+
+    <div class="fine-amount-box">
+        <div class="title">Formal Fine Authorized</div>
+        <div class="amount">${{ incident.bylaw.standard_fine|floatformat:2 }}</div>
+        <p style="margin-top: 10px; color: #9f1239; font-size: 10pt;">This amount has been officially levied against your strata lot ledger.</p>
+    </div>
+
+    <h3>Particulars of Contravention</h3>
+    <div class="content">
+        <p><strong>Bylaw Violated:</strong> {{ incident.bylaw.code }} &mdash; {{ incident.bylaw.title }}</p>
+        <p><strong>Factual Allegation:</strong></p>
+        <p style="white-space: pre-wrap; padding-left: 15px; border-left: 3px solid #cbd5e1; color: #475569;">{{ incident.description }}</p>
+    </div>
+    
+    <h3>Audit Timeline & Record of Evidence</h3>
+    <div class="content">
+        <table style="width: 100%; border-collapse: collapse; font-size: 9pt;">
+            <thead>
+                <tr style="border-bottom: 2px solid #cbd5e1;">
+                    <th style="text-align: left; padding: 8px 4px; color: #475569;">Date & Time</th>
+                    <th style="text-align: left; padding: 8px 4px; color: #475569;">Event / Actor</th>
+                    <th style="text-align: left; padding: 8px 4px; color: #475569;">Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Initial Intake -->
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 12px 4px; vertical-align: top; width: 20%; color: #64748b;">
+                        {{ incident.created_at|date:"M j, Y" }}<br>{{ incident.created_at|date:"g:i a" }}
+                    </td>
+                    <td style="padding: 12px 4px; vertical-align: top; width: 25%;">
+                        <strong>Initial Intake</strong><br>
+                        <span style="color: #64748b;">{{ incident.created_by.get_full_name|default:incident.created_by.email }}</span>
+                    </td>
+                    <td style="padding: 12px 4px; vertical-align: top; white-space: pre-wrap;">{{ incident.description }}</td>
+                </tr>
+                
+                <!-- Events -->
+                {% for event in incident.events.all %}
+                <tr style="border-bottom: 1px solid #e2e8f0; {% if event.event_type == 'OWNER_STATEMENT' or event.event_type == 'HEARING_REQUESTED' %}background-color: #f8fafc;{% endif %}">
+                    <td style="padding: 12px 4px; vertical-align: top; width: 20%; color: #64748b;">
+                        {{ event.occurred_at|date:"M j, Y" }}<br>{{ event.occurred_at|date:"g:i a" }}
+                    </td>
+                    <td style="padding: 12px 4px; vertical-align: top; width: 25%;">
+                        <strong>{{ event.get_event_type_display }}</strong><br>
+                        <span style="color: #64748b;">{% if event.created_by %}{{ event.created_by.get_full_name|default:event.created_by.email }}{% else %}Respondent (Owner){% endif %}</span>
+                    </td>
+                    <td style="padding: 12px 4px; vertical-align: top; white-space: pre-wrap;">{{ event.description }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div style="page-break-inside: avoid;">
+        <div class="footer">
+        <p>This fine is due and payable immediately. Please remit payment along with your next strata fees or via your standard payment portal.</p>
+        <div class="signature-line">
+            For the Strata Council<br>
+            {{ incident.strata.name }}
+        </div>
+    </div>
+    </div>
+
+</body>
+</html>
