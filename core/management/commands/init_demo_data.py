@@ -14,21 +14,6 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.WARNING("Starting demo data generation..."))
 
-        # 1. Create Superuser
-        admin_email = "sisir@sisir.com"
-        admin_username = "sisir"
-        admin_password = "Hello@World123"
-
-        if not User.objects.filter(username=admin_username).exists():
-            User.objects.create_superuser(
-                username=admin_username,
-                email=admin_email,
-                password=admin_password
-            )
-            self.stdout.write(self.style.SUCCESS(f"Created Superuser: {admin_username}"))
-        else:
-            self.stdout.write(self.style.SUCCESS(f"Superuser {admin_username} already exists."))
-
         # 2. Create Strata Plans
         strata_1_data = {
             "name": "kings landing 2",
@@ -100,7 +85,7 @@ class Command(BaseCommand):
         import datetime
         
         self.stdout.write(f"Generating mock incidents for {s1.name}...")
-        admin_user = User.objects.get(username=admin_username)
+        admin_user = User.objects.filter(is_superuser=True).first() or User.objects.first()
         bylaws = list(Bylaw.objects.filter(strata=s1))
         
         # Fallback for pre-existing strata plans that missed the post_save signal
