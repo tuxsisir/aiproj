@@ -17,3 +17,4 @@ ipdb
 ipython
 
 django-debug-toolbar==8.0.0
+django-anymail[resend]==15.2

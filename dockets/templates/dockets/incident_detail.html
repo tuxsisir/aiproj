@@ -1,185 +1,679 @@
-{% extends 'base_dashboard.html' %}
+{% extends "base_dashboard.html" %}
+{% load static %}
 
-{% block title %}Docket Details • {{ active_strata.plan_number }}{% endblock %}
+{% block title %}Docket #{{ incident.id|stringformat:"s"|slice:":8"|upper }}{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-6">
-  <!-- Header -->
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
-    <div>
-      <div class="flex items-center gap-2 mb-1">
-        <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{{ incident.title }}</h1>
-        <span class="px-2 py-0.5 rounded-full text-[11px] font-medium border bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
-          {{ incident.get_status_display }}
-        </span>
-      </div>
-      <p class="text-sm text-slate-500 dark:text-slate-400">
-        Logged on {{ incident.created_at|date:"M j, Y" }}
-      </p>
-    </div>
-    <div class="flex items-center gap-4">
+<div x-data="{ 
+    editUnitOpen: false, 
+    logEventOpen: false,
+    dispatchNoticeOpen: false,
+    voteModalOpen: false
+}">
 
-      <a href="{% url 'dockets:incident_list' %}" class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition">
-        {% heroicon_outline "arrow-left" class="w-4 h-4" %}
-        Back to Dockets
-      </a>
-    </div>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <!-- Left Column: Details & Evidence -->
-    <div class="md:col-span-2 space-y-6">
-      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-6">
-        <h3 class="text-sm font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase mb-4">Factual Allegation</h3>
-        
-        <div class="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <div class="text-[11px] text-slate-400 uppercase tracking-wider mb-1">Type</div>
-            <div class="text-sm font-medium text-slate-900 dark:text-slate-100">{{ incident.get_incident_type_display }}</div>
-          </div>
-          <div>
-            <div class="text-[11px] text-slate-400 uppercase tracking-wider mb-1">Unit</div>
-            <div class="text-sm font-mono text-slate-900 dark:text-slate-100">{{ incident.unit_number|default:"Common Property" }}</div>
-          </div>
+    <div class="max-w-6xl mx-auto pb-12 w-full text-left justify-start">
+    
+    <!-- Page Header -->
+    <div class="mb-6 flex flex-col md:flex-row md:items-start md:justify-start gap-4 text-left">
+        <div class="text-left w-full">
+            <div class="flex items-center justify-start gap-3 mb-2 text-left">
+                <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400 dark:ring-blue-400/30">
+                    Docket #{{ incident.id|stringformat:"s"|slice:":8"|upper }}
+                </span>
+                <span class="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 dark:bg-slate-400/10 dark:text-slate-400 dark:ring-slate-400/20">
+                    {{ incident.get_status_display }}
+                </span>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white sm:text-3xl tracking-tight text-left">
+                {{ incident.title }}
+            </h1>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400 text-left">
+                Opened {{ incident.created_at|date:"M j, Y" }} by {{ incident.created_by.get_full_name|default:incident.created_by.email }}
+            </p>
         </div>
-
-        {% if incident.bylaw %}
-          <div class="mb-4 p-3 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/50 rounded-md">
-            <div class="text-xs font-bold text-rose-800 dark:text-rose-400 mb-1">Violated Bylaw: {{ incident.bylaw.code }}</div>
-            <div class="text-sm text-rose-700 dark:text-rose-300">{{ incident.bylaw.title }} (Fine: ${{ incident.bylaw.standard_fine }})</div>
-          </div>
-        {% endif %}
-
-        <div class="prose prose-sm dark:prose-invert text-slate-700 dark:text-slate-300">
-          {{ incident.description|linebreaks }}
-        </div>
-
-        {% if incident.evidence_image %}
-          <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <h4 class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Evidence Photo</h4>
-            <a href="{{ incident.evidence_image.url }}" target="_blank">
-              <img src="{{ incident.evidence_image.url }}" class="rounded-md border border-slate-200 dark:border-slate-700 max-h-64 object-cover" alt="Evidence">
-            </a>
-          </div>
-        {% endif %}
-      </div>
-
-      {% if incident.response %}
-        <div class="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 rounded-lg shadow-sm p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-bold tracking-wider text-blue-800 dark:text-blue-400 uppercase">Owner Response</h3>
-            <span class="text-xs font-medium text-blue-600 dark:text-blue-500">{{ incident.response.submitted_at|date:"M j, Y g:i a" }}</span>
-          </div>
-          <div class="mb-2">
-            <span class="inline-flex px-2 py-0.5 rounded text-[11px] font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-              {{ incident.response.get_response_type_display }}
-            </span>
-          </div>
-          <div class="prose prose-sm dark:prose-invert text-blue-900 dark:text-blue-100 mb-4">
-            {{ incident.response.statement|linebreaks }}
-          </div>
-          {% if incident.response.counter_evidence %}
-            <a href="{{ incident.response.counter_evidence.url }}" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 dark:text-blue-400 hover:underline">
-              {% heroicon_outline "document-arrow-down" class="w-4 h-4" %}
-              View Attached Evidence
-            </a>
-          {% endif %}
-        </div>
-      {% endif %}
     </div>
 
-    <!-- Right Column: Statutory Status & Voting -->
-    <div class="space-y-6">
-      
-      {% if request.membership and request.membership.role in 'MANAGER,COUNCIL,PRESIDENT' %}
-      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-6">
-        <h3 class="text-sm font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase mb-4">Docket Creator</h3>
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-sm font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-            {{ incident.created_by.first_name|slice:":1"|default:incident.created_by.email|slice:":1"|upper }}
-          </div>
-          <div>
-            <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ incident.created_by.get_full_name|default:incident.created_by.email }}</div>
-            <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ incident.created_by.email }}</div>
-          </div>
-        </div>
-      </div>
-      {% endif %}
-
-      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-6">
-        <h3 class="text-sm font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase mb-4">Timeline & Status</h3>
-        
-        <div class="space-y-4">
-          {% if incident.notice_issued_at %}
-            <div>
-              <div class="text-[11px] text-slate-400 uppercase tracking-wider mb-1">Notice Issued</div>
-              <div class="text-sm font-medium text-slate-900 dark:text-slate-100">{{ incident.notice_issued_at|date:"M j, Y" }}</div>
-              <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Sent to: {{ incident.recipient_email }}</div>
+    <!-- Defect Warning -->
+    {% if not incident.unit_number or not incident.recipient_email %}
+    <div class="rounded-md bg-amber-50 dark:bg-amber-900/30 p-4 mb-6 border border-amber-200 dark:border-amber-800/50">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                {% heroicon_outline "exclamation-triangle" class="h-5 w-5 text-amber-400 dark:text-amber-500" %}
             </div>
-            <div>
-              <div class="text-[11px] text-slate-400 uppercase tracking-wider mb-1">Statutory Deadline</div>
-              <div class="text-sm font-medium {% if incident.days_remaining <= 3 %}text-red-600 dark:text-red-400{% else %}text-slate-900 dark:text-slate-100{% endif %}">
-                {{ incident.statutory_deadline|date:"M j, Y" }} ({{ incident.days_remaining }} days left)
-              </div>
-            </div>
-          {% else %}
-            <div class="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-md text-sm text-amber-800 dark:text-amber-400">
-              Notice has not been formally issued to the owner yet.
-            </div>
-          {% endif %}
-          
-          <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
-            <div class="text-[11px] text-slate-400 uppercase tracking-wider mb-2">Magic Links</div>
-            <div class="space-y-2">
-              <a href="{% url 'dockets:manager_magic_action' incident.manager_token %}" target="_blank" class="block text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">Open Manager Portal</a>
-              <a href="{% url 'dockets:owner_response_portal' incident.owner_token %}" target="_blank" class="block text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline">Open Owner Portal</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Voting Panel -->
-      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-6">
-        <h3 class="text-sm font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase mb-4">Council Vote</h3>
-        
-        <div class="space-y-2 mb-4">
-          {% for vote in votes %}
-            <div class="flex items-center justify-between p-2 rounded-md {% if vote.approve_fine %}bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400{% else %}bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300{% endif %}">
-              <div class="flex items-center gap-2">
-                <div class="w-6 h-6 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold border border-slate-200 dark:border-slate-700">
-                  {{ vote.member.user.first_name|slice:":1"|default:vote.member.user.email|slice:":1"|upper }}
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-amber-800 dark:text-amber-200">Missing Defect Data</h3>
+                <div class="mt-2 text-sm text-amber-700 dark:text-amber-300">
+                    <p>This incident is missing the target unit number and/or owner's email address. It cannot be formally dispatched until these fields are populated.</p>
                 </div>
-                <span class="text-xs font-medium">{{ vote.member.user.get_full_name|default:vote.member.user.email }}</span>
-              </div>
-              <span class="text-xs font-bold uppercase">{{ vote.approve_fine|yesno:"Levy Fine,Dismiss" }}</span>
             </div>
-          {% empty %}
-            <div class="text-xs text-slate-500 dark:text-slate-400 italic">No votes cast yet.</div>
-          {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left Column -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Factual Allegations Box -->
+            <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                    <h2 class="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
+                        {% heroicon_outline "document-text" class="w-4 h-4 text-slate-400" %} Factual Allegation
+                    </h2>
+                    {% if request.membership.role in 'MANAGER,COUNCIL,PRESIDENT' %}
+                    <button @click="editUnitOpen = true" class="text-xs font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400">Edit Target</button>
+                    {% endif %}
+                </div>
+                
+                <div class="p-6">
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
+                        <div>
+                            <dt class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Target Unit</dt>
+                            <dd class="text-sm font-semibold text-slate-900 dark:text-slate-100 font-mono">{{ incident.unit_number|default:"N/A" }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Owner Email</dt>
+                            <dd class="text-sm font-medium text-slate-900 dark:text-slate-100">{{ incident.recipient_email|default:"Not Provided" }}</dd>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <dt class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Bylaw Violated</dt>
+                            <dd class="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                                <span class="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-xs border border-slate-200 dark:border-slate-700">{{ incident.bylaw.code }}</span>
+                                {{ incident.bylaw.title }}
+                            </dd>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <dt class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Factual Description</dt>
+                            <dd class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{{ incident.description }}</dd>
+                        </div>
+                    </dl>
+                    
+                    {% if incident.evidence_file %}
+                    <div class="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
+                        <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Attached Evidence</h4>
+                        <a href="{{ incident.evidence_file.url }}" target="_blank" class="inline-flex items-center gap-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+                            {% heroicon_outline "photo" class="h-5 w-5 text-slate-400" %}
+                            View Original File / Photo
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Owner Response Card -->
+            {% if owner_response %}
+            <div class="bg-indigo-50 border border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-800/50 rounded-xl p-6 mb-8 shadow-sm">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/50">
+                        {% if owner_response.event_type == 'HEARING_REQUESTED' %}
+                            {% heroicon_outline "megaphone" class="h-5 w-5 text-indigo-700 dark:text-indigo-400" %}
+                        {% else %}
+                            {% heroicon_outline "document-text" class="h-5 w-5 text-indigo-700 dark:text-indigo-400" %}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-indigo-900 dark:text-indigo-100">{{ owner_response.get_event_type_display }}</h3>
+                        <p class="text-xs text-indigo-700 dark:text-indigo-300">Submitted by Respondent on {{ owner_response.occurred_at|date:"M j, Y @ g:i a" }}</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-800/50 rounded-lg p-4 text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap shadow-sm">{{ owner_response.description }}</div>
+                
+                {% if owner_response.evidence_file %}
+                <div class="mt-4 pt-4 border-t border-indigo-200 dark:border-indigo-800/50">
+                    <a href="{{ owner_response.evidence_file.url }}" target="_blank" class="inline-flex items-center gap-2 rounded-md border border-indigo-200 dark:border-indigo-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-indigo-700 dark:text-indigo-300 shadow-sm hover:bg-indigo-50 dark:hover:bg-slate-700 transition">
+                        {% heroicon_outline "paper-clip" class="h-4 w-4" %}
+                        View Counter-Evidence
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Chronological Ledger -->
+            <div>
+                <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider mb-6">Audit Timeline</h3>
+                
+                <div class="flow-root">
+                    <ul role="list" class="-mb-8">
+                        
+                        <!-- Initial Intake -->
+                        <li>
+                            <div class="relative pb-8">
+                                <span class="absolute left-4 top-4 -ml-px h-full w-0.5 bg-slate-200 dark:bg-slate-700" aria-hidden="true"></span>
+                                <div class="relative flex space-x-3">
+                                    <div>
+                                        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 ring-8 ring-white dark:ring-slate-950">
+                                            {% heroicon_outline "inbox-arrow-down" class="h-4 w-4 text-slate-500" %}
+                                        </span>
+                                    </div>
+                                    <div class="flex min-w-0 flex-1 flex-col space-y-2 pt-1.5">
+                                        <div class="flex justify-between space-x-4">
+                                            <p class="text-sm text-slate-500 dark:text-slate-400">Incident logged by <span class="font-medium text-slate-900 dark:text-slate-100">{{ incident.created_by.get_full_name|default:incident.created_by.email }}</span></p>
+                                            <div class="whitespace-nowrap text-right text-xs text-slate-500">
+                                                <time datetime="{{ incident.created_at|date:'c' }}">{{ incident.created_at|date:"M j, g:i a" }}</time>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+
+                        <!-- Events Ledger -->
+                        {% for event in incident.events.all %}
+                        <li>
+                            <div class="relative pb-8">
+                                {% if not forloop.last %}<span class="absolute left-4 top-4 -ml-px h-full w-0.5 bg-slate-200 dark:bg-slate-700" aria-hidden="true"></span>{% endif %}
+                                <div class="relative flex space-x-3">
+                                    <div>
+                                        <span class="flex h-8 w-8 items-center justify-center rounded-full ring-8 ring-white dark:ring-slate-950
+                                            {% if event.event_type == 'STATUTORY_NOTICE' %}bg-rose-100 dark:bg-rose-900/50 text-rose-600
+                                            {% elif event.event_type == 'UNIT_CORRECTED' %}bg-blue-100 dark:bg-blue-900/50 text-blue-600
+                                            {% elif event.event_type == 'RECURRENCE' %}bg-amber-100 dark:bg-amber-900/50 text-amber-600
+                                            {% else %}bg-slate-100 dark:bg-slate-800 text-slate-500{% endif %}">
+                                            
+                                            {% if event.event_type == 'STATUTORY_NOTICE' %}
+                                                {% heroicon_outline "envelope" class="h-4 w-4" %}
+                                            {% elif event.event_type == 'UNIT_CORRECTED' %}
+                                                {% heroicon_outline "pencil-square" class="h-4 w-4" %}
+                                            {% elif event.event_type == 'RECURRENCE' %}
+                                                {% heroicon_outline "exclamation-circle" class="h-4 w-4" %}
+                                            {% else %}
+                                                {% heroicon_outline "chat-bubble-left-ellipsis" class="h-4 w-4" %}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="flex min-w-0 flex-1 flex-col space-y-2 pt-1.5">
+                                        <div class="flex justify-between space-x-4">
+                                            <p class="text-sm text-slate-900 dark:text-slate-100">
+                                                <span class="font-medium">{% if event.created_by %}{{ event.created_by.get_full_name|default:event.created_by.email }}{% else %}Respondent (Owner){% endif %}</span> 
+                                                <span class="text-slate-500 dark:text-slate-400">added {{ event.get_event_type_display|lower }}</span>
+                                            </p>
+                                            <div class="whitespace-nowrap text-right text-xs text-slate-500">
+                                                <time datetime="{{ event.occurred_at|date:'c' }}">{{ event.occurred_at|date:"M j, g:i a" }}</time>
+                                            </div>
+                                        </div>
+                                        <div class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{{ event.description }}</div>
+                                        
+                                        {% if event.evidence_file %}
+                                        <div>
+                                            <a href="{{ event.evidence_file.url }}" target="_blank" class="inline-flex items-center gap-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+                                                {% heroicon_outline "paper-clip" class="h-4 w-4 text-slate-400" %}
+                                                View Attached Evidence
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
         </div>
 
-        {% if request.membership and request.membership.role in 'COUNCIL_MEMBER,PRESIDENT' %}
-          <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
-            <form method="post" action="{% url 'dockets:cast_council_vote' incident.pk %}" class="space-y-3">
-              {% csrf_token %}
-              {% if user_vote %}
-                <div class="text-xs text-emerald-600 dark:text-emerald-400 font-medium mb-2">You have already voted, but you may revise it.</div>
-              {% endif %}
-              <select name="approve_fine" required class="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 text-sm text-slate-900 dark:text-slate-100 focus:border-slate-500">
-                <option value="">-- Cast Your Ballot --</option>
-                <option value="true" {% if user_vote and user_vote.approve_fine %}selected{% endif %}>Vote: Levy Standard Fine</option>
-                <option value="false" {% if user_vote and not user_vote.approve_fine %}selected{% endif %}>Vote: Dismiss / Issue Warning</option>
-              </select>
-              <textarea name="notes" placeholder="Optional deliberative notes..." rows="2" class="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 focus:border-slate-500">{{ user_vote.notes }}</textarea>
-              <button type="submit" class="w-full py-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-sm font-semibold rounded-md shadow hover:bg-slate-800 dark:hover:bg-slate-200 transition">
-                Record Vote
-              </button>
-            </form>
-          </div>
-        {% endif %}
-      </div>
+        <!-- Right Column -->
+        <div class="lg:col-span-1">
+            <div class="sticky top-24 space-y-6">
+                
+                {% if request.membership.role == 'MANAGER' %}
+                <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                    <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                        <h2 class="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
+                            {% heroicon_outline "command-line" class="w-4 h-4 text-blue-600 dark:text-blue-400" %} Manager Console
+                        </h2>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        
+                        <!-- Primary Action -->
+                        <div>
+                            {% if incident.status == 'IN_REVIEW' %}
+                                {% if not incident.unit_number or not incident.recipient_email %}
+                                    <button disabled class="w-full flex justify-center items-center gap-2 rounded-md bg-slate-100 dark:bg-slate-800 px-3 py-2.5 text-sm font-semibold text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-70 border border-slate-200 dark:border-slate-700">
+                                        {% heroicon_outline "envelope" class="w-5 h-5" %}
+                                        Dispatch S.135 Notice
+                                    </button>
+                                    <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-2 text-center">Missing unit or email to dispatch.</p>
+                                {% else %}
+                                    <button type="button" @click="dispatchNoticeOpen = true" class="w-full flex justify-center items-center gap-2 rounded-md bg-blue-600 hover:bg-blue-500 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition">
+                                        {% heroicon_outline "envelope" class="w-5 h-5" %}
+                                        Dispatch S.135 Notice
+                                    </button>
+                                {% endif %}
+                            {% elif incident.status == 'NOTICE_ISSUED' %}
+                                <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 rounded-md p-3 text-center"
+                                     x-data="{
+                                        deadline: new Date('{{ incident.statutory_deadline|date:'c' }}').getTime(),
+                                        timeLeft: '',
+                                        updateClock() {
+                                            const now = new Date().getTime();
+                                            const diff = this.deadline - now;
+                                            if (diff <= 0) {
+                                                this.timeLeft = '00:00:00';
+                                                return;
+                                            }
+                                            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                                            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+                                            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+                                            const seconds = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
+                                            
+                                            if (days > 0) {
+                                                this.timeLeft = `${days}d ${hours}:${minutes}:${seconds}`;
+                                            } else {
+                                                this.timeLeft = `${hours}:${minutes}:${seconds}`;
+                                            }
+                                        }
+                                     }"
+                                     x-init="updateClock(); setInterval(() => updateClock(), 1000);">
+                                    <p class="text-xs text-blue-700 dark:text-blue-300 font-medium uppercase tracking-wider mb-1">Clock Ticking</p>
+                                    <p class="text-lg font-mono font-bold text-blue-900 dark:text-white" x-text="timeLeft">{{ incident.days_remaining }} days left</p>
+                                </div>
+                            {% elif incident.status == 'RESOLVED_FINED' %}
+                                {% if fine_dispatched_event %}
+                                    <div class="bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800/50 rounded-md p-3 text-center">
+                                        <p class="text-xs text-rose-700 dark:text-rose-300 font-bold uppercase tracking-wider mb-1">Fine Dispatched</p>
+                                        <p class="text-[10px] text-rose-600 dark:text-rose-400">Notice sent to ledger.</p>
+                                    </div>
+                                {% else %}
+                                    <form method="POST" action="{% url 'dockets:dispatch_fine_notice' incident.pk %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="w-full flex justify-center items-center gap-2 rounded-md bg-rose-600 hover:bg-rose-500 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition">
+                                            {% heroicon_outline "banknotes" class="w-5 h-5" %}
+                                            Dispatch Fine Notice
+                                        </button>
+                                        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-2 text-center">Formal fine authorized by Council majority.</p>
+                                    </form>
+                                {% endif %}
+                            {% else %}
+                                <div class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md p-3 text-center text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    Status: {{ incident.get_status_display }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <hr class="border-slate-200 dark:border-slate-800">
+                        <button @click="logEventOpen = true" class="w-full flex items-center justify-center gap-2 rounded-md bg-white dark:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-slate-300 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+                            {% heroicon_outline "plus" class="w-4 h-4" %} Log Note / Event
+                        </button>
+                    </div>
+                </div>
+                {% elif request.membership.role in 'COUNCIL,PRESIDENT' %}
+                <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                    <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
+                        <h2 class="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
+                            {% heroicon_outline "clipboard-document-check" class="w-4 h-4 text-emerald-600 dark:text-emerald-400" %} Council Actions
+                        </h2>
+                    </div>
+                    <div class="p-5 space-y-2">
+                        <button @click="editUnitOpen = true" class="w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition">
+                            {% heroicon_outline "pencil-square" class="w-4 h-4 text-slate-400 dark:text-slate-500" %}
+                            Edit Target Unit
+                        </button>
+                        <button @click="logEventOpen = true" class="w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition">
+                            {% heroicon_outline "plus-circle" class="w-4 h-4 text-slate-400 dark:text-slate-500" %}
+                            Log Repeat Occurrence / Note
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
 
+                <!-- Fine Issued Card -->
+                {% if fine_dispatched_event %}
+                <div class="bg-gradient-to-br from-rose-50 to-white dark:from-rose-950/40 dark:to-slate-900 rounded-xl shadow-sm border border-rose-200 dark:border-rose-800/60 overflow-hidden relative">
+                    <div class="absolute top-0 right-0 p-4 opacity-10">
+                        {% heroicon_outline "banknotes" class="w-24 h-24 text-rose-600" %}
+                    </div>
+                    <div class="px-5 py-4 border-b border-rose-100 dark:border-rose-800/40 flex items-center justify-between relative z-10">
+                        <h2 class="text-sm font-bold text-rose-900 dark:text-rose-100 uppercase tracking-wider flex items-center gap-2">
+                            {% heroicon_outline "banknotes" class="w-4 h-4 text-rose-600 dark:text-rose-400" %} Fine Issued
+                        </h2>
+                        <span class="inline-flex items-center rounded-full bg-rose-100 dark:bg-rose-900/50 px-2.5 py-0.5 text-[10px] font-bold text-rose-800 dark:text-rose-300 uppercase tracking-wider ring-1 ring-inset ring-rose-600/20">Finalized</span>
+                    </div>
+                    <div class="p-5 relative z-10">
+                        <p class="text-xs font-semibold text-rose-800 dark:text-rose-200 mb-1">Standard Fine Applied</p>
+                        <p class="text-3xl font-black text-rose-600 dark:text-rose-400 mb-4">${{ incident.bylaw.standard_fine }}</p>
+                        
+                        <div class="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm rounded-lg p-3 text-xs text-rose-900 dark:text-rose-100 border border-rose-100 dark:border-rose-800/30">
+                            <strong>Official Notice Dispatched</strong><br>
+                            <span class="text-[10px] text-rose-700 dark:text-rose-300">Sent to {{ incident.recipient_email }} on {{ fine_dispatched_event.occurred_at|date:"M j, Y @ g:i a" }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                <!-- Council Adjudication & Voting Card -->
+                {% if incident.status == 'NOTICE_ISSUED' or incident.status == 'VOTING_OPEN' or incident.status == 'RESOLVED_FINED' or incident.status == 'RESOLVED_DISMISSED' %}
+                <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                    <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
+                        <h2 class="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
+                            {% heroicon_outline "scale" class="w-4 h-4 text-purple-600 dark:text-purple-400" %} Council Adjudication
+                        </h2>
+                        {% if incident.status == 'RESOLVED_FINED' or incident.status == 'RESOLVED_DISMISSED' %}
+                            <span class="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600 uppercase tracking-wider">Concluded</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="p-5 space-y-6">
+                        {% if incident.status == 'NOTICE_ISSUED' %}
+                            <!-- Locked State -->
+                            <div class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 text-center">
+                                {% heroicon_outline "lock-closed" class="h-6 w-6 text-slate-400 mx-auto mb-2" %}
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Ballot locked until statutory response window lapses or owner submits answer.</p>
+                            </div>
+                        {% else %}
+                            <!-- Quorum Progress Bar -->
+                            <div>
+                                <div class="flex justify-between items-end mb-2">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-rose-600">{{ fine_votes_count }} Levy Fine</span>
+                                    <span class="text-xs font-semibold text-slate-500">{{ quorum_percentage }}% Quorum</span>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600">{{ dismiss_votes_count }} Dismiss</span>
+                                </div>
+                                <div class="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
+                                    <div class="h-full bg-rose-500 transition-all" style="width: {% widthratio fine_votes_count total_votes_cast 100 %}%;"></div>
+                                    <div class="h-full bg-emerald-500 transition-all ml-auto" style="width: {% widthratio dismiss_votes_count total_votes_cast 100 %}%;"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Voter Badges -->
+                            {% if votes %}
+                            <div class="space-y-3">
+                                {% for vote in votes %}
+                                <div class="flex items-center gap-3">
+                                    <div class="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 {% if vote.approve_fine %}bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-400{% else %}bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400{% endif %}">
+                                        {{ vote.member.user.first_name|slice:":1"|default:vote.member.user.email|slice:":1"|upper }}
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">{{ vote.member.user.get_full_name|default:vote.member.user.email }}</p>
+                                        <p class="text-[10px] text-slate-500 truncate">{{ vote.member.get_role_display }} &bull; {{ vote.created_at|date:"M j" }}</p>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            
+                            <hr class="border-slate-200 dark:border-slate-800">
+                            
+                            <!-- CTA -->
+                            {% if request.membership.role in 'COUNCIL,PRESIDENT' %}
+                                {% if user_vote %}
+                                    <div class="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-center border border-slate-200 dark:border-slate-700">
+                                        <div class="flex items-center justify-center gap-2 mb-1">
+                                            {% heroicon_outline "check-badge" class="w-5 h-5 text-emerald-500" %}
+                                            <span class="text-sm font-bold text-slate-900 dark:text-slate-100">Ballot Cast</span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">You voted to {{ user_vote.approve_fine|yesno:"Levy Fine,Dismiss" }}.</p>
+                                    </div>
+                                {% elif incident.status == 'VOTING_OPEN' %}
+                                    <button @click="voteModalOpen = true" class="w-full flex justify-center items-center gap-2 rounded-md bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 px-3 py-2.5 text-sm font-bold text-white shadow-sm transition">
+                                        🗳️ Cast Your Ballot
+                                    </button>
+                                {% endif %}
+                            {% elif request.membership.role == 'MANAGER' %}
+                                <div class="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-center border border-slate-200 dark:border-slate-700">
+                                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Manager Oversight</p>
+                                    <p class="text-[10px] text-slate-500 dark:text-slate-500">Awaiting Council Majority</p>
+                                </div>
+                            {% endif %}
+
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
     </div>
-  </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Edit Target Unit Modal -->
+    <div x-show="editUnitOpen" class="relative z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="display: none;">
+        <div x-show="editUnitOpen" x-transition.opacity class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div x-show="editUnitOpen" @click.away="editUnitOpen = false" x-transition class="relative transform overflow-hidden rounded-lg bg-white dark:bg-slate-900 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-200 dark:border-slate-700">
+                    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+                                {% heroicon_outline "home" class="h-5 w-5 text-blue-600 dark:text-blue-400" %}
+                            </div>
+                            <h3 class="text-base font-semibold leading-6 text-slate-900 dark:text-slate-100" id="modal-title">Edit Target Unit</h3>
+                        </div>
+                        <button type="button" @click="editUnitOpen = false" class="text-slate-400 hover:text-slate-500">
+                            {% heroicon_outline "x-mark" class="h-6 w-6" %}
+                        </button>
+                    </div>
+                    
+                    <div class="p-6">
+                        <form method="POST" action="{% url 'dockets:update_target_unit' incident.pk %}">
+                            {% csrf_token %}
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">Unit Number</label>
+                                    <input type="text" name="unit_number" value="{{ incident.unit_number|default:'' }}" class="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-slate-500 focus:ring-slate-500" placeholder="e.g. 402">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">Owner Email</label>
+                                    <input type="email" name="recipient_email" value="{{ incident.recipient_email|default:'' }}" class="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-slate-500 focus:ring-slate-500" placeholder="owner@example.com">
+                                </div>
+                            </div>
+                            <div class="mt-6 flex flex-row-reverse gap-3">
+                                <button type="submit" class="inline-flex justify-center rounded-md bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 px-4 py-2 text-sm font-semibold text-white shadow-sm transition">Save Changes</button>
+                                <button type="button" @click="editUnitOpen = false" class="inline-flex justify-center rounded-md bg-white dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-900 dark:text-slate-300 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Log Event Modal -->
+    <div x-show="logEventOpen" class="relative z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="display: none;">
+        <div x-show="logEventOpen" x-transition.opacity class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div x-show="logEventOpen" @click.away="logEventOpen = false" x-transition class="relative transform overflow-hidden rounded-lg bg-white dark:bg-slate-900 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-200 dark:border-slate-700">
+                    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+                                {% heroicon_outline "plus" class="h-5 w-5 text-blue-600 dark:text-blue-400" %}
+                            </div>
+                            <h3 class="text-base font-semibold leading-6 text-slate-900 dark:text-slate-100" id="modal-title">Log Event / Note</h3>
+                        </div>
+                        <button type="button" @click="logEventOpen = false" class="text-slate-400 hover:text-slate-500">
+                            {% heroicon_outline "x-mark" class="h-6 w-6" %}
+                        </button>
+                    </div>
+                    
+                    <div class="p-6">
+                        <form method="POST" action="{% url 'dockets:log_incident_event' incident.pk %}" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">Event Type</label>
+                                    <select name="event_type" required class="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-slate-500 focus:ring-slate-500">
+                                        <option value="NOTE">Manager / Council Note</option>
+                                        <option value="RECURRENCE">Subsequent Occurrence</option>
+                                        <option value="EVIDENCE">Additional Evidence</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">Description</label>
+                                    <textarea name="description" required rows="3" class="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-slate-500 focus:ring-slate-500"></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">Attach Evidence <span class="text-slate-400 font-normal">(Optional)</span></label>
+                                    <input type="file" name="evidence_file" class="w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 dark:file:bg-slate-800 dark:file:text-slate-300">
+                                </div>
+                            </div>
+                            <div class="mt-6 flex flex-row-reverse gap-3">
+                                <button type="submit" class="inline-flex justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition">Save Event</button>
+                                <button type="button" @click="logEventOpen = false" class="inline-flex justify-center rounded-md bg-white dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-900 dark:text-slate-300 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dispatch Notice Modal -->
+    <div x-show="dispatchNoticeOpen" class="relative z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="display: none;">
+        <div x-show="dispatchNoticeOpen" x-transition.opacity class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div x-show="dispatchNoticeOpen" @click.away="dispatchNoticeOpen = false" x-transition class="relative transform overflow-hidden rounded-lg bg-white dark:bg-slate-900 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-slate-200 dark:border-slate-700">
+                    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+                                {% heroicon_outline "envelope" class="h-5 w-5 text-blue-600 dark:text-blue-400" %}
+                            </div>
+                            <h3 class="text-base font-semibold leading-6 text-slate-900 dark:text-slate-100" id="modal-title">Review Section 135 Notice</h3>
+                        </div>
+                        <button type="button" @click="dispatchNoticeOpen = false" class="text-slate-400 hover:text-slate-500">
+                            {% heroicon_outline "x-mark" class="h-6 w-6" %}
+                        </button>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="mb-4">
+                            <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Statutory Notice Preview</h4>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">The following notice will be officially dispatched to <span class="font-bold">{{ incident.recipient_email }}</span>.</p>
+                        </div>
+                        
+                        <div class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-4 font-mono text-[11px] sm:text-xs text-slate-700 dark:text-slate-300 mb-6 whitespace-pre-wrap">Subject: FORMAL NOTICE OF COMPLAINT - {{ incident.strata.plan_number }}
+
+Dear Owner of Unit {{ incident.unit_number }},
+
+The Strata Corporation {{ incident.strata.plan_number }} has received a complaint regarding an alleged contravention of the bylaws.
+
+Particulars of the complaint:
+- Bylaw: {{ incident.bylaw.code }} ({{ incident.bylaw.title }})
+- Date of Intake: {{ incident.created_at|date:"M j, Y" }}
+- Description: {{ incident.description }}
+
+Pursuant to Section 135 of the Strata Property Act, you are entitled to answer this complaint. You may provide a written response or request a hearing before the strata council.
+
+Please note that under the Act (incorporating deemed service requirements), you have exactly 14 days from today to respond before the Council proceeds with a vote to potentially levy a fine.
+
+To submit your written statement or formally request a council hearing, please use your secure response portal link below:
+https://{{ request.get_host }}/dockets/respond/{{ incident.owner_token }}/
+
+Sincerely,
+Strata Management</div>
+
+                        <form method="POST" action="{% url 'dockets:dispatch_section_135' incident.pk %}">
+                            {% csrf_token %}
+                            <div class="flex flex-row-reverse gap-3">
+                                <button type="submit" class="inline-flex justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition">Confirm & Dispatch Notice</button>
+                                <button type="button" @click="dispatchNoticeOpen = false" class="inline-flex justify-center rounded-md bg-white dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-900 dark:text-slate-300 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vote Modal -->
+    <div x-show="voteModalOpen" class="relative z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="display: none;">
+        <div x-show="voteModalOpen" x-transition.opacity class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div x-show="voteModalOpen" @click.away="voteModalOpen = false" x-transition class="relative transform overflow-hidden rounded-lg bg-white dark:bg-slate-900 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-slate-200 dark:border-slate-700">
+                    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/30">
+                                {% heroicon_outline "scale" class="h-5 w-5 text-indigo-600 dark:text-indigo-400" %}
+                            </div>
+                            <div>
+                                <h3 class="text-base font-bold leading-6 text-slate-900 dark:text-slate-100" id="modal-title">Formal Section 135 Adjudication Ballot</h3>
+                                <p class="text-xs text-slate-500">Plan {{ incident.strata.plan_number }} &bull; Unit {{ incident.unit_number }} &bull; Fine Limit: ${{ incident.bylaw.standard_fine }}</p>
+                            </div>
+                        </div>
+                        <button type="button" @click="voteModalOpen = false" class="text-slate-400 hover:text-slate-500">
+                            {% heroicon_outline "x-mark" class="h-6 w-6" %}
+                        </button>
+                    </div>
+                    
+                    <div class="p-6 bg-slate-50 dark:bg-slate-950/50 border-b border-slate-200 dark:border-slate-800">
+                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Evidence Review</h4>
+                        <div class="space-y-4">
+                            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4 text-sm text-slate-700 dark:text-slate-300">
+                                <strong>Complaint Allegation:</strong><br>
+                                {{ incident.description }}
+                            </div>
+                            
+                            {% if owner_response %}
+                            <div class="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 rounded-md p-4 text-sm text-slate-700 dark:text-slate-300">
+                                <strong>Owner's Formal Statement ({{ owner_response.get_event_type_display }}):</strong><br>
+                                {{ owner_response.description }}
+                            </div>
+                            {% else %}
+                            <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-md p-4 text-sm text-amber-800 dark:text-amber-200">
+                                <strong>Owner's Response:</strong><br>
+                                Owner did not submit an answer; 14-day statutory window lapsed.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="p-6" x-data="{ approveFine: null }">
+                        <form method="POST" action="{% url 'dockets:cast_council_vote' incident.pk %}">
+                            {% csrf_token %}
+                            
+                            <fieldset class="mb-6">
+                                <legend class="sr-only">Vote Options</legend>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <label class="relative flex cursor-pointer rounded-lg border bg-white dark:bg-slate-900 p-4 shadow-sm focus:outline-none transition" :class="approveFine === 'true' ? 'border-rose-500 ring-1 ring-rose-500 dark:border-rose-500' : 'border-slate-300 dark:border-slate-700'">
+                                        <input type="radio" name="approve_fine" value="true" class="sr-only" x-model="approveFine" required>
+                                        <span class="flex flex-1">
+                                            <span class="flex flex-col">
+                                                <span class="block text-sm font-bold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-2">
+                                                    {% heroicon_outline "banknotes" class="w-4 h-4 text-rose-500" %}
+                                                    Authorize Fine (${{ incident.bylaw.standard_fine }})
+                                                </span>
+                                                <span class="mt-1 flex items-center text-xs text-slate-500 dark:text-slate-400">I find that a bylaw contravention occurred and authorize levying the standard statutory fine.</span>
+                                            </span>
+                                        </span>
+                                    </label>
+
+                                    <label class="relative flex cursor-pointer rounded-lg border bg-white dark:bg-slate-900 p-4 shadow-sm focus:outline-none transition" :class="approveFine === 'false' ? 'border-emerald-500 ring-1 ring-emerald-500 dark:border-emerald-500' : 'border-slate-300 dark:border-slate-700'">
+                                        <input type="radio" name="approve_fine" value="false" class="sr-only" x-model="approveFine" required>
+                                        <span class="flex flex-1">
+                                            <span class="flex flex-col">
+                                                <span class="block text-sm font-bold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-2">
+                                                    {% heroicon_outline "shield-check" class="w-4 h-4 text-emerald-500" %}
+                                                    Dismiss / Warning
+                                                </span>
+                                                <span class="mt-1 flex items-center text-xs text-slate-500 dark:text-slate-400">I find the explanation satisfactory or evidence insufficient to levy a financial penalty.</span>
+                                            </span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </fieldset>
+
+                            <div class="mb-6">
+                                <label class="block text-sm font-bold text-slate-900 dark:text-slate-100 mb-1">Deliberative Notes <span class="text-slate-400 font-normal">(Optional)</span></label>
+                                <textarea name="notes" rows="3" class="block w-full rounded-md border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:ring-indigo-500" placeholder="Enter notes for official council minutes (e.g., 'Considered owner explanation, but vehicle photo shows clear obstruction')."></textarea>
+                            </div>
+
+                            <div class="flex flex-row-reverse gap-3">
+                                <button type="submit" class="inline-flex justify-center items-center rounded-md bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 px-4 py-2 text-sm font-bold text-white shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed" :disabled="!approveFine">
+                                    Submit Immutable Ballot
+                                </button>
+                                <button type="button" @click="voteModalOpen = false" class="inline-flex justify-center rounded-md bg-white dark:bg-slate-800 px-4 py-2 text-sm font-bold text-slate-900 dark:text-slate-300 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 {% endblock %}

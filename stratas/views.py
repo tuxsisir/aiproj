@@ -106,6 +106,7 @@ def onboarding_wizard(request):
 
     if request.method == "POST":
         persona = request.POST.get('persona')
+        strata_id = request.POST.get('strata_id')
         plan_number = request.POST.get('plan_number', '').strip().upper()
         name = request.POST.get('name', '').strip()
         unit_number = request.POST.get('unit_number', '').strip()
@@ -120,49 +121,65 @@ def onboarding_wizard(request):
             role = Membership.Role.STRATA_MANAGER
         request.user.save(update_fields=['phone_number', 'brokerage_name'])
 
-        # Validate BC Strata Plan regex
-        if not re.match(r'^(EPS|BCS|LMS|NWS|VIS|KAS|PRS)\s?\d{1,6}$', plan_number):
-            messages.error(request, "Invalid Strata Plan format. Must be EPS, BCS, etc. followed by numbers.")
-            return render(request, 'stratas/onboarding.html')
-            
-        plan_number = plan_number.replace(" ", "")
+        if strata_id:
+            # Joining an existing strata
+            strata = get_object_or_404(StrataPlan, id=strata_id)
+        else:
+            # Creating a new strata
+            # Validate BC Strata Plan regex
+            if not re.match(r'^(EPS|BCS|LMS|NWS|VIS|KAS|PRS)\s?\d{1,6}$', plan_number):
+                messages.error(request, "Invalid Strata Plan format. Must be EPS, BCS, etc. followed by numbers.")
+                return render(request, 'stratas/onboarding.html', {'existing_stratas': StrataPlan.objects.all().order_by('plan_number')})
+                
+            plan_number = plan_number.replace(" ", "")
 
-        # Check existing
-        strata, created = StrataPlan.objects.get_or_create(
-            plan_number=plan_number,
-            defaults={'name': name}
-        )
+            # Check existing explicitly
+            if StrataPlan.objects.filter(plan_number=plan_number).exists():
+                messages.error(request, f"Strata Plan {plan_number} already exists. Please select it from the dropdown instead.")
+                return render(request, 'stratas/onboarding.html', {'existing_stratas': StrataPlan.objects.all().order_by('plan_number')})
+                
+            strata = StrataPlan.objects.create(
+                plan_number=plan_number,
+                name=name
+            )
 
-        if not created:
-            # Prevent duplicate claim
-            return render(request, 'stratas/already_claimed.html', {'strata': strata})
-
-        # Create Membership
-        Membership.objects.create(
+        # Check if membership already exists to prevent IntegrityError
+        membership, membership_created = Membership.objects.get_or_create(
             user=request.user,
             strata=strata,
-            role=role,
-            unit_number=unit_number,
-            is_active=True
+            defaults={
+                'role': role,
+                'unit_number': unit_number,
+                'is_active': True
+            }
         )
+        
+        if not membership_created:
+            # Update role and unit if they somehow re-submit
+            membership.role = role
+            membership.unit_number = unit_number
+            membership.is_active = True
+            membership.save()
 
         request.session['active_strata_id'] = str(strata.id)
         request.strata = strata
         
-        # Seed Mock Incident
-        bylaw = Bylaw.objects.filter(strata=strata, code='3(4)').first()
-        Incident.objects.create(
-            strata=strata,
-            created_by=request.user,
-            incident_type=Incident.Type.BYLAW,
-            title="Sample Docket: Noise & Quiet Enjoyment Infraction",
-            unit_number="Sample Unit",
-            bylaw=bylaw,
-            description="This is a demo incident generated during onboarding. A resident complained about excessive noise.",
-            status=Incident.Status.PENDING_MANAGER
-        )
+        # Seed Mock Incident only if creating a new building or first incident (optional, but keep it simple)
+        if not Incident.objects.filter(strata=strata).exists():
+            bylaw = Bylaw.objects.filter(strata=strata, code='3(4)').first()
+            Incident.objects.create(
+                strata=strata,
+                created_by=request.user,
+                incident_type=Incident.Type.BYLAW,
+                title="Sample Docket: Noise & Quiet Enjoyment Infraction",
+                unit_number="Sample Unit",
+                bylaw=bylaw,
+                description="This is a demo incident generated during onboarding. A resident complained about excessive noise.",
+                status=Incident.Status.IN_REVIEW
+            )
 
         messages.success(request, f"Welcome to CivicDesk! Workspace for {strata.plan_number} is ready.")
         return redirect('dockets:incident_list')
 
-    return render(request, 'stratas/onboarding.html')
+    existing_stratas = StrataPlan.objects.all().order_by('plan_number')
+    return render(request, 'stratas/onboarding.html', {'existing_stratas': existing_stratas})

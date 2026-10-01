@@ -42,6 +42,9 @@ INSTALLED_APPS = [
     "django_cotton_ui",
     "heroicons",
     
+    # Mail
+    "anymail",
+    
     # Auth
     "allauth",
     "allauth.account",
@@ -130,6 +133,7 @@ LOGOUT_REDIRECT_URL = 'landing'
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*']
+ACCOUNT_SIGNUP_FORM_CLASS = 'core.forms.CustomSignupForm'
 
 # Social account configuration
 SOCIALACCOUNT_PROVIDERS = {
@@ -159,3 +163,15 @@ if DEBUG:
     INSTALLED_APPS += ["debug_toolbar"]
     MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
 
+
+# Email Configuration
+if DEBUG and not env("RESEND_API_KEY", default=""):
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
+
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="CivicDesk <noreply@civicdesk.app>")
+
+ANYMAIL = {
+    "RESEND_API_KEY": env("RESEND_API_KEY", default=""),
+}

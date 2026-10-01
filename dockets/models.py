@@ -2,7 +2,7 @@ import uuid
 from datetime import timedelta
 from django.db import models
 from django.utils import timezone
-from core.models import BaseModel
+from core.models import BaseModel, FieldTrackerMixin
 from stratas.models import StrataPlan, Membership
 from django.conf import settings
 
@@ -23,20 +23,20 @@ class Bylaw(BaseModel):
         return f"{self.code} - {self.title}"
 
 
-class Incident(BaseModel):
+class Incident(FieldTrackerMixin, BaseModel):
+    TRACKED_FIELDS = ['unit_number', 'strata_lot', 'bylaw_id', 'status', 'recipient_email']
+
     class Type(models.TextChoices):
         BYLAW = 'BYLAW', 'Bylaw Infraction'
         DEFICIENCY = 'DEFICIENCY', 'Common Property Deficiency'
 
     class Status(models.TextChoices):
-        LOGGED = 'LOGGED', 'Draft/Newly submitted'
-        PENDING_MANAGER = 'PENDING_MANAGER', 'Awaiting manager review'
-        NOTICE_ISSUED = 'NOTICE_ISSUED', 'Formal notice sent, statutory clock running'
-        RESPONSE_RECEIVED = 'RESPONSE_RECEIVED', 'Owner submitted written statement'
-        HEARING_REQUESTED = 'HEARING_REQUESTED', 'Owner requested in-person council hearing'
-        VOTING_OPEN = 'VOTING_OPEN', 'Ready for digital council ballot'
-        RESOLVED_FINED = 'RESOLVED_FINED', 'Fine authorized and posted'
-        RESOLVED_DISMISSED = 'RESOLVED_DISMISSED', 'Dismissed or warning issued'
+        IN_REVIEW = 'IN_REVIEW', 'Awaiting Manager Review'
+        NOTICE_ISSUED = 'NOTICE_ISSUED', 'Statutory Notice Issued'
+        RESPONSE_RECEIVED = 'RESPONSE_RECEIVED', 'Response Received'
+        VOTING_OPEN = 'VOTING_OPEN', 'Council Ballot Open'
+        RESOLVED_FINED = 'RESOLVED_FINED', 'Fine Authorized'
+        RESOLVED_DISMISSED = 'RESOLVED_DISMISSED', 'Closed / Dismissed'
 
     strata = models.ForeignKey(StrataPlan, on_delete=models.CASCADE, related_name="incidents")
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="logged_incidents")
@@ -44,12 +44,13 @@ class Incident(BaseModel):
     incident_type = models.CharField(max_length=20, choices=Type.choices, default=Type.BYLAW)
     title = models.CharField(max_length=255)
     unit_number = models.CharField(max_length=50, blank=True)
+    strata_lot = models.CharField(max_length=20, blank=True)
     bylaw = models.ForeignKey(Bylaw, on_delete=models.SET_NULL, null=True, blank=True, related_name="incidents")
     
     description = models.TextField()
     evidence_image = models.ImageField(upload_to="incidents/evidence/", blank=True, null=True)
     
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.LOGGED)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.IN_REVIEW)
     
     notice_issued_at = models.DateTimeField(null=True, blank=True)
     statutory_deadline = models.DateTimeField(null=True, blank=True)
@@ -66,12 +67,12 @@ class Incident(BaseModel):
 
     def calculate_and_set_deadline(self):
         """
-        Computes BC Section 61 deemed service (4 days) plus Section 135 response window (14 days), 
-        totaling 18 days from current timestamp.
+        Computes BC Section 61 deemed service plus Section 135 response window, 
+        totaling 14 days from current timestamp.
         """
         now = timezone.now()
         self.notice_issued_at = now
-        self.statutory_deadline = now + timedelta(days=18)
+        self.statutory_deadline = now + timedelta(days=14)
         self.status = self.Status.NOTICE_ISSUED
 
     @property
@@ -82,19 +83,34 @@ class Incident(BaseModel):
         return 0
 
 
-class IncidentResponse(models.Model):
-    class ResponseType(models.TextChoices):
-        WRITTEN = 'WRITTEN', 'Submit Written Explanation'
-        HEARING = 'HEARING', 'Request In-Person Hearing'
+class IncidentEvent(BaseModel):
+    class EventType(models.TextChoices):
+        RECURRENCE = 'RECURRENCE', 'Subsequent Occurrence'
+        EVIDENCE = 'EVIDENCE', 'Additional Evidence'
+        NOTE = 'NOTE', 'Manager / Council Note'
+        UNIT_CORRECTED = 'UNIT_CORRECTED', 'Unit Corrected'
+        STATUTORY_NOTICE = 'STATUTORY_NOTICE', 'S.135 Notice Dispatched'
+        OWNER_STATEMENT = 'OWNER_STATEMENT', 'Owner Written Response'
+        HEARING_REQUESTED = 'HEARING_REQUESTED', 'Council Hearing Requested'
+        FINE_DISPATCHED = 'FINE_DISPATCHED', 'Official Fine Dispatched'
 
-    incident = models.OneToOneField(Incident, on_delete=models.CASCADE, related_name="response")
-    response_type = models.CharField(max_length=20, choices=ResponseType.choices)
-    statement = models.TextField(blank=True)
-    counter_evidence = models.FileField(upload_to="incidents/responses/", blank=True, null=True)
-    submitted_at = models.DateTimeField(auto_now_add=True)
+    incident = models.ForeignKey(Incident, on_delete=models.CASCADE, related_name="events")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    event_type = models.CharField(max_length=30, choices=EventType.choices)
+    description = models.TextField()
+    evidence_file = models.FileField(upload_to="incidents/evidence_events/", null=True, blank=True)
+    occurred_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['occurred_at']
 
     def __str__(self):
-        return f"Response for {self.incident.title}"
+        return f"{self.get_event_type_display()} on {self.incident.title}"
+
+
+
+
+
 
 
 class CouncilVote(models.Model):

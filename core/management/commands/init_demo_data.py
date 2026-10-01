@@ -95,7 +95,7 @@ class Command(BaseCommand):
         create_members(s2, Membership.Role.CARETAKER, 1)
 
         # 4. Generate Mock Incidents for Kings Landing 2
-        from dockets.models import Incident, IncidentResponse, Bylaw
+        from dockets.models import Incident, IncidentEvent, Bylaw
         from django.utils import timezone
         import datetime
         
@@ -139,14 +139,14 @@ class Command(BaseCommand):
             
             # Wind back the deadline so it looks realistic
             i2.notice_issued_at = timezone.now() - datetime.timedelta(days=10)
-            i2.statutory_deadline = i2.notice_issued_at + datetime.timedelta(days=18)
+            i2.statutory_deadline = i2.notice_issued_at + datetime.timedelta(days=14)
             i2.status = Incident.Status.VOTING_OPEN
             i2.save()
             
-            IncidentResponse.objects.create(
+            IncidentEvent.objects.create(
                 incident=i2,
-                response_type=IncidentResponse.ResponseType.WRITTEN,
-                statement="I apologize for the noise. My dog was anxious because I was away at the hospital. I have now hired a dog sitter."
+                event_type=IncidentEvent.EventType.OWNER_STATEMENT,
+                description="I apologize for the noise. My dog was anxious because I was away at the hospital. I have now hired a dog sitter."
             )
             self.stdout.write(self.style.SUCCESS("  -> 2 Mock incidents created (1 Notice Issued, 1 Ready for Vote)."))
 

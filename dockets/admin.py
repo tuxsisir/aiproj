@@ -1,8 +1,8 @@
 from django.contrib import admin
-from .models import Bylaw, Incident, IncidentResponse, CouncilVote
+from .models import Bylaw, Incident, CouncilVote, IncidentEvent
 
-class IncidentResponseInline(admin.StackedInline):
-    model = IncidentResponse
+class IncidentEventInline(admin.StackedInline):
+    model = IncidentEvent
     extra = 0
 
 class CouncilVoteInline(admin.TabularInline):
@@ -20,12 +20,12 @@ class IncidentAdmin(admin.ModelAdmin):
     list_display = ('title', 'strata', 'incident_type', 'status', 'created_at')
     list_filter = ('status', 'incident_type', 'strata')
     search_fields = ('title', 'unit_number', 'description')
-    inlines = [IncidentResponseInline, CouncilVoteInline]
+    inlines = [IncidentEventInline, CouncilVoteInline]
 
-@admin.register(IncidentResponse)
-class IncidentResponseAdmin(admin.ModelAdmin):
-    list_display = ('incident', 'response_type', 'submitted_at')
-    list_filter = ('response_type',)
+@admin.register(IncidentEvent)
+class IncidentEventAdmin(admin.ModelAdmin):
+    list_display = ('incident', 'event_type', 'created_at')
+    list_filter = ('event_type',)
 
 @admin.register(CouncilVote)
 class CouncilVoteAdmin(admin.ModelAdmin):

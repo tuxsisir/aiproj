@@ -1,0 +1,141 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Council Voting Center{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-2xl font-extrabold text-slate-900 dark:text-slate-100">Council Voting Center</h1>
+        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Review open dockets and cast your secure ballot. Requires {{ dockets.0.majority_needed|default:"majority" }} votes to pass ({{ total_council }} active council members).</p>
+    </div>
+
+    {% if not dockets %}
+    <div class="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-12 text-center bg-white dark:bg-slate-900/50">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
+            {% heroicon_outline "check-badge" class="h-6 w-6 text-slate-500" %}
+        </div>
+        <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">No active votes</h3>
+        <p class="mt-1 text-sm text-slate-500">All dockets have been resolved or are awaiting manager review.</p>
+    </div>
+    {% else %}
+    
+    <div class="space-y-6">
+        {% for docket in dockets %}
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm flex flex-col md:flex-row">
+            
+            <!-- Info Section -->
+            <div class="p-6 md:w-2/3 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-500/10 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-400 ring-1 ring-inset ring-blue-700/10">
+                        {{ docket.incident.get_incident_type_display }}
+                    </span>
+                    <span class="text-xs font-semibold text-slate-500">Docket #{{ docket.incident.id|stringformat:"s"|slice:":8"|upper }}</span>
+                </div>
+                
+                <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1"><a href="{% url 'dockets:incident_detail' docket.incident.pk %}" class="hover:underline">{{ docket.incident.title }}</a></h3>
+                <p class="text-sm text-slate-500 mb-4">{{ docket.incident.unit_number }} &bull; {{ docket.incident.bylaw.code }}</p>
+                
+                <p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-6">{{ docket.incident.description }}</p>
+
+                <!-- Progress Bar UI -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between text-xs font-medium">
+                        <span class="text-slate-500">Current Votes ({{ docket.total_votes }} / {{ total_council }})</span>
+                        <span class="font-bold uppercase tracking-wider px-2 py-0.5 rounded
+                            {% if docket.directive_color == 'emerald' %}text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30{% endif %}
+                            {% if docket.directive_color == 'rose' %}text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30{% endif %}
+                            {% if docket.directive_color == 'amber' %}text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30{% endif %}
+                            {% if docket.directive_color == 'slate' %}text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800{% endif %}
+                        ">
+                            {{ docket.directive }}
+                        </span>
+                    </div>
+                    
+                    <div class="flex h-3 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                        <div class="bg-emerald-500 transition-all duration-500" style="width: {{ docket.approve_percent }}%" title="Approve Fine: {{ docket.approve_count }}"></div>
+                        <div class="bg-rose-500 transition-all duration-500" style="width: {{ docket.reject_percent }}%" title="Dismiss/Warn: {{ docket.reject_count }}"></div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-xs text-slate-500">
+                        <span>{{ docket.approve_count }} Approve</span>
+                        <span>{{ docket.reject_count }} Dismiss</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Section -->
+            <div class="p-6 md:w-1/3 bg-slate-50 dark:bg-slate-800/50 flex flex-col justify-center">
+                {% if request.membership.role == 'MANAGER' %}
+                    <div class="text-center">
+                        <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900 mb-3">
+                            {% heroicon_outline "clipboard-document-check" class="h-5 w-5 text-blue-600 dark:text-blue-400" %}
+                        </div>
+                        <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">Manager Directive</h4>
+                        <p class="text-xs text-slate-500 mb-4">You cannot vote, but you must enact the council's decision.</p>
+                        
+                        <div class="space-y-2">
+                            <form method="POST" action="{% url 'dockets:incident_detail' docket.incident.pk %}">
+                                {% csrf_token %}
+                                <!-- This relies on the detail view handling manager resolution... but for now just link to detail -->
+                                <c-ui.button href="{% url 'dockets:incident_detail' docket.incident.pk %}" class="w-full">Open Docket</c-ui.button>
+                            </form>
+                        </div>
+                    </div>
+                {% else %}
+                    {% if docket.user_voted %}
+                        <div class="text-center">
+                            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 mb-3">
+                                {% heroicon_outline "check" class="h-6 w-6 text-emerald-600 dark:text-emerald-400" %}
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-900 dark:text-slate-100 mb-1">Vote Recorded</h4>
+                            <p class="text-sm text-slate-500">You voted to <strong class="{% if docket.user_vote_value %}text-emerald-600{% else %}text-rose-600{% endif %}">{% if docket.user_vote_value %}Approve Fine{% else %}Dismiss{% endif %}</strong>.</p>
+                            
+                            <form method="POST" action="{% url 'dockets:cast_council_vote' docket.incident.pk %}" class="mt-4 border-t border-slate-200 dark:border-slate-700 pt-4">
+                                {% csrf_token %}
+                                <p class="text-xs text-slate-400 mb-2">Change your vote?</p>
+                                <div class="flex gap-2">
+                                    <button type="submit" name="approve_fine" value="true" class="flex-1 rounded bg-slate-200 dark:bg-slate-700 px-2 py-1.5 text-xs font-semibold hover:bg-emerald-500 hover:text-white transition">Approve</button>
+                                    <button type="submit" name="approve_fine" value="false" class="flex-1 rounded bg-slate-200 dark:bg-slate-700 px-2 py-1.5 text-xs font-semibold hover:bg-rose-500 hover:text-white transition">Dismiss</button>
+                                </div>
+                            </form>
+                        </div>
+                    {% else %}
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-900 dark:text-slate-100 mb-4 text-center">Cast Your Vote</h4>
+                            <form method="POST" action="{% url 'dockets:cast_council_vote' docket.incident.pk %}" class="space-y-3">
+                                {% csrf_token %}
+                                
+                                <button type="submit" name="approve_fine" value="true" class="w-full relative flex items-center justify-between rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 p-3 text-left shadow-sm hover:bg-emerald-100 dark:hover:bg-emerald-900/40 focus:outline-none transition group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-200 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300 group-hover:bg-emerald-600 group-hover:text-white transition">
+                                            {% heroicon_outline "currency-dollar" class="h-4 w-4" %}
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-bold text-emerald-900 dark:text-emerald-100">Approve Fine</p>
+                                            <p class="text-xs text-emerald-700 dark:text-emerald-400">Levy standard fine</p>
+                                        </div>
+                                    </div>
+                                </button>
+                                
+                                <button type="submit" name="approve_fine" value="false" class="w-full relative flex items-center justify-between rounded-lg border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/20 p-3 text-left shadow-sm hover:bg-rose-100 dark:hover:bg-rose-900/40 focus:outline-none transition group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-rose-200 dark:bg-rose-800 text-rose-700 dark:text-rose-300 group-hover:bg-rose-600 group-hover:text-white transition">
+                                            {% heroicon_outline "hand-raised" class="h-4 w-4" %}
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-bold text-rose-900 dark:text-rose-100">Dismiss / Warn</p>
+                                            <p class="text-xs text-rose-700 dark:text-rose-400">No fine levied</p>
+                                        </div>
+                                    </div>
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

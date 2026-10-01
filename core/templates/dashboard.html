@@ -137,7 +137,7 @@
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold border
                       {% if 'RESOLVED' in incident.status %}
                         bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800
-                      {% elif incident.status == 'NOTICE_ISSUED' or incident.status == 'PENDING_MANAGER' %}
+                      {% elif incident.status == 'NOTICE_ISSUED' %}
                         bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800
                         animate-pulse
                       {% else %}
@@ -145,7 +145,7 @@
                       {% endif %}">
                       {% if 'RESOLVED' in incident.status %}
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      {% elif incident.status == 'NOTICE_ISSUED' or incident.status == 'PENDING_MANAGER' %}
+                      {% elif incident.status == 'NOTICE_ISSUED' %}
                         <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                       {% else %}
                         <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>

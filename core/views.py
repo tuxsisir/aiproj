@@ -34,7 +34,7 @@ def dashboard(request):
     # KPIs
     active_incidents = incidents.exclude(status__in=[Incident.Status.RESOLVED_FINED, Incident.Status.RESOLVED_DISMISSED]).count()
     pending_votes = incidents.filter(status=Incident.Status.VOTING_OPEN).count()
-    deadlines_active = incidents.filter(status__in=[Incident.Status.NOTICE_ISSUED, Incident.Status.HEARING_REQUESTED]).count()
+    deadlines_active = incidents.filter(status__in=[Incident.Status.NOTICE_ISSUED, Incident.Status.RESPONSE_RECEIVED]).count()
     
     now = timezone.now()
     start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)

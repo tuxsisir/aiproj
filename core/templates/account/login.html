@@ -16,9 +16,14 @@
     <div class="space-y-4">
         {% for field in form %}
             {% if field.name == 'remember' %}
-                <div class="flex items-center gap-2 mt-2">
-                    <input type="checkbox" name="{{ field.html_name }}" id="{{ field.id_for_label }}" {% if field.value %}checked{% endif %} class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600">
-                    <label for="{{ field.id_for_label }}" class="text-sm text-slate-700">{{ field.label }}</label>
+                <div class="flex items-center justify-between mt-2">
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="{{ field.html_name }}" id="{{ field.id_for_label }}" {% if field.value %}checked{% endif %} class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600">
+                        <label for="{{ field.id_for_label }}" class="text-sm text-slate-700">{{ field.label }}</label>
+                    </div>
+                    <div class="text-sm leading-6">
+                        <a href="{% url 'account_reset_password' %}" class="font-semibold text-blue-600 hover:text-blue-500">Forgot password?</a>
+                    </div>
                 </div>
             {% else %}
                 <div {% if field.field.widget.input_type == 'password' %}x-data="{ show: false }"{% endif %}>

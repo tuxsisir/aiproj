@@ -2,7 +2,7 @@
 {% block title %}CivicDesk Onboarding{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-slate-50 flex flex-col py-12 px-4 sm:px-6 lg:px-8" x-data="{ persona: 'COUNCIL' }">
+<div class="min-h-screen bg-slate-50 flex flex-col py-12 px-4 sm:px-6 lg:px-8" x-data="{ persona: 'COUNCIL', mode: 'select' }">
     <!-- Header -->
     <div class="sm:mx-auto sm:w-full sm:max-w-3xl flex justify-between items-center mb-8">
         <div class="flex items-center gap-3">
@@ -97,21 +97,47 @@
                 <div class="border-t border-slate-200 pt-8 pb-4">
                     <h3 class="text-lg font-bold text-slate-900 mb-6">Building Details</h3>
                     
-                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6 mb-6">
-                        <!-- Common Fields -->
-                        <div class="sm:col-span-3">
-                            <label for="plan_number" class="block text-sm font-medium text-slate-700">Strata Plan Number</label>
+                    <!-- Select Existing Strata -->
+                    <div x-show="mode === 'select'">
+                        <div class="mb-4 sm:col-span-6">
+                            <label for="strata_id" class="block text-sm font-medium text-slate-700">Select your Strata Plan</label>
                             <div class="mt-1">
-                                <input type="text" name="plan_number" id="plan_number" required placeholder="e.g. EPS 8291" class="block w-full rounded-md border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm uppercase">
+                                <select id="strata_id" name="strata_id" :required="mode === 'select'" class="block w-full rounded-md border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm">
+                                    <option value="" disabled selected>Select an existing building...</option>
+                                    {% for s in existing_stratas %}
+                                        <option value="{{ s.id }}">{{ s.plan_number }} - {{ s.name }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </div>
-                        
-                        <div class="sm:col-span-3">
-                            <label for="name" class="block text-sm font-medium text-slate-700">Complex / Building Name</label>
-                            <div class="mt-1">
-                                <input type="text" name="name" id="name" required placeholder="e.g. Kingsview Landing" class="block w-full rounded-md border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm">
+                        <p class="text-sm text-slate-500 mb-6 mt-2">
+                            Didn't find your building? 
+                            <button type="button" @click="mode = 'create'; document.getElementById('strata_id').value='';" class="text-blue-600 hover:text-blue-500 font-semibold focus:outline-none">Create a new one</button>
+                        </p>
+                    </div>
+
+                    <!-- Create New Strata -->
+                    <div x-show="mode === 'create'" style="display: none;">
+                        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6 mb-4">
+                            <!-- Common Fields -->
+                            <div class="sm:col-span-3">
+                                <label for="plan_number" class="block text-sm font-medium text-slate-700">Strata Plan Number</label>
+                                <div class="mt-1">
+                                    <input type="text" name="plan_number" id="plan_number" :required="mode === 'create'" placeholder="e.g. EPS 8291" class="block w-full rounded-md border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm uppercase">
+                                </div>
+                            </div>
+                            
+                            <div class="sm:col-span-3">
+                                <label for="name" class="block text-sm font-medium text-slate-700">Complex / Building Name</label>
+                                <div class="mt-1">
+                                    <input type="text" name="name" id="name" :required="mode === 'create'" placeholder="e.g. Kingsview Landing" class="block w-full rounded-md border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm">
+                                </div>
                             </div>
                         </div>
+                        <p class="text-sm text-slate-500 mb-6">
+                            Want to join an existing building instead? 
+                            <button type="button" @click="mode = 'select'; document.getElementById('plan_number').value=''; document.getElementById('name').value='';" class="text-blue-600 hover:text-blue-500 font-semibold focus:outline-none">Select from list</button>
+                        </p>
                     </div>
 
                     <!-- Conditional Council Fields -->

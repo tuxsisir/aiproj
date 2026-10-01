@@ -1,0 +1,195 @@
+{% extends 'base_public.html' %}
+{% load static %}
+
+{% block title %}Strata Notice Portal{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">CivicDesk</h1>
+            <p class="text-sm font-medium text-slate-500 mt-2 uppercase tracking-widest">Formal Statutory Notice Portal</p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden">
+            
+            {% if already_submitted %}
+            <!-- State B: SUBMITTED (Read-Only Receipt) -->
+            <div class="bg-blue-50 border-b border-blue-100 p-6 text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
+                    {% heroicon_outline "check-circle" class="h-8 w-8 text-blue-600" %}
+                </div>
+                <h2 class="text-xl font-bold text-slate-900">Response Delivered to Council</h2>
+                <p class="text-sm text-slate-600 mt-1">on {{ submitted_event.created_at|date:'M d, Y @ H:i' }}</p>
+            </div>
+            
+            <div class="p-6 space-y-6">
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Submitted Action</h3>
+                    <div class="bg-slate-50 border border-slate-200 rounded-md p-4 text-sm font-medium text-slate-900">
+                        {{ submitted_event.get_event_type_display }}
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Written Statement / Notes</h3>
+                    <div class="bg-slate-50 border border-slate-200 rounded-md p-4 text-sm text-slate-700 whitespace-pre-wrap">{{ submitted_event.description }}</div>
+                </div>
+                
+                {% if submitted_event.evidence_file %}
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Attached File</h3>
+                    <div class="flex items-center gap-2 text-sm text-blue-600">
+                        {% heroicon_outline "paper-clip" class="h-4 w-4" %}
+                        <a href="{{ submitted_event.evidence_file.url }}" target="_blank" class="hover:underline">View Document</a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            {% elif is_expired %}
+            <!-- State C: STATUTORY DEADLINE LAPSED -->
+            <div class="bg-amber-50 border-b border-amber-200 p-6 text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 mb-4">
+                    {% heroicon_outline "clock" class="h-8 w-8 text-amber-600" %}
+                </div>
+                <h2 class="text-xl font-bold text-amber-900">Statutory Deadline Lapsed</h2>
+                <p class="text-sm text-amber-700 mt-2">
+                    The 14-day statutory response period under Section 135 expired on <strong>{{ incident.statutory_deadline|date:'M d, Y' }}</strong>. Submissions are now closed.
+                </p>
+            </div>
+            
+            <div class="p-6">
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center">
+                    <p class="text-sm text-slate-600">The Council is now reviewing this file and will notify you if a decision is made.</p>
+                </div>
+            </div>
+
+            {% else %}
+            <!-- State A: ACTIVE -->
+            <div class="p-6 border-b border-slate-100">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">Notice of Complaint</h2>
+                        <p class="text-sm text-slate-500 mt-1">Strata Plan {{ incident.strata.plan_number }} &bull; Unit {{ incident.unit_number }}</p>
+                    </div>
+                    
+                    <div class="text-right" x-data="{
+                        deadline: new Date('{{ incident.statutory_deadline|date:'c' }}').getTime(),
+                        timeLeft: '',
+                        updateClock() {
+                            const now = new Date().getTime();
+                            const diff = this.deadline - now;
+                            if (diff <= 0) {
+                                this.timeLeft = '00:00:00';
+                                return;
+                            }
+                            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                            if (days > 0) {
+                                this.timeLeft = `${days} days remaining to submit response`;
+                            } else {
+                                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                                this.timeLeft = `${hours} hours remaining to submit response`;
+                            }
+                        }
+                    }" x-init="updateClock(); setInterval(() => updateClock(), 1000 * 60);">
+                        <span class="inline-flex items-center rounded-md bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 border border-amber-200" x-text="timeLeft">
+                            {{ incident.days_remaining }} days remaining to submit response
+                        </span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 rounded-lg p-5 border border-slate-200 mb-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <div class="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Alleged Bylaw</div>
+                            <div class="text-sm font-semibold text-slate-900">{{ incident.bylaw.code }} ({{ incident.bylaw.title }})</div>
+                        </div>
+                        <div>
+                            <div class="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Date of Intake</div>
+                            <div class="text-sm font-semibold text-slate-900">{{ incident.created_at|date:"M j, Y" }}</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Factual Description</div>
+                        <div class="text-sm text-slate-700 whitespace-pre-wrap">{{ incident.description }}</div>
+                    </div>
+                    {% if incident.evidence_file %}
+                    <div class="mt-4 pt-4 border-t border-slate-200">
+                        <div class="flex items-center gap-2 text-sm text-blue-600 font-medium">
+                            {% heroicon_outline "paper-clip" class="h-4 w-4" %}
+                            <a href="{{ incident.evidence_file.url }}" target="_blank" class="hover:underline">View Evidence Photo/File</a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="p-6 bg-slate-50" x-data="{ responseType: 'WRITTEN' }">
+                <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    <fieldset>
+                        <legend class="text-sm font-bold text-slate-900 mb-4">How would you like to respond?</legend>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none" :class="responseType === 'WRITTEN' ? 'border-blue-500 ring-1 ring-blue-500' : 'border-slate-300'">
+                                <input type="radio" name="response_type" value="WRITTEN" class="sr-only" x-model="responseType">
+                                <span class="flex flex-1">
+                                    <span class="flex flex-col">
+                                        <span class="block text-sm font-medium text-slate-900">Submit Written Statement</span>
+                                        <span class="mt-1 flex items-center text-xs text-slate-500">Provide an explanation directly to the council.</span>
+                                    </span>
+                                </span>
+                                <span x-show="responseType === 'WRITTEN'">{% heroicon_outline "check-circle" class="h-5 w-5 text-blue-600" %}</span>
+                            </label>
+
+                            <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none" :class="responseType === 'HEARING' ? 'border-blue-500 ring-1 ring-blue-500' : 'border-slate-300'">
+                                <input type="radio" name="response_type" value="HEARING" class="sr-only" x-model="responseType">
+                                <span class="flex flex-1">
+                                    <span class="flex flex-col">
+                                        <span class="block text-sm font-medium text-slate-900">Request Council Hearing</span>
+                                        <span class="mt-1 flex items-center text-xs text-slate-500">Meet with the council in person.</span>
+                                    </span>
+                                </span>
+                                <span x-show="responseType === 'HEARING'" style="display: none;">{% heroicon_outline "check-circle" class="h-5 w-5 text-blue-600" %}</span>
+                            </label>
+                        </div>
+                    </fieldset>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-900 mb-1" x-text="responseType === 'WRITTEN' ? 'Your Statement' : 'Notes for the Council (Optional)'">Your Statement</label>
+                        <textarea name="statement" rows="4" :required="responseType === 'WRITTEN'" class="block w-full rounded-md border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:ring-blue-500 shadow-sm" placeholder="Provide any relevant facts or explanations..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-900 mb-1">Attach Counter-Evidence <span class="text-slate-400 font-normal">(Optional)</span></label>
+                        <input type="file" name="counter_evidence" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200">
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-md p-4 flex gap-3">
+                        {% heroicon_outline "information-circle" class="h-5 w-5 text-blue-600 shrink-0 mt-0.5" %}
+                        <p class="text-xs text-blue-800 leading-relaxed">
+                            <strong>Disclaimer:</strong> Your statement will be appended directly to the official strata compliance ledger and reviewed by Council prior to any adjudication. Under Section 135 of the British Columbia Strata Property Act, you have the right to provide this written explanation or request a hearing before any decision or fine is considered.
+                        </p>
+                    </div>
+
+                    <div class="pt-2">
+                        <button type="submit" class="w-full flex justify-center items-center rounded-md bg-slate-900 hover:bg-slate-800 px-4 py-3 text-sm font-bold text-white shadow-sm transition">
+                            Submit Formal Response
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+            
+        </div>
+        
+        <!-- Footer -->
+        <div class="mt-8 text-center text-xs text-slate-500">
+            &copy; {% now "Y" %} CivicDesk. Authorized Section 135 Processing Portal.
+        </div>
+    </div>
+</div>
+{% endblock %}

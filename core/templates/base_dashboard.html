@@ -50,6 +50,9 @@
         <!-- Sidebar Navigation -->
         <nav class="flex-1 overflow-y-auto p-4 space-y-8">
             <div>
+                <c-sidebar.user_profile />
+            </div>
+            <div>
                 <div class="px-3 mb-3 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Governance & Operations</div>
                 <div class="space-y-1">
                     <c-sidebar.nav_item href="{% url 'dashboard' %}" icon="layout-dashboard" label="Dashboard" />
@@ -57,7 +60,13 @@
                         href="{% url 'dockets:incident_list' %}" 
                         icon="shield-alert" 
                         label="Dockets" 
-                        active="{% if 'dockets' in request.resolver_match.url_name and 'bylaw' not in request.resolver_match.url_name %}true{% else %}false{% endif %}"
+                        active="{% if 'incident' in request.resolver_match.url_name %}true{% else %}false{% endif %}"
+                    />
+                    <c-sidebar.nav_item 
+                        href="{% url 'dockets:voting_center' %}" 
+                        icon="check-badge" 
+                        label="Council Voting" 
+                        active="{% if request.resolver_match.url_name == 'voting_center' %}true{% else %}false{% endif %}"
                     />
                     <c-sidebar.nav_item 
                         href="{% url 'dockets:bylaw_list' %}" 
@@ -84,9 +93,6 @@
                 </div>
             </div>
         </nav>
-
-        <!-- Sidebar Footer (User) -->
-        <c-sidebar.user_footer />
     </aside>
 
     <!-- Main Content Area -->

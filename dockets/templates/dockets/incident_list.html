@@ -11,7 +11,7 @@
       <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage infractions, deficiencies, and statutory notices for {{ active_strata.name }}.</p>
     </div>
     <div>
-      {% if request.membership and request.membership.role in 'COUNCIL_MEMBER,PRESIDENT' %}
+      {% if request.membership and request.membership.role in 'COUNCIL,PRESIDENT,MANAGER' %}
         <a href="{% url 'dockets:incident_create' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-sm font-semibold rounded-md shadow hover:bg-slate-800 dark:hover:bg-slate-200 transition">
           {% heroicon_outline "plus" class="w-4 h-4 shrink-0" %}
           Log New Docket
@@ -95,7 +95,7 @@
             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border
               {% if 'RESOLVED' in incident.status %}
                 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800
-              {% elif incident.status == 'NOTICE_ISSUED' or incident.status == 'PENDING_MANAGER' %}
+              {% elif incident.status == 'NOTICE_ISSUED' %}
                 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800
               {% else %}
                 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800
