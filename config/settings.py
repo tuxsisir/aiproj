@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "payments",
     "stratas",
     "dockets",
+    "documents",
     
     # UI
     "django_cotton",
@@ -157,6 +158,9 @@ SOCIALACCOUNT_PROVIDERS = {
 STRIPE_PUBLIC_KEY = env("STRIPE_PUBLIC_KEY", default="")
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
 STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
+
+# Claude (document summaries and Q&A). Features degrade gracefully when unset.
+ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
 
 # Debug Toolbar
 if DEBUG:

@@ -19,3 +19,4 @@ ipython
 django-debug-toolbar==8.0.0
 django-anymail[resend]==15.2
 weasyprint==70.0
+anthropic==2.3.0

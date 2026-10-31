@@ -27,7 +27,7 @@ Features they advertise (reviewed 2026-10-31):
 | Area | ManageStrata | CivicDesk today | Plan |
 |---|---|---|---|
 | Statutory deadline calendar (BC/AB/ON) | ✅ | s.135 deadline only | Phase 4 (BC only) |
-| Document library + AI Q&A over bylaws/minutes | ✅ | ❌ | Library Phase 4, AI later |
+| Document library + AI Q&A over bylaws/minutes | ✅ | ✅ Summaries by topic + Q&A with page citations | Phase 0.5 (built) |
 | Meetings: notice, quorum, e-voting, minutes | ✅ | Council e-vote on bylaw cases only | Phase 2 (decisions) → Phase 5 (meetings) |
 | Minutes approval workflow | ✅ | ❌ | Phase 5 |
 | Finance: operating vs CRF, per-lot ledger, payments | ✅ | ❌ | Phase 3 (council-side first) |
@@ -58,10 +58,17 @@ approvals, finances, enforcement) for BC, where most of the email pain is.
 ### Phase 0 — Foundation _(in progress)_
 - [x] Local environment running (Python 3.13 `.venv`)
 - [x] Membership approval by platform admin; council positions incl. Treasurer; tests
-- [ ] Fix audit log silently dropping events
-- [ ] Lock down `log_incident_event` (fake owner responses)
+- [x] Fix audit log silently dropping events
+- [x] Lock down `log_incident_event` (fake owner responses)
 - [ ] Workflow fixes: null bylaw crash, re-dispatch guards, duplicate fine dispatch, email-before-save ordering
 - [ ] Hide Billing from nav (payments parked)
+
+### Phase 0.5 — Document library (the "aha") _(built 2026-10-31)_
+- [x] Upload building PDFs; AI summary by topic (Parking, Pets, Rentals…) with page links
+- [x] "Ask your documents" with answers citing document + page; questions saved as history
+- [ ] Try on our real bylaws once `ANTHROPIC_API_KEY` is added; tune the prompts
+- [ ] Later: pick relevant documents first when a building has too many to send at once (600-page request limit)
+- [ ] Later: summaries/answers on the dashboards; bylaw codes in Dockets linked to the bylaws PDF
 
 ### Phase 1 — Role dashboards
 - [ ] Manager: per-building "needs action" list across portfolio (approvals, deadlines, cases)

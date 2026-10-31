@@ -1,0 +1,5 @@
+{% for page in point.pages %}<a
+    href="{% url 'documents:file' document.pk %}#page={{ page }}"
+    target="_blank"
+    class="ml-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+  >p.{{ page }}</a>{% endfor %}

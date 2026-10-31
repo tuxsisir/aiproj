@@ -30,12 +30,18 @@ Planned production domain: `usecivicdesk.com`.
 - `dockets` — `Bylaw` (per strata; defaults seeded by `post_save` signal in `dockets/signals.py`),
   `Incident` (status machine + `manager_token` / `owner_token` for zero-login portals), `IncidentEvent`
   (timeline), `CouncilVote`. All workflow logic lives in `dockets/views.py` (function views).
+- `documents` — building document library: `Document` (PDF, category, structured AI `summary` JSON,
+  `summary_status`, `claude_file_id`) and `DocumentQuestion` (saved Q&A with page citations). All Claude calls
+  live in `documents/ai.py` (model `claude-opus-5-5`, Files API, citations, prompt caching, server-side fallback);
+  `documents/services.py` orchestrates (summaries run in a daemon thread after commit). PDFs are served only via
+  the permission-checked `documents:file` view. Needs `ANTHROPIC_API_KEY`; without it the UI says AI isn't set up.
 - `payments` — Stripe checkout, customer portal, webhook at `/payments/webhooks/stripe/`.
 
 ## Architecture conventions (see `docs/PLAN.md`)
 - Function-based views only, kept thin; business rules + side effects in each app's `services.py`.
 - Validate input with Django forms; never trust POSTed choice values.
 - Common reads as QuerySet methods: `Membership.objects.active().council()`, `.pending()`, `.managers()`.
+- `stratas.decorators.membership_required` for views that need an active building membership.
 - Permission checks via `membership.is_council` / `membership.is_manager`; display via `membership.title`.
 - Data conversions go in their own migration (Postgres "pending trigger events" error otherwise).
 - Owners/tenants have no accounts; they only use token links.
@@ -53,10 +59,12 @@ Planned production domain: `usecivicdesk.com`.
 → manager `dispatch_fine_notice` + `generate_fine_pdf`. `RESPONSE_RECEIVED` exists but is unused.
 
 ## Gotchas
-- `record_audit_log` returns `None` (writes nothing) when the instance is not new and has no dirty fields —
-  this includes right after `objects.create()`, so create / vote / fine-dispatch logs are silently dropped.
+- `record_audit_log`: pass an explicit `AuditLog.Action` for events (CREATE after `objects.create()`, VOTE_CAST…);
+  without one it only logs inferred field UPDATEs. Audit logs are viewable read-only in admin.
+- Manual timeline entries go through `dockets.forms.IncidentEventForm` (NOTE / RECURRENCE / EVIDENCE only).
 - `incident.bylaw` is nullable; notice/fine emails dereference it.
 - `DEFAULT_FROM_EMAIL` default is `civicdesk.app`, not the real domain.
+- Documents tests mock `documents.ai`; never call the real API from tests.
 - Root-level `test_*.py` scripts are NOT tests; they write to the real DB on import. Always run tests with
   app labels (below) so the runner never discovers them.
 
@@ -66,7 +74,7 @@ Planned production domain: `usecivicdesk.com`.
   (System default Python is 3.15, which Django 5.2 doesn't support.)
 - Local DB is Postgres `stratacorp` (from `.env`), already migrated with demo data.
 - `python manage.py runserver`, `python manage.py migrate`, `python manage.py init_demo_data`
-- Tests: `.venv/bin/python manage.py test core stratas dockets payments` (factories in `core/testing.py`).
+- Tests: `.venv/bin/python manage.py test core stratas dockets documents payments` (factories in `core/testing.py`).
 - Quick throwaway DB: `DATABASE_URL="sqlite://:memory:" python manage.py shell -c "..."` (run `migrate` first inside).
 
 ## Style

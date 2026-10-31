@@ -68,6 +68,12 @@
                         label="Council Voting" 
                         active="{% if request.resolver_match.url_name == 'voting_center' %}true{% else %}false{% endif %}"
                     />
+                    <c-sidebar.nav_item
+                        href="{% url 'documents:library' %}"
+                        icon="folder-archive"
+                        label="Documents"
+                        active="{% if request.resolver_match.app_name == 'documents' %}true{% else %}false{% endif %}"
+                    />
                     <c-sidebar.nav_item 
                         href="{% url 'dockets:bylaw_list' %}" 
                         icon="book-open" 

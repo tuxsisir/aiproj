@@ -1,0 +1,123 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Documents - {{ active_strata.plan_number }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Building Documents</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Bylaws, rules and records for {{ active_strata.name }}, summarized and searchable.</p>
+    </div>
+    <a
+      href="{% url 'documents:upload' %}"
+      class="inline-flex items-center gap-2 rounded-md bg-blue-600 dark:bg-blue-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 dark:hover:bg-blue-400 transition"
+    >
+      {% heroicon_outline "arrow-up-tray" class="h-4 w-4" %}
+      Upload PDF
+    </a>
+  </div>
+
+  <!-- Ask -->
+  <div class="bg-white dark:bg-slate-900 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800 rounded-lg p-5">
+    <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+      {% heroicon_outline "sparkles" class="h-4 w-4 text-indigo-500" %}
+      Ask your documents
+    </h2>
+    {% if not ai_configured %}
+      <p class="mt-2 text-sm text-amber-700 dark:text-amber-300">AI isn't set up yet. Add <code>ANTHROPIC_API_KEY</code> to enable summaries and questions.</p>
+    {% elif not has_documents %}
+      <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Upload your bylaws first, then ask things like "What are the parking rules?"</p>
+    {% else %}
+      <form
+        method="post"
+        action="{% url 'documents:ask' %}"
+        hx-post="{% url 'documents:ask' %}"
+        hx-target="#answer"
+        hx-indicator="#ask-spinner"
+        class="mt-3 flex flex-col sm:flex-row gap-2"
+      >
+        {% csrf_token %}
+        <input
+          type="text"
+          name="question"
+          required
+          maxlength="500"
+          placeholder="e.g. What are the parking rules for visitors?"
+          class="flex-1 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
+        >
+        <button
+          type="submit"
+          class="inline-flex items-center justify-center gap-2 rounded-md bg-slate-900 dark:bg-slate-100 px-4 py-2 text-sm font-semibold text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 transition"
+        >
+          Ask
+        </button>
+      </form>
+      <p
+        id="ask-spinner"
+        class="htmx-indicator mt-3 text-sm text-slate-500 dark:text-slate-400"
+      >
+        Reading your documents… this can take up to a minute.
+      </p>
+      <div
+        id="answer"
+        class="mt-4"
+      ></div>
+    {% endif %}
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Documents -->
+    <div class="lg:col-span-2 space-y-6">
+      {% for category, docs in grouped_documents %}
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">{{ category }}</h3>
+          <ul class="bg-white dark:bg-slate-900 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800 rounded-lg divide-y divide-slate-200 dark:divide-slate-800">
+            {% for doc in docs %}
+              <li>
+                <a
+                  href="{% url 'documents:detail' doc.pk %}"
+                  class="flex items-center justify-between gap-4 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition"
+                >
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{{ doc.title }}</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                      Uploaded {{ doc.created_at|date:"M j, Y" }}{% if doc.uploaded_by %} by {{ doc.uploaded_by.get_full_name|default:doc.uploaded_by.email }}{% endif %}
+                    </p>
+                  </div>
+                  {% include "documents/partials/status_badge.html" with document=doc %}
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% empty %}
+        <div class="text-center py-16 bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-800 rounded-lg">
+          {% heroicon_outline "folder-open" class="mx-auto h-10 w-10 text-slate-400" %}
+          <p class="mt-3 text-sm font-medium text-slate-900 dark:text-slate-100">No documents yet</p>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Start with your bylaws PDF.</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Recent questions -->
+    <div>
+      <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Recent questions</h3>
+      <ul class="bg-white dark:bg-slate-900 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800 rounded-lg divide-y divide-slate-200 dark:divide-slate-800">
+        {% for q in recent_questions %}
+          <li>
+            <a
+              href="{% url 'documents:question' q.pk %}"
+              class="block px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition"
+            >
+              <p class="text-sm text-slate-900 dark:text-slate-100 line-clamp-2">{{ q.question }}</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ q.asked_by.get_full_name|default:q.asked_by.email }} · {{ q.created_at|timesince }} ago</p>
+            </a>
+          </li>
+        {% empty %}
+          <li class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">No questions asked yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

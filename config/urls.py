@@ -9,6 +9,7 @@ urlpatterns = [
     path("payments/", include("payments.urls")),
     path("stratas/", include("stratas.urls")),
     path("dockets/", include("dockets.urls")),
+    path("documents/", include("documents.urls")),
     path("", include("core.urls")),
 ]
 

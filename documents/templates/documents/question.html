@@ -1,0 +1,16 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Question - Documents{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl space-y-4">
+  <a
+    href="{% url 'documents:library' %}"
+    class="text-xs font-medium text-slate-500 dark:text-slate-400 hover:underline"
+  >&larr; All documents</a>
+  <p class="text-xs text-slate-500 dark:text-slate-400">
+    Asked by {{ question.asked_by.get_full_name|default:question.asked_by.email }} on {{ question.created_at|date:"M j, Y g:i a" }}
+  </p>
+  {% include "documents/partials/answer.html" %}
+  <p class="text-xs text-slate-400 dark:text-slate-500">AI-generated answer. Follow the page links to check the original wording.</p>
+</div>
+{% endblock %}
