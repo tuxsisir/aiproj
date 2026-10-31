@@ -391,7 +391,7 @@
                                     </div>
                                     <div class="min-w-0 flex-1">
                                         <p class="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">{{ vote.member.user.get_full_name|default:vote.member.user.email }}</p>
-                                        <p class="text-[10px] text-slate-500 truncate">{{ vote.member.get_role_display }} &bull; {{ vote.created_at|date:"M j" }}</p>
+                                        <p class="text-[10px] text-slate-500 truncate">{{ vote.member.title }} &bull; {{ vote.created_at|date:"M j" }}</p>
                                     </div>
                                 </div>
                                 {% endfor %}

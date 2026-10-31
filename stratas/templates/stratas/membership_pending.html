@@ -1,0 +1,33 @@
+{% extends 'base_public.html' %}
+{% block title %}Awaiting Approval{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+    <div class="max-w-md w-full bg-white shadow-xl rounded-xl border border-slate-200 p-8 text-center">
+        <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            {% heroicon_outline "clock" class="w-8 h-8 text-amber-600" %}
+        </div>
+        <h2 class="text-2xl font-extrabold text-slate-900 mb-2">Request Received</h2>
+        <p class="text-slate-600 mb-6">
+            Your access request is waiting for approval. We'll email you as soon as it's reviewed.
+        </p>
+        <ul class="text-left text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-lg divide-y divide-slate-200 mb-8">
+            {% for m in pending %}
+                <li class="px-4 py-3 flex justify-between gap-4">
+                    <span class="font-semibold">{{ m.strata.plan_number }} &middot; {{ m.strata.name }}</span>
+                    <span class="text-slate-500">{{ m.title }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+        <form method="post" action="{% url 'account_logout' %}">
+            {% csrf_token %}
+            <button
+                type="submit"
+                class="inline-flex justify-center w-full rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 transition"
+            >
+                Sign out
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

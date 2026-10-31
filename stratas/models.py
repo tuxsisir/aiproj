@@ -46,16 +46,44 @@ class StrataPlan(BaseModel):
         return f"{self.plan_number} - {self.name}"
 
 
+class MembershipQuerySet(models.QuerySet):
+    def active(self):
+        return self.filter(status=Membership.Status.ACTIVE)
+
+    def pending(self):
+        return self.filter(status=Membership.Status.PENDING)
+
+    def council(self):
+        return self.filter(role=Membership.Role.COUNCIL)
+
+    def managers(self):
+        return self.filter(role=Membership.Role.MANAGER)
+
+
 class Membership(BaseModel):
     """
     RBAC Bridge connecting any User to any StrataPlan.
     Allows council members to bind to 1 building, and strata managers to bind to many.
+
+    `role` drives permissions; `position` is the council office held (display / future per-office rights).
+    New memberships start PENDING and need platform-admin approval (see stratas.services).
     """
     class Role(models.TextChoices):
-        COUNCIL_PRESIDENT = 'PRESIDENT', 'Council President / Chair'
-        COUNCIL_MEMBER    = 'COUNCIL',   'Council Member'
-        STRATA_MANAGER    = 'MANAGER',   'Licensed Strata Manager'
-        CARETAKER         = 'CARETAKER', 'Building Caretaker / Staff'
+        COUNCIL = 'COUNCIL', 'Council Member'
+        MANAGER = 'MANAGER', 'Strata Manager'
+
+    class Position(models.TextChoices):
+        PRESIDENT = 'PRESIDENT', 'President'
+        VICE_PRESIDENT = 'VICE_PRESIDENT', 'Vice-President'
+        TREASURER = 'TREASURER', 'Treasurer'
+        SECRETARY = 'SECRETARY', 'Secretary'
+        MEMBER_AT_LARGE = 'MEMBER_AT_LARGE', 'Member-at-Large'
+
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', 'Pending Approval'
+        ACTIVE = 'ACTIVE', 'Active'
+        REJECTED = 'REJECTED', 'Rejected'
+        INACTIVE = 'INACTIVE', 'Inactive'
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
@@ -68,24 +96,49 @@ class Membership(BaseModel):
         related_name="memberships"
     )
     role = models.CharField(
-        max_length=20, 
-        choices=Role.choices, 
-        default=Role.COUNCIL_MEMBER
+        max_length=20,
+        choices=Role.choices,
+        default=Role.COUNCIL
     )
-    
+    position = models.CharField(max_length=20, choices=Position.choices, blank=True)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+
     # Specific unit number (crucial for council members who are unit owners)
     unit_number = models.CharField(max_length=10, blank=True, help_text="Unit / Lot number owned or occupied")
-    is_active = models.BooleanField(default=True)
     joined_at = models.DateTimeField(auto_now_add=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reviewed_memberships"
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    objects = MembershipQuerySet.as_manager()
 
     class Meta:
         unique_together = ('user', 'strata')
         indexes = [
-            models.Index(fields=['user', 'strata', 'is_active']),
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['strata', 'status']),
         ]
 
     def __str__(self):
-        return f"{self.user.email} -> {self.strata.plan_number} ({self.get_role_display()})"
+        return f"{self.user.email} -> {self.strata.plan_number} ({self.title})"
+
+    @property
+    def is_council(self):
+        return self.role == self.Role.COUNCIL
+
+    @property
+    def is_manager(self):
+        return self.role == self.Role.MANAGER
+
+    @property
+    def title(self):
+        """Human label, e.g. 'Treasurer' or 'Strata Manager'."""
+        return self.get_position_display() if self.position else self.get_role_display()
 
 
 class StrataInvitation(BaseModel):

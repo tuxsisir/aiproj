@@ -57,21 +57,17 @@
 
               <!-- Role Pill -->
               <td class="px-4 py-3 whitespace-nowrap">
-                {% if m.role == 'PRESIDENT' %}
+                {% if m.position == 'PRESIDENT' %}
                   <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
-                    Council President
+                    {{ m.title }}
                   </span>
-                {% elif m.role == 'MANAGER' %}
+                {% elif m.is_manager %}
                   <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-                    Strata Manager
-                  </span>
-                {% elif m.role == 'CARETAKER' %}
-                  <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60">
-                    Building Staff
+                    {{ m.title }}
                   </span>
                 {% else %}
                   <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                    Council Member
+                    {{ m.title }}
                   </span>
                 {% endif %}
               </td>

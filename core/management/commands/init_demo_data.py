@@ -45,7 +45,9 @@ class Command(BaseCommand):
                     user=user,
                     strata=strata,
                     role=role,
-                    unit_number=unit_num
+                    position=Membership.Position.MEMBER_AT_LARGE,
+                    unit_number=unit_num,
+                    status=Membership.Status.ACTIVE,
                 )
             self.stdout.write(f"  -> Generated {count} random {role}(s)")
 
@@ -68,7 +70,7 @@ class Command(BaseCommand):
         Membership.objects.get_or_create(
             user=manager_user,
             strata=s1,
-            defaults={"role": Membership.Role.STRATA_MANAGER}
+            defaults={"role": Membership.Role.MANAGER, "status": Membership.Status.ACTIVE}
         )
         self.stdout.write(self.style.SUCCESS("  -> Created specific Manager: Mike M"))
 
@@ -92,14 +94,16 @@ class Command(BaseCommand):
             user=council_user,
             strata=s1,
             defaults={
-                "role": Membership.Role.COUNCIL_PRESIDENT,
-                "unit_number": "PH1"
+                "role": Membership.Role.COUNCIL,
+                "position": Membership.Position.PRESIDENT,
+                "unit_number": "PH1",
+                "status": Membership.Status.ACTIVE,
             }
         )
         self.stdout.write(self.style.SUCCESS("  -> Created specific Council Member: Sara G"))
 
         # 4. Create 7 random council members
-        create_random_members(s1, Membership.Role.COUNCIL_MEMBER, 7)
+        create_random_members(s1, Membership.Role.COUNCIL, 7)
 
         # 5. Generate 15 Mock Incidents
         self.stdout.write(f"Generating 15 mock incidents for {s1.name}...")

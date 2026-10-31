@@ -8,12 +8,11 @@ def strata_context(request):
         }
 
     user_memberships = list(
-        request.user.memberships.select_related('strata').filter(is_active=True)
+        request.user.memberships.active().select_related('strata')
     )
-    
+
     # Strata Managers always get the switcher so they can add new buildings
-    is_manager = any(m.role == 'MANAGER' for m in user_memberships)
-    can_switch = is_manager
+    can_switch = any(m.is_manager for m in user_memberships)
 
     return {
         'active_strata': getattr(request, 'strata', None),

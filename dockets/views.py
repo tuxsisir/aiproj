@@ -50,7 +50,7 @@ def incident_create(request):
         messages.warning(request, "No active strata plan selected.")
         return redirect('dashboard')
 
-    if request.membership and request.membership.role not in [Membership.Role.COUNCIL_MEMBER, Membership.Role.COUNCIL_PRESIDENT]:
+    if request.membership and not request.membership.is_council:
         messages.error(request, "Permission denied: Only Council Members can log new dockets.")
         return redirect('dockets:incident_list')
 
@@ -96,17 +96,14 @@ def incident_detail(request, pk):
     
     # Check if current user can vote
     user_vote = None
-    if request.membership and request.membership.role in [Membership.Role.COUNCIL_MEMBER, Membership.Role.COUNCIL_PRESIDENT]:
+    if request.membership and request.membership.is_council:
         user_vote = votes.filter(member=request.membership).first()
         
     owner_response = incident.events.filter(
         event_type__in=[IncidentEvent.EventType.OWNER_STATEMENT, IncidentEvent.EventType.HEARING_REQUESTED]
     ).first()
     
-    total_council_count = Membership.objects.filter(
-        strata=incident.strata, 
-        role__in=[Membership.Role.COUNCIL_MEMBER, Membership.Role.COUNCIL_PRESIDENT]
-    ).count()
+    total_council_count = Membership.objects.active().council().filter(strata=incident.strata).count()
     
     fine_votes_count = sum(1 for v in votes if v.approve_fine)
     dismiss_votes_count = sum(1 for v in votes if not v.approve_fine)
@@ -135,7 +132,7 @@ def cast_council_vote(request, pk):
         messages.error(request, "Invalid strata context.")
         return redirect('dockets:incident_list')
 
-    if request.membership.role not in [Membership.Role.COUNCIL_MEMBER, Membership.Role.COUNCIL_PRESIDENT]:
+    if not request.membership.is_council:
         messages.error(request, "Only council members can vote.")
         return redirect('dockets:incident_detail', pk=pk)
 
@@ -165,14 +162,11 @@ def cast_council_vote(request, pk):
         incident=incident,
         created_by=request.user,
         event_type=IncidentEvent.EventType.NOTE,
-        description=f"{request.user.get_full_name() or request.user.email} ({request.membership.get_role_display()}) cast digital ballot: {'Levy Fine' if approve_fine else 'Dismiss / Warn'}. Notes: {notes}"
+        description=f"{request.user.get_full_name() or request.user.email} ({request.membership.title}) cast digital ballot: {'Levy Fine' if approve_fine else 'Dismiss / Warn'}. Notes: {notes}"
     )
 
     # Tally Quorum
-    total_council_count = Membership.objects.filter(
-        strata=incident.strata, 
-        role__in=[Membership.Role.COUNCIL_MEMBER, Membership.Role.COUNCIL_PRESIDENT]
-    ).count()
+    total_council_count = Membership.objects.active().council().filter(strata=incident.strata).count()
     
     votes = CouncilVote.objects.filter(incident=incident)
     total_votes_cast = votes.count()
@@ -352,11 +346,7 @@ def voting_center(request):
         return redirect('dashboard')
 
     # Total council members
-    total_council = Membership.objects.filter(
-        strata=request.strata,
-        role__in=[Membership.Role.COUNCIL_MEMBER, Membership.Role.COUNCIL_PRESIDENT],
-        is_active=True
-    ).count()
+    total_council = Membership.objects.active().council().filter(strata=request.strata).count()
 
     incidents = Incident.objects.filter(
         strata=request.strata,
@@ -417,14 +407,14 @@ def voting_center(request):
 @require_POST
 def update_target_unit(request, pk):
     incident = get_object_or_404(Incident, pk=pk, strata=request.strata)
-    if request.membership.role not in [Membership.Role.STRATA_MANAGER, Membership.Role.COUNCIL_MEMBER, Membership.Role.COUNCIL_PRESIDENT]:
+    if not (request.membership.is_manager or request.membership.is_council):
         messages.error(request, "Permission denied to update unit particulars.")
         return redirect('dockets:incident_detail', pk=pk)
         
     incident.unit_number = request.POST.get('unit_number', incident.unit_number)
     
     # Only strata manager can update strata_lot and recipient_email
-    if request.membership.role == Membership.Role.STRATA_MANAGER:
+    if request.membership.is_manager:
         incident.strata_lot = request.POST.get('strata_lot', incident.strata_lot)
         incident.recipient_email = request.POST.get('recipient_email', incident.recipient_email)
         
@@ -432,7 +422,7 @@ def update_target_unit(request, pk):
     
     record_audit_log(incident, request.user, request=request)
     
-    role_name = "Manager" if request.membership.role == Membership.Role.STRATA_MANAGER else "Council"
+    role_name = "Manager" if request.membership.is_manager else "Council"
     IncidentEvent.objects.create(
         incident=incident,
         created_by=request.user,
@@ -465,7 +455,7 @@ def log_incident_event(request, pk):
 @require_POST
 def dispatch_section_135(request, pk):
     incident = get_object_or_404(Incident, pk=pk, strata=request.strata)
-    if request.membership.role != Membership.Role.STRATA_MANAGER:
+    if not request.membership.is_manager:
         messages.error(request, "Only strata managers can dispatch statutory notices.")
         return redirect('dockets:incident_detail', pk=pk)
         
@@ -530,7 +520,7 @@ def dispatch_fine_notice(request, pk):
         messages.error(request, "Incident is not in a fineable state.")
         return redirect('dockets:incident_detail', pk=pk)
         
-    if request.membership.role != Membership.Role.STRATA_MANAGER:
+    if not request.membership.is_manager:
         messages.error(request, "Only the strata manager can formally dispatch fine notices to the ledger.")
         return redirect('dockets:incident_detail', pk=pk)
 
@@ -567,7 +557,7 @@ def generate_fine_pdf(request, pk):
         
     incident = get_object_or_404(Incident, pk=pk, strata=request.strata)
     
-    if request.membership.role not in [Membership.Role.STRATA_MANAGER, Membership.Role.COUNCIL_MEMBER, Membership.Role.COUNCIL_PRESIDENT]:
+    if not (request.membership.is_manager or request.membership.is_council):
         messages.error(request, "Unauthorized to view this document.")
         return redirect('dockets:incident_detail', pk=pk)
 

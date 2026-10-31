@@ -56,15 +56,7 @@
                         {% else %}
                             text-slate-500
                         {% endif %}">
-                        {% if request.membership.role == 'PRESIDENT' %}
-                            Council President
-                        {% elif request.membership.role == 'MANAGER' %}
-                            Strata Manager
-                        {% elif request.membership.role == 'CARETAKER' %}
-                            Building Staff
-                        {% else %}
-                            Council Member
-                        {% endif %}
+                        {{ request.membership.title }}
                     </span>
                 {% else %}
                     <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400 truncate mt-0.5">No Active Role</span>

@@ -151,14 +151,13 @@
                             </div>
                             
                             <div class="sm:col-span-3">
-                                <label for="role" class="block text-sm font-medium text-slate-700">Your Council Role</label>
+                                <label for="position" class="block text-sm font-medium text-slate-700">Your Council Position</label>
                                 <div class="mt-1">
-                                    <select id="role" name="role" :required="persona === 'COUNCIL'" class="block w-full rounded-md border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm">
-                                        <option value="PRESIDENT">Council President / Chair</option>
-                                        <option value="COUNCIL">Council Member</option>
-                                        <option value="COUNCIL">Treasurer</option>
-                                        <option value="COUNCIL">Secretary</option>
-                                        <option value="COUNCIL">Member-at-Large</option>
+                                    <select id="position" name="position" :required="persona === 'COUNCIL'" class="block w-full rounded-md border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm">
+                                        <option value="" disabled selected>Select your position...</option>
+                                        {% for value, label in positions %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                             </div>

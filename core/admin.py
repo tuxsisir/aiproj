@@ -36,7 +36,7 @@ class CustomUserAdmin(UserAdmin):
     def get_roles(self, obj):
         roles = []
         for m in obj.memberships.all():
-            roles.append(f"{m.get_role_display()} ({m.strata.plan_number})")
+            roles.append(f"{m.title} · {m.get_status_display()} ({m.strata.plan_number})")
         return ", ".join(roles) if roles else "-"
 
     get_roles.short_description = "Strata Roles"
