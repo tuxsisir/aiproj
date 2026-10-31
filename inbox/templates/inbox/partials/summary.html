@@ -1,0 +1,84 @@
+<div
+  id="email-summary"
+  {% if email.status == 'PENDING' or email.status == 'PROCESSING' %}
+    hx-get="{% url 'inbox:summary' email.pk %}"
+    hx-trigger="every 3s"
+    hx-swap="outerHTML"
+  {% endif %}
+>
+  {% if email.status == 'READY' %}
+    {% with s=email.summary %}
+      <div class="space-y-5 ai-reveal">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800">{{ s.category }}</span>
+          {% include "inbox/partials/urgency_badge.html" %}
+        </div>
+        <p class="text-sm leading-relaxed text-slate-800 dark:text-slate-200">{{ s.summary }}</p>
+
+        {% if s.suggested_next_step %}
+          <div class="rounded-lg bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900 p-4">
+            <p class="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 mb-1">Suggested next step</p>
+            <p class="text-sm text-slate-800 dark:text-slate-200">{{ s.suggested_next_step }}</p>
+          </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {% if s.action_items %}
+            <div class="rounded-lg ring-1 ring-slate-200 dark:ring-slate-800 bg-white dark:bg-slate-900 p-4">
+              <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">Action items</h3>
+              <ul class="space-y-2">
+                {% for item in s.action_items %}
+                  <li class="text-sm text-slate-700 dark:text-slate-300">
+                    {{ item.task }}
+                    {% if item.owner or item.due %}<span class="block text-xs text-slate-500 dark:text-slate-400">{% if item.owner %}{{ item.owner }}{% endif %}{% if item.owner and item.due %} · {% endif %}{% if item.due %}due {{ item.due }}{% endif %}</span>{% endif %}
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+          {% if s.people %}
+            <div class="rounded-lg ring-1 ring-slate-200 dark:ring-slate-800 bg-white dark:bg-slate-900 p-4">
+              <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">People involved</h3>
+              <ul class="space-y-1.5">
+                {% for p in s.people %}
+                  <li class="text-sm text-slate-700 dark:text-slate-300">{{ p.name|default:"Unknown" }}{% if p.role %} <span class="text-slate-500 dark:text-slate-400">· {{ p.role }}</span>{% endif %}{% if p.email %} <span class="text-xs text-slate-400">{{ p.email }}</span>{% endif %}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+          {% if s.open_questions %}
+            <div class="rounded-lg ring-1 ring-slate-200 dark:ring-slate-800 bg-white dark:bg-slate-900 p-4 md:col-span-2">
+              <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">Open questions</h3>
+              <ul class="space-y-1 list-disc pl-4">
+                {% for q in s.open_questions %}<li class="text-sm text-slate-700 dark:text-slate-300">{{ q }}</li>{% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    {% endwith %}
+  {% elif email.status == 'FAILED' %}
+    <div class="rounded-md bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 px-4 py-3">
+      <p class="text-sm text-rose-700 dark:text-rose-300">{{ email.error|default:"The summary couldn't be generated." }}</p>
+      <form
+        method="post"
+        action="{% url 'inbox:retry' email.pk %}"
+        class="mt-2"
+      >
+        {% csrf_token %}
+        <button
+          type="submit"
+          class="text-sm font-semibold text-rose-700 dark:text-rose-300 underline"
+        >
+          Try again
+        </button>
+      </form>
+    </div>
+  {% else %}
+    <c-ai.working
+      message="Reading the email thread…"
+      hint="Pulling out who's involved, what's open and what to do next."
+      lines="3"
+    />
+  {% endif %}
+</div>

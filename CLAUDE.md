@@ -11,7 +11,12 @@ Planned production domain: `usecivicdesk.com`.
   `core/templates/base_dashboard.html` / `base_public.html`. No `theme/` app or CSS build step.
 - UI components: `django-cotton` + `django-cotton-ui` (`core/templates/cotton/`), `heroicons` as template builtin.
 - Auth: `django-allauth`, email-only login, Google OAuth; signup form `core.forms.CustomSignupForm`.
-- Email: `anymail` + Resend; console backend when `DEBUG` and no `RESEND_API_KEY`.
+- Email: `anymail` + Resend; console backend when `DEBUG` and no `RESEND_API_KEY`. **All email goes through
+  `core/emails.py`** (`EMAILS` registry + `send(key, to, context)`; templates in `core/templates/emails/`,
+  plain text derived from HTML, one private copy per recipient). allauth emails route there via
+  `core.adapters.AccountAdapter`; welcome email on `user_signed_up` (`core/signals.py`).
+  Staff preview of every email with sample data: `/admin/emails/` (`core/email_previews.py` holds the samples;
+  add sample context there when a new email needs new variables).
 - PDFs: WeasyPrint (needs system Pango/Cairo libs).
 - Payments: Stripe (`payments/`), per-user `UserSubscription`; `subscription_required` decorator is unused.
 - DB: `DATABASE_URL` via django-environ (Postgres in `.env`, SQLite fallback). Settings read `.env`.
@@ -32,9 +37,13 @@ Planned production domain: `usecivicdesk.com`.
   (timeline), `CouncilVote`. All workflow logic lives in `dockets/views.py` (function views).
 - `documents` — building document library: `Document` (PDF, category, structured AI `summary` JSON,
   `summary_status`, `claude_file_id`) and `DocumentQuestion` (saved Q&A with page citations). All Claude calls
-  live in `documents/ai.py` (model `claude-opus-5-5`, Files API, citations, prompt caching, server-side fallback);
-  `documents/services.py` orchestrates (summaries run in a daemon thread after commit). PDFs are served only via
+  live in `documents/ai.py` (shared client/model/fallback in `core/ai.py`; Files API, citations, prompt caching);
+  `documents/services.py` orchestrates. Slow AI work runs via `core.background.run_after_commit` (daemon thread). PDFs are served only via
   the permission-checked `documents:file` view. Needs `ANTHROPIC_API_KEY`; without it the UI says AI isn't set up.
+- `inbox` — per-building forwarding address (`Inbox`, `<plan>-<hex>@INBOUND_EMAIL_DOMAIN`) and `InboundEmail`
+  with an AI issue summary. anymail's Resend inbound webhook (`/anymail/resend/inbound/`) fires the `inbound`
+  signal (`inbox/signals.py`); only active members of that building are accepted; the summary is emailed back to
+  the forwarder. Try locally: `manage.py inbox_simulate <PLAN> <member email> <thread.txt>`.
 - `payments` — Stripe checkout, customer portal, webhook at `/payments/webhooks/stripe/`.
 
 ## Architecture conventions (see `docs/PLAN.md`)
@@ -45,6 +54,8 @@ Planned production domain: `usecivicdesk.com`.
 - Permission checks via `membership.is_council` / `membership.is_manager`; display via `membership.title`.
 - Data conversions go in their own migration (Postgres "pending trigger events" error otherwise).
 - Owners/tenants have no accounts; they only use token links.
+- AI "working" UI: `<c-ai.working message=... hint=.../>` + `.ai-*` classes in `core/static/core/ai.css`
+  (`.ai-indicator` for HTMX loading slots, `.ai-reveal` on results).
 
 ## Multi-tenancy conventions
 - `stratas.middleware.ActiveStrataMiddleware` sets `request.strata` / `request.membership` from
@@ -63,8 +74,7 @@ Planned production domain: `usecivicdesk.com`.
   without one it only logs inferred field UPDATEs. Audit logs are viewable read-only in admin.
 - Manual timeline entries go through `dockets.forms.IncidentEventForm` (NOTE / RECURRENCE / EVIDENCE only).
 - `incident.bylaw` is nullable; notice/fine emails dereference it.
-- `DEFAULT_FROM_EMAIL` default is `civicdesk.app`, not the real domain.
-- Documents tests mock `documents.ai`; never call the real API from tests.
+- Documents/inbox tests mock `documents.ai` / `inbox.ai`; never call the real API from tests.
 - Root-level `test_*.py` scripts are NOT tests; they write to the real DB on import. Always run tests with
   app labels (below) so the runner never discovers them.
 
@@ -74,7 +84,7 @@ Planned production domain: `usecivicdesk.com`.
   (System default Python is 3.15, which Django 5.2 doesn't support.)
 - Local DB is Postgres `stratacorp` (from `.env`), already migrated with demo data.
 - `python manage.py runserver`, `python manage.py migrate`, `python manage.py init_demo_data`
-- Tests: `.venv/bin/python manage.py test core stratas dockets documents payments` (factories in `core/testing.py`).
+- Tests: `.venv/bin/python manage.py test core stratas dockets documents inbox payments` (factories in `core/testing.py`).
 - Quick throwaway DB: `DATABASE_URL="sqlite://:memory:" python manage.py shell -c "..."` (run `migrate` first inside).
 
 ## Style

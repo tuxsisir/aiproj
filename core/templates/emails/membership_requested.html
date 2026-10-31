@@ -1,0 +1,5 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p><strong>{{ membership.user.get_full_name|default:membership.user.email }}</strong> ({{ membership.user.email }}) asked to join <strong>{{ membership.strata }}</strong> as <strong>{{ membership.title }}</strong>{% if membership.unit_number %}, unit {{ membership.unit_number }}{% endif %}.</p>
+{% include "emails/_button.html" with url=site_url|add:"/admin/stratas/membership/?status__exact=PENDING" label="Review pending requests" %}
+{% endblock %}

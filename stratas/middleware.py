@@ -13,6 +13,7 @@ EXEMPT_PATHS = [
     r'^/dockets/actions/',
     r'^/dockets/respond/',
     r'^/payments/webhooks/',
+    r'^/anymail/',
     r'^/admin/',
     r'^/__debug__/',
     r'^/$'

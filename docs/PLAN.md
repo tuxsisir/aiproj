@@ -70,6 +70,14 @@ approvals, finances, enforcement) for BC, where most of the email pain is.
 - [ ] Later: pick relevant documents first when a building has too many to send at once (600-page request limit)
 - [ ] Later: summaries/answers on the dashboards; bylaw codes in Dockets linked to the bylaws PDF
 
+### Phase 0.6 — Email in and out _(built 2026-10-31)_
+- [x] One email pipeline (`core/emails.py`): welcome, password reset, membership request/approve/reject,
+      docket logged, s.135 notice, vote open, decision reached, fine notice, summary ready
+- [x] Forward-to-CivicDesk inbox per building with AI issue summary, emailed back to the forwarder
+- [x] AI "working" animations (shimmer text, glowing orb, skeleton lines)
+- [ ] Configure Resend: verify `usecivicdesk.com` for sending, inbound domain + webhook (needs deploy)
+- [ ] Later: read PDF/image attachments in forwarded emails; turn an inbox summary into a docket or task
+
 ### Phase 1 — Role dashboards
 - [ ] Manager: per-building "needs action" list across portfolio (approvals, deadlines, cases)
 - [ ] Council: "waiting on me" (votes, approvals), building activity

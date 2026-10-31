@@ -1,0 +1,16 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>We read the email you forwarded{% if email.subject %} (“{{ email.subject }}”){% endif %}. Here's the summary:</p>
+<p style="margin:16px 0;padding:12px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
+  <strong>{{ email.summary.title }}</strong><br>
+  {{ email.summary.category }} · urgency: {{ email.summary.urgency }}<br><br>
+  {{ email.summary.summary }}
+</p>
+{% if email.summary.action_items %}
+<p><strong>Action items</strong><br>
+{% for item in email.summary.action_items %}• {{ item.task }}{% if item.owner %} ({{ item.owner }}){% endif %}{% if item.due %}, due {{ item.due }}{% endif %}<br>{% endfor %}</p>
+{% endif %}
+{% if email.summary.suggested_next_step %}<p><strong>Suggested next step:</strong> {{ email.summary.suggested_next_step }}</p>{% endif %}
+{% url 'inbox:detail' email.pk as path %}
+{% include "emails/_button.html" with url=site_url|add:path label="Open in CivicDesk" %}
+{% endblock %}

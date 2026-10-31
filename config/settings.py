@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "stratas",
     "dockets",
     "documents",
+    "inbox",
     
     # UI
     "django_cotton",
@@ -135,6 +136,7 @@ ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*']
 ACCOUNT_SIGNUP_FORM_CLASS = 'core.forms.CustomSignupForm'
+ACCOUNT_ADAPTER = 'core.adapters.AccountAdapter'
 
 # Social account configuration
 SOCIALACCOUNT_PROVIDERS = {
@@ -174,8 +176,17 @@ if DEBUG and not env("RESEND_API_KEY", default=""):
 else:
     EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
 
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="CivicDesk <noreply@civicdesk.app>")
+# All outgoing email goes through core/emails.py.
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="CivicDesk <noreply@usecivicdesk.com>")
+EMAIL_REPLY_TO = env("EMAIL_REPLY_TO", default="")
+# Absolute links in emails and background jobs (no request available there).
+SITE_URL = env("SITE_URL", default="http://127.0.0.1:8000")
+
+# Inbound email: each building gets <token>@INBOUND_EMAIL_DOMAIN; Resend posts received mail to
+# /anymail/resend/inbound/ (signature checked with RESEND_INBOUND_SECRET).
+INBOUND_EMAIL_DOMAIN = env("INBOUND_EMAIL_DOMAIN", default="inbox.usecivicdesk.com")
 
 ANYMAIL = {
     "RESEND_API_KEY": env("RESEND_API_KEY", default=""),
+    "RESEND_INBOUND_SECRET": env("RESEND_INBOUND_SECRET", default=None),
 }

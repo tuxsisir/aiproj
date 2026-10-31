@@ -1,0 +1,8 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>All council ballots are in for <strong>{{ incident.title }}</strong>.</p>
+<p>Decision: <strong>{{ incident.get_status_display }}</strong>.</p>
+{% if incident.status == "RESOLVED_FINED" %}<p>The strata manager can now dispatch the fine notice.</p>{% endif %}
+{% url 'dockets:incident_detail' incident.pk as path %}
+{% include "emails/_button.html" with url=site_url|add:path label="Open docket" %}
+{% endblock %}

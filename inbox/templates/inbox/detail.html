@@ -1,0 +1,31 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}{{ email.title }} - Email Inbox{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl space-y-6">
+  <div class="border-b border-slate-200 dark:border-slate-800 pb-5">
+    <a
+      href="{% url 'inbox:home' %}"
+      class="text-xs font-medium text-slate-500 dark:text-slate-400 hover:underline"
+    >&larr; Email Inbox</a>
+    <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{{ email.title }}</h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+      Forwarded by {{ email.forwarded_by.get_full_name|default:email.from_email }} · {{ email.received_at|date:"M j, Y g:i a" }}
+    </p>
+  </div>
+
+  {% include "inbox/partials/summary.html" %}
+
+  <details class="rounded-lg ring-1 ring-slate-200 dark:ring-slate-800 bg-white dark:bg-slate-900">
+    <summary class="cursor-pointer px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200">Original email{% if email.subject %}: {{ email.subject }}{% endif %}</summary>
+    <div class="border-t border-slate-200 dark:border-slate-800 px-4 py-4">
+      {% if email.attachments %}
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Attachments: {% for a in email.attachments %}{{ a.filename }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+      {% endif %}
+      <pre class="whitespace-pre-wrap break-words text-sm font-sans text-slate-700 dark:text-slate-300">{{ email.body_text }}</pre>
+    </div>
+  </details>
+
+  <p class="text-xs text-slate-400 dark:text-slate-500">AI-generated summary. Check the original email before acting.</p>
+</div>
+{% endblock %}

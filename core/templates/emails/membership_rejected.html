@@ -1,0 +1,6 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>Hi {{ membership.user.first_name|default:"there" }},</p>
+<p>Your request to join <strong>{{ membership.strata }}</strong> was not approved.</p>
+<p>If you think this is a mistake, reply to this email and we'll take another look.</p>
+{% endblock %}

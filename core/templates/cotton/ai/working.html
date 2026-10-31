@@ -1,0 +1,25 @@
+<c-vars
+    message="Thinking…"
+    hint=""
+    lines="3"
+/>
+<div
+    class="ai-card p-4"
+    role="status"
+    aria-live="polite"
+>
+    <div class="flex items-center gap-3">
+        <span class="ai-orb">{% heroicon_solid "sparkles" class="h-4 w-4" %}</span>
+        <div>
+            <p class="ai-shimmer text-sm font-semibold">{{ message }}</p>
+            {% if hint %}<p class="text-xs text-slate-500 dark:text-slate-400">{{ hint }}</p>{% endif %}
+        </div>
+    </div>
+    {% if lines != "0" %}
+        <div class="mt-4 space-y-2.5">
+            <div class="ai-skeleton w-11/12"></div>
+            <div class="ai-skeleton w-9/12"></div>
+            {% if lines != "2" %}<div class="ai-skeleton w-10/12"></div>{% endif %}
+        </div>
+    {% endif %}
+</div>

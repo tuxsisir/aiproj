@@ -1,0 +1,8 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>The summary for <strong>{{ document.title }}</strong> is ready.</p>
+<p>{{ document.summary.overview }}</p>
+{% if document.summary.topics %}<p>Topics covered: {% for t in document.summary.topics %}{{ t.name }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>{% endif %}
+{% url 'documents:detail' document.pk as path %}
+{% include "emails/_button.html" with url=site_url|add:path label="View summary" %}
+{% endblock %}

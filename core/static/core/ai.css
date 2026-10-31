@@ -1,0 +1,63 @@
+/* AI activity visuals. Use via <c-ai.working message="..."/> and the .ai-* classes. */
+:root { --ai-surface: #ffffff; }
+.dark { --ai-surface: #0f172a; }
+
+/* Shimmering gradient text */
+.ai-shimmer {
+  background: linear-gradient(90deg, #64748b 0%, #64748b 35%, #8b5cf6 45%, #ec4899 50%, #6366f1 55%, #64748b 65%, #64748b 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: ai-shimmer-text 2.2s linear infinite;
+}
+.dark .ai-shimmer {
+  background-image: linear-gradient(90deg, #94a3b8 0%, #94a3b8 35%, #a78bfa 45%, #f472b6 50%, #818cf8 55%, #94a3b8 65%, #94a3b8 100%);
+}
+@keyframes ai-shimmer-text { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+
+/* Glowing spinning orb with a sparkle */
+.ai-orb {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.75rem; height: 1.75rem; border-radius: 9999px; color: #fff; flex-shrink: 0;
+  background: conic-gradient(from 0deg, #6366f1, #a855f7, #ec4899, #6366f1);
+  animation: ai-spin 3s linear infinite, ai-glow 1.6s ease-in-out infinite;
+}
+.ai-orb > svg { animation: ai-spin 3s linear infinite reverse; }
+@keyframes ai-spin { to { transform: rotate(360deg); } }
+@keyframes ai-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.45); }
+  50% { box-shadow: 0 0 18px 4px rgba(139, 92, 246, 0.35); }
+}
+
+/* Glimmering placeholder lines */
+.ai-skeleton {
+  height: 0.65rem; border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.18) 25%, rgba(139, 92, 246, 0.30) 50%, rgba(148, 163, 184, 0.18) 75%);
+  background-size: 200% 100%;
+  animation: ai-shimmer-bg 1.6s ease-in-out infinite;
+}
+@keyframes ai-shimmer-bg { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* Card with a slowly moving gradient border */
+.ai-card {
+  border: 1px solid transparent; border-radius: 0.75rem;
+  background:
+    linear-gradient(var(--ai-surface), var(--ai-surface)) padding-box,
+    linear-gradient(120deg, #6366f1, #a855f7, #ec4899, #6366f1) border-box;
+  background-size: auto, 300% 300%;
+  animation: ai-border 4s ease infinite;
+}
+@keyframes ai-border { 0%, 100% { background-position: 0 0, 0% 50%; } 50% { background-position: 0 0, 100% 50%; } }
+
+/* Results fade in when the AI finishes */
+.ai-reveal { animation: ai-reveal 0.5s ease-out; }
+@keyframes ai-reveal { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-shimmer, .ai-orb, .ai-orb > svg, .ai-skeleton, .ai-card, .ai-reveal { animation: none; }
+}
+
+/* HTMX loading slot: hidden (no reserved space) until its request is in flight. Use with hx-indicator. */
+.ai-indicator { display: none; }
+.ai-indicator.htmx-request { display: block; }

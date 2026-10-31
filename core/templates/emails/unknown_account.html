@@ -1,0 +1,7 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>Someone asked to reset a CivicDesk password for {{ email }}, but there's no account with this address.</p>
+<p>If you meant to create one, you can sign up here:</p>
+{% include "emails/_button.html" with url=signup_url label="Create an account" %}
+<p style="color:#64748b;font-size:13px;">If this wasn't you, you can ignore this email.</p>
+{% endblock %}

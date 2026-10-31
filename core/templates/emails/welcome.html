@@ -1,0 +1,7 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>Hi {{ user.first_name|default:"there" }},</p>
+<p>Welcome to CivicDesk. Your account is ready.</p>
+<p>Next, choose your building and role. Your request is reviewed before you get access, and we'll email you as soon as it's approved.</p>
+{% include "emails/_button.html" with url=site_url|add:"/stratas/onboarding/" label="Set up my building" %}
+{% endblock %}

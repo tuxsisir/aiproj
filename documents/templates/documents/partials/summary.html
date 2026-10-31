@@ -7,7 +7,7 @@
   {% endif %}
 >
   {% if document.summary_status == 'READY' %}
-    <div class="space-y-6">
+    <div class="space-y-6 ai-reveal">
       <p class="text-sm leading-relaxed text-slate-700 dark:text-slate-300">{{ document.summary.overview }}</p>
 
       {% if document.summary.key_numbers %}
@@ -52,9 +52,9 @@
       </form>
     </div>
   {% else %}
-    <p class="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
-      {% heroicon_outline "arrow-path" class="h-4 w-4 animate-spin" %}
-      Reading and summarizing this document… usually under a minute.
-    </p>
+    <c-ai.working
+      message="Reading and summarizing this document…"
+      hint="Usually under a minute. You can leave this page; we'll email you when it's ready."
+    />
   {% endif %}
 </div>

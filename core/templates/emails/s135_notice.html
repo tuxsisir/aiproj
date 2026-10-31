@@ -1,0 +1,15 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>Dear Owner of Unit {{ incident.unit_number }},</p>
+<p>The Strata Corporation {{ incident.strata.plan_number }} has received a complaint regarding an alleged contravention of the bylaws.</p>
+<p><strong>Particulars of the complaint:</strong><br>
+{% if incident.bylaw %}- Bylaw: {{ incident.bylaw.code }} ({{ incident.bylaw.title }})<br>{% endif %}
+- Date of Intake: {{ incident.created_at|date:"M j, Y" }}<br>
+- Description: {{ incident.description }}</p>
+<p>Pursuant to Section 135 of the Strata Property Act, you are entitled to answer this complaint. You may provide a written response or request a hearing before the strata council.</p>
+<p>Please note that under the Act (incorporating deemed service requirements), you have exactly 14 days from today to respond before the Council proceeds with a vote to potentially levy a fine.</p>
+<p>To submit your written statement or formally request a council hearing, please use your secure response portal link below:</p>
+{% include "emails/_button.html" with url=response_url label="Respond to this notice" %}
+<p>Sincerely,<br>Strata Management</p>
+{% endblock %}
+{% block footer %}Sent on behalf of Strata Corporation {{ incident.strata.plan_number }} via CivicDesk.{% endblock %}

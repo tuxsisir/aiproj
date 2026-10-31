@@ -3,11 +3,11 @@ Document lifecycle: upload -> summarize (background) -> ask questions across doc
 All Claude calls go through documents.ai.
 """
 import logging
-import threading
 
-from django.db import close_old_connections, transaction
 from django.utils import timezone
 
+from core import emails
+from core.background import run_after_commit
 from . import ai
 from .models import Document, DocumentQuestion
 
@@ -23,24 +23,15 @@ def create_document(strata, user, title, category, file):
 
 
 def queue_summary(document):
-    """Summarize after the upload commits, without blocking the request.
-
-    A daemon thread is enough at our volume; swap for a task queue later without touching callers.
-    """
+    """Summarize after the upload commits, without blocking the request."""
     if not ai.is_configured():
         _fail(document, "AI isn't set up yet. Add ANTHROPIC_API_KEY, then retry.")
         return
-    transaction.on_commit(
-        lambda: threading.Thread(target=_summarize_in_thread, args=(document.pk,), daemon=True).start()
-    )
+    run_after_commit(_summarize_by_pk, document.pk)
 
 
-def _summarize_in_thread(document_pk):
-    close_old_connections()
-    try:
-        summarize_document(Document.objects.get(pk=document_pk))
-    finally:
-        close_old_connections()
+def _summarize_by_pk(document_pk):
+    summarize_document(Document.objects.get(pk=document_pk))
 
 
 def summarize_document(document):
@@ -62,6 +53,8 @@ def summarize_document(document):
     document.summary_status = Document.SummaryStatus.READY
     document.summarized_at = timezone.now()
     document.save(update_fields=["summary", "summary_status", "summarized_at", "updated_at"])
+    if document.uploaded_by:
+        emails.send("document_summarized", [document.uploaded_by.email], {"document": document})
     return document
 
 

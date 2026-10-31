@@ -1,4 +1,5 @@
-from django.test import TestCase
+from django.core import mail
+from django.test import TestCase, override_settings
 from django.utils import timezone
 from django.urls import reverse
 
@@ -106,3 +107,41 @@ class LogIncidentEventTests(TestCase):
             {"event_type": IncidentEvent.EventType.NOTE, "description": "x"},
         )
         self.assertEqual(response.status_code, 404)
+
+
+
+@override_settings(SITE_URL="https://app.example.com")
+class DocketEmailTests(TestCase):
+    def setUp(self):
+        self.strata = make_strata()
+        self.council = make_membership(make_user("council@example.com"), self.strata)
+        self.manager = make_membership(make_user("manager@example.com"), self.strata, role=Membership.Role.MANAGER)
+
+    def test_new_docket_notifies_managers(self):
+        self.client.force_login(self.council.user)
+        self.client.post(reverse("dockets:incident_create"), {
+            "title": "Bike in lobby", "incident_type": Incident.Type.BYLAW, "description": "Again",
+        })
+        self.assertEqual([m.to for m in mail.outbox], [["manager@example.com"]])
+
+    def test_s135_notice_links_to_owner_portal_on_site_url(self):
+        incident = Incident.objects.create(
+            strata=self.strata, title="Noise", description="Loud", unit_number="304", recipient_email="owner@example.com"
+        )
+        self.client.force_login(self.manager.user)
+        self.client.post(reverse("dockets:dispatch_section_135", args=[incident.pk]))
+        notice = mail.outbox[-1]
+        self.assertEqual(notice.to, ["owner@example.com"])
+        self.assertIn(f"https://app.example.com/dockets/respond/{incident.owner_token}/", notice.body)
+
+    def test_owner_response_notifies_council(self):
+        incident = Incident.objects.create(
+            strata=self.strata, title="Noise", description="Loud", status=Incident.Status.NOTICE_ISSUED,
+            statutory_deadline=timezone.now() + timezone.timedelta(days=14),
+        )
+        self.client.post(
+            reverse("dockets:owner_response_portal", args=[incident.owner_token]),
+            {"response_type": "WRITTEN", "statement": "Not me"},
+        )
+        self.assertEqual([m.to for m in mail.outbox], [["council@example.com"]])
+        self.assertIn("Council vote needed", mail.outbox[0].subject)

@@ -10,6 +10,7 @@
     
     <!-- Load Cotton UI components before Alpine core so they catch alpine:init -->
     <link rel="stylesheet" href="{% static 'django_cotton_ui/cotton-ui.css' %}">
+    <link rel="stylesheet" href="{% static 'core/ai.css' %}">
     <script defer src="{% static 'django_cotton_ui/cotton-ui.min.js' %}"></script>
     
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -67,6 +68,12 @@
                         icon="check-badge" 
                         label="Council Voting" 
                         active="{% if request.resolver_match.url_name == 'voting_center' %}true{% else %}false{% endif %}"
+                    />
+                    <c-sidebar.nav_item
+                        href="{% url 'inbox:home' %}"
+                        icon="inbox"
+                        label="Email Inbox"
+                        active="{% if request.resolver_match.app_name == 'inbox' %}true{% else %}false{% endif %}"
                     />
                     <c-sidebar.nav_item
                         href="{% url 'documents:library' %}"

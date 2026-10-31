@@ -52,12 +52,15 @@
           Ask
         </button>
       </form>
-      <p
+      <div
         id="ask-spinner"
-        class="htmx-indicator mt-3 text-sm text-slate-500 dark:text-slate-400"
+        class="ai-indicator mt-4"
       >
-        Reading your documents… this can take up to a minute.
-      </p>
+        <c-ai.working
+          message="Searching your documents…"
+          hint="Reading every page so the answer can cite its source. Up to a minute."
+        />
+      </div>
       <div
         id="answer"
         class="mt-4"

@@ -1,0 +1,16 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<p><a href="{% url 'email_preview_list' %}">&larr; All emails</a></p>
+<p><strong>Subject:</strong> {{ subject }}<br>
+<strong>Template:</strong> <code>core/templates/emails/{{ spec.template }}.html</code> · <strong>Resend tag:</strong> {{ spec.tag }}</p>
+<p>
+  <a href="{% url 'email_preview_body' key 'html' %}" target="preview">HTML</a> ·
+  <a href="{% url 'email_preview_body' key 'text' %}" target="preview">Plain text</a>
+</p>
+<iframe
+  name="preview"
+  src="{% url 'email_preview_body' key 'html' %}"
+  title="Email preview"
+  style="width:100%;max-width:720px;height:760px;border:1px solid #ccc;border-radius:8px;background:#fff;"
+></iframe>
+{% endblock %}

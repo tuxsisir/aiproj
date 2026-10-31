@@ -1,0 +1,6 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>Dear Owner of Unit {{ incident.unit_number }},</p>
+<p>The Strata Council has reviewed your case and authorized levying a ${{ incident.bylaw.standard_fine }} fine to your strata lot ledger for contravention of Bylaw {{ incident.bylaw.code }}.</p>
+{% endblock %}
+{% block footer %}Sent on behalf of Strata Corporation {{ incident.strata.plan_number }} via CivicDesk.{% endblock %}

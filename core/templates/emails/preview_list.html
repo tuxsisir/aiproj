@@ -1,0 +1,24 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<p>Every email CivicDesk sends, rendered with sample data. Edit templates in <code>core/templates/emails/</code> and subjects in <code>core/emails.py</code>.</p>
+<table>
+  <thead>
+    <tr>
+      <th>Email</th>
+      <th>Subject</th>
+      <th>Resend tag</th>
+      <th>Template</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in rows %}
+      <tr>
+        <td><a href="{% url 'email_preview' row.key %}">{{ row.key }}</a></td>
+        <td>{{ row.subject }}</td>
+        <td>{{ row.spec.tag }}</td>
+        <td><code>emails/{{ row.spec.template }}.html</code></td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -3,16 +3,10 @@ The only module that talks to Claude. Everything here takes plain data and retur
 so services and views can be tested with this module mocked.
 """
 import anthropic
-from django.conf import settings
 from pydantic import BaseModel
 
-MODEL = "claude-opus-5-5"
-# Server-side fallback: if the model declines a request, the API retries on a suitable model.
-BETAS = ["server-side-fallback-2026-07-01"]
-
-
-class AIError(Exception):
-    """User-presentable failure (not configured, refused, too large, API down)."""
+from core import ai as core_ai
+from core.ai import BETAS, MODEL, AIError, is_configured  # noqa: F401  (re-exported for callers)
 
 
 class SummaryPoint(BaseModel):
@@ -54,14 +48,8 @@ conflict (for example a newer bylaw amendment), say so and prefer the most recen
 don't answer the question, say that clearly instead of guessing. Do not give legal advice."""
 
 
-def is_configured():
-    return bool(settings.ANTHROPIC_API_KEY)
-
-
 def _client():
-    if not is_configured():
-        raise AIError("AI isn't set up yet (ANTHROPIC_API_KEY is missing).")
-    return anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+    return core_ai.client()
 
 
 def upload_pdf(filename, fileobj):
@@ -101,7 +89,7 @@ def summarize(file_id, title):
     except anthropic.APIError as exc:
         raise AIError(f"The AI service couldn't summarize this document: {exc.message}") from exc
 
-    _raise_for_stop_reason(response)
+    core_ai.raise_for_stop_reason(response)
     if response.parsed_output is None:
         raise AIError("The AI service returned an unreadable summary. Try again.")
     return response.parsed_output.model_dump()
@@ -140,7 +128,7 @@ def answer(question, documents):
     except anthropic.APIError as exc:
         raise AIError(f"The AI service couldn't answer right now: {exc.message}") from exc
 
-    _raise_for_stop_reason(response)
+    core_ai.raise_for_stop_reason(response)
 
     segments = []
     for block in response.content:
@@ -167,10 +155,3 @@ def answer(question, documents):
         "model": response.model,
     }
     return segments, usage
-
-
-def _raise_for_stop_reason(response):
-    if response.stop_reason == "refusal":
-        raise AIError("The AI service declined this request.")
-    if response.stop_reason == "max_tokens":
-        raise AIError("The answer was cut off. Try a narrower question.")

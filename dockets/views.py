@@ -1,5 +1,8 @@
-from django.core.mail import send_mail
 from django.conf import settings
+from django.urls import reverse
+
+from core import emails
+from stratas.services import member_emails
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -80,6 +83,7 @@ def incident_create(request):
             status=Incident.Status.IN_REVIEW
         )
         record_audit_log(incident, request.user, action=AuditLog.Action.CREATE, request=request)
+        emails.send("docket_logged", member_emails(incident.strata, Membership.Role.MANAGER), {"incident": incident})
         
         messages.success(request, "Docket successfully logged and awaiting manager review.")
         return redirect('dockets:incident_list')
@@ -181,6 +185,7 @@ def cast_council_vote(request, pk):
             incident.status = Incident.Status.RESOLVED_DISMISSED
         incident.save()
         record_audit_log(incident, request.user, action=AuditLog.Action.STATUS_CHANGE, request=request, custom_summary=f"Quorum reached. Status changed to {incident.get_status_display()}")
+        emails.send("decision_reached", member_emails(incident.strata), {"incident": incident})
 
     messages.success(request, "Your council vote has been securely recorded.")
     return redirect('dockets:incident_detail', pk=pk)
@@ -247,6 +252,7 @@ def owner_response_portal(request, token):
         incident.save()
         
         record_audit_log(incident, None, action=AuditLog.Action.STATUS_CHANGE, request=request, custom_summary=f"Owner submitted response: {response_type}")
+        emails.send("voting_open", member_emails(incident.strata, Membership.Role.COUNCIL), {"incident": incident})
         return redirect('dockets:owner_response_portal', token=token)
 
     return render(request, 'incidents/owner_portal.html', {
@@ -465,37 +471,9 @@ def dispatch_section_135(request, pk):
         
     incident.calculate_and_set_deadline()
     incident.save()
-    
-    
-    
-    
-    subject = f"FORMAL NOTICE OF COMPLAINT - {incident.strata.plan_number}"
-    message = f"""Dear Owner of Unit {incident.unit_number},
 
-The Strata Corporation {incident.strata.plan_number} has received a complaint regarding an alleged contravention of the bylaws.
-
-Particulars of the complaint:
-- Bylaw: {incident.bylaw.code} ({incident.bylaw.title})
-- Date of Intake: {incident.created_at.strftime('%b %-d, %Y')}
-- Description: {incident.description}
-
-Pursuant to Section 135 of the Strata Property Act, you are entitled to answer this complaint. You may provide a written response or request a hearing before the strata council.
-
-Please note that under the Act (incorporating deemed service requirements), you have exactly 14 days from today to respond before the Council proceeds with a vote to potentially levy a fine.
-
-To submit your written statement or formally request a council hearing, please use your secure response portal link below:
-https://{request.get_host()}/dockets/respond/{incident.owner_token}/
-
-Sincerely,
-Strata Management"""
-
-    send_mail(
-        subject,
-        message,
-        settings.DEFAULT_FROM_EMAIL,
-        [incident.recipient_email],
-        fail_silently=False,
-    )
+    response_url = settings.SITE_URL.rstrip("/") + reverse('dockets:owner_response_portal', args=[incident.owner_token])
+    emails.send("s135_notice", [incident.recipient_email], {"incident": incident, "response_url": response_url}, fail_silently=False)
     
     record_audit_log(incident, request.user, action=AuditLog.Action.NOTICE_DISPATCHED, request=request)
     IncidentEvent.objects.create(
@@ -524,14 +502,8 @@ def dispatch_fine_notice(request, pk):
         messages.error(request, "Only the strata manager can formally dispatch fine notices to the ledger.")
         return redirect('dockets:incident_detail', pk=pk)
 
-    # In a real app, integrate with ledger/accounting here and send email
-    send_mail(
-        subject=f"Notice of Formal Fine - Strata Plan {incident.strata.plan_number}",
-        message=f"""Dear Owner of Unit {incident.unit_number},\n\nThe Strata Council has reviewed your case and authorized levying a ${incident.bylaw.standard_fine} fine to your strata lot ledger for contravention of Bylaw {incident.bylaw.code}.""",
-        from_email="no-reply@stratacorp.com",
-        recipient_list=[incident.recipient_email],
-        fail_silently=True,
-    )
+    # In a real app, integrate with ledger/accounting here
+    emails.send("fine_notice", [incident.recipient_email], {"incident": incident})
 
     IncidentEvent.objects.create(
         incident=incident,

@@ -1,0 +1,7 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>The owner has responded to the s.135 notice for <strong>{{ incident.title }}</strong>{% if incident.unit_number %} (unit {{ incident.unit_number }}){% endif %}.</p>
+<p>The council vote is now open. Please review the response and cast your ballot.</p>
+{% url 'dockets:incident_detail' incident.pk as path %}
+{% include "emails/_button.html" with url=site_url|add:path label="Review and vote" %}
+{% endblock %}
