@@ -70,6 +70,7 @@ class AuditLog(models.Model):
         STATUS_CHANGE = "STATUS_CHANGE", "Status Transitioned"
         NOTICE_DISPATCHED = "NOTICE_DISPATCHED", "Statutory Notice Dispatched"
         VOTE_CAST = "VOTE_CAST", "Council Ballot Submitted"
+        FINE_DISPATCHED = "FINE_DISPATCHED", "Fine Notice Dispatched"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     

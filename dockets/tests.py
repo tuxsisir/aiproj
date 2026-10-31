@@ -1,9 +1,11 @@
 from django.test import TestCase
+from django.utils import timezone
 from django.urls import reverse
 
+from core.models import AuditLog
 from core.testing import make_membership, make_strata, make_user
 from stratas.models import Membership
-from .models import CouncilVote, Incident
+from .models import CouncilVote, Incident, IncidentEvent
 
 
 class CouncilVoteTests(TestCase):
@@ -29,6 +31,9 @@ class CouncilVoteTests(TestCase):
         self.vote(self.bob, True)
         self.incident.refresh_from_db()
         self.assertEqual(self.incident.status, Incident.Status.RESOLVED_FINED)
+        actions = list(AuditLog.objects.values_list("action", flat=True))
+        self.assertEqual(actions.count(AuditLog.Action.VOTE_CAST), 2)
+        self.assertIn(AuditLog.Action.STATUS_CHANGE, actions)
 
     def test_manager_cannot_vote(self):
         manager = make_membership(make_user(), self.strata, role=Membership.Role.MANAGER)
@@ -46,7 +51,8 @@ class IncidentCreateTests(TestCase):
         self.client.post(reverse("dockets:incident_create"), {
             "title": "Bike in lobby", "incident_type": Incident.Type.BYLAW, "description": "Again",
         })
-        self.assertTrue(Incident.objects.filter(strata=self.strata, title="Bike in lobby").exists())
+        incident = Incident.objects.get(strata=self.strata, title="Bike in lobby")
+        self.assertTrue(AuditLog.objects.filter(object_id=str(incident.pk), action=AuditLog.Action.CREATE).exists())
 
     def test_manager_cannot_log_docket(self):
         manager = make_membership(make_user(), self.strata, role=Membership.Role.MANAGER)
@@ -55,3 +61,48 @@ class IncidentCreateTests(TestCase):
             "title": "Nope", "incident_type": Incident.Type.BYLAW, "description": "x",
         })
         self.assertFalse(Incident.objects.exists())
+
+
+class LogIncidentEventTests(TestCase):
+    def setUp(self):
+        self.strata = make_strata()
+        self.member = make_membership(make_user(), self.strata)
+        self.incident = Incident.objects.create(
+            strata=self.strata, title="Noise", description="Loud", status=Incident.Status.NOTICE_ISSUED,
+            statutory_deadline=timezone.now() + timezone.timedelta(days=14),
+        )
+        self.client.force_login(self.member.user)
+        self.url = reverse("dockets:log_incident_event", args=[self.incident.pk])
+
+    def test_member_can_add_note(self):
+        self.client.post(self.url, {"event_type": IncidentEvent.EventType.NOTE, "description": "Called owner"})
+        event = IncidentEvent.objects.get(incident=self.incident)
+        self.assertEqual((event.event_type, event.created_by), (IncidentEvent.EventType.NOTE, self.member.user))
+
+    def test_member_cannot_fake_owner_statement_or_fine(self):
+        for event_type in (IncidentEvent.EventType.OWNER_STATEMENT, IncidentEvent.EventType.FINE_DISPATCHED):
+            self.client.post(self.url, {"event_type": event_type, "description": "fake"})
+        self.assertFalse(IncidentEvent.objects.exists())
+
+    def test_description_is_required(self):
+        self.client.post(self.url, {"event_type": IncidentEvent.EventType.NOTE})
+        self.assertFalse(IncidentEvent.objects.exists())
+
+    def test_owner_can_still_respond_after_member_notes(self):
+        self.client.post(self.url, {"event_type": IncidentEvent.EventType.NOTE, "description": "Note"})
+        self.client.logout()
+        self.client.post(
+            reverse("dockets:owner_response_portal", args=[self.incident.owner_token]),
+            {"response_type": "WRITTEN", "statement": "It was my TV"},
+        )
+        self.incident.refresh_from_db()
+        self.assertEqual(self.incident.status, Incident.Status.VOTING_OPEN)
+        self.assertTrue(self.incident.events.filter(event_type=IncidentEvent.EventType.OWNER_STATEMENT).exists())
+
+    def test_cannot_log_on_another_buildings_incident(self):
+        other = Incident.objects.create(strata=make_strata(), title="x", description="y")
+        response = self.client.post(
+            reverse("dockets:log_incident_event", args=[other.pk]),
+            {"event_type": IncidentEvent.EventType.NOTE, "description": "x"},
+        )
+        self.assertEqual(response.status_code, 404)

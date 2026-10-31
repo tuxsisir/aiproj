@@ -12,7 +12,9 @@ from django.utils import timezone
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.db import IntegrityError
+from core.models import AuditLog
 from core.services import record_audit_log
+from .forms import IncidentEventForm
 
 @login_required
 def incident_list(request):
@@ -77,7 +79,7 @@ def incident_create(request):
             evidence_image=evidence_image,
             status=Incident.Status.IN_REVIEW
         )
-        record_audit_log(incident, request.user, request=request)
+        record_audit_log(incident, request.user, action=AuditLog.Action.CREATE, request=request)
         
         messages.success(request, "Docket successfully logged and awaiting manager review.")
         return redirect('dockets:incident_list')
@@ -156,7 +158,7 @@ def cast_council_vote(request, pk):
         notes=notes
     )
     
-    record_audit_log(incident, request.user, action="VOTE_CAST", request=request, custom_summary=f"Vote cast: {'Levy Fine' if approve_fine else 'Dismiss'}")
+    record_audit_log(incident, request.user, action=AuditLog.Action.VOTE_CAST, request=request, custom_summary=f"Vote cast: {'Levy Fine' if approve_fine else 'Dismiss'}")
     
     IncidentEvent.objects.create(
         incident=incident,
@@ -178,7 +180,7 @@ def cast_council_vote(request, pk):
         else:
             incident.status = Incident.Status.RESOLVED_DISMISSED
         incident.save()
-        record_audit_log(incident, request.user, action="STATUS_CHANGE", request=request, custom_summary=f"Quorum reached. Status changed to {incident.get_status_display()}")
+        record_audit_log(incident, request.user, action=AuditLog.Action.STATUS_CHANGE, request=request, custom_summary=f"Quorum reached. Status changed to {incident.get_status_display()}")
 
     messages.success(request, "Your council vote has been securely recorded.")
     return redirect('dockets:incident_detail', pk=pk)
@@ -194,7 +196,7 @@ def manager_magic_action(request, token):
             incident.calculate_and_set_deadline()
             incident.save()
             
-            record_audit_log(incident, request.user if request.user.is_authenticated else None, action="NOTICE_DISPATCHED", request=request)
+            record_audit_log(incident, request.user if request.user.is_authenticated else None, action=AuditLog.Action.NOTICE_DISPATCHED, request=request)
             
             # Note: in real app, send email here with owner_token link
             messages.success(request, f"Official Notice sent to {recipient_email}. Clock is ticking.")
@@ -244,7 +246,7 @@ def owner_response_portal(request, token):
         incident.status = Incident.Status.VOTING_OPEN
         incident.save()
         
-        record_audit_log(incident, None, action="STATUS_CHANGE", request=request, custom_summary=f"Owner submitted response: {response_type}")
+        record_audit_log(incident, None, action=AuditLog.Action.STATUS_CHANGE, request=request, custom_summary=f"Owner submitted response: {response_type}")
         return redirect('dockets:owner_response_portal', token=token)
 
     return render(request, 'incidents/owner_portal.html', {
@@ -436,18 +438,16 @@ def update_target_unit(request, pk):
 @require_POST
 def log_incident_event(request, pk):
     incident = get_object_or_404(Incident, pk=pk, strata=request.strata)
-    
-    event_type = request.POST.get('event_type')
-    description = request.POST.get('description')
-    evidence_file = request.FILES.get('evidence_file')
-    
-    IncidentEvent.objects.create(
-        incident=incident,
-        created_by=request.user,
-        event_type=event_type,
-        description=description,
-        evidence_file=evidence_file
-    )
+
+    form = IncidentEventForm(request.POST, request.FILES)
+    if not form.is_valid():
+        messages.error(request, "Choose a note, recurrence or evidence entry and add a description.")
+        return redirect('dockets:incident_detail', pk=pk)
+
+    event = form.save(commit=False)
+    event.incident = incident
+    event.created_by = request.user
+    event.save()
     messages.success(request, "Event logged successfully.")
     return redirect('dockets:incident_detail', pk=pk)
 
@@ -497,7 +497,7 @@ Strata Management"""
         fail_silently=False,
     )
     
-    record_audit_log(incident, request.user, action="NOTICE_DISPATCHED", request=request)
+    record_audit_log(incident, request.user, action=AuditLog.Action.NOTICE_DISPATCHED, request=request)
     IncidentEvent.objects.create(
         incident=incident,
         created_by=request.user,
@@ -540,7 +540,7 @@ def dispatch_fine_notice(request, pk):
         description=f"Formal Notice of Fine sent to {incident.recipient_email}. Fine amount: ${incident.bylaw.standard_fine}"
     )
     
-    record_audit_log(incident, request.user, action="FINE_DISPATCHED", request=request)
+    record_audit_log(incident, request.user, action=AuditLog.Action.FINE_DISPATCHED, request=request)
     
     messages.success(request, f"Fine notice formally dispatched to {incident.recipient_email} and logged to the unit ledger.")
     return redirect('dockets:incident_detail', pk=pk)
