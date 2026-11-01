@@ -1,286 +1,411 @@
-{% extends 'base_public.html' %}
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicDesk · The desk your strata council never had</title>
+    <meta name="description" content="CivicDesk gives BC strata councils and strata managers one place for bylaws, complaints, votes and email threads, summarized by AI and kept on the record.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..700,0..100,0..1;1,9..144,400..700,0..100,0..1&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="{% static 'core/landing.css' %}">
+    <script defer src="{% static 'core/landing.js' %}"></script>
+</head>
+<body class="landing antialiased">
 
+    <!-- ================= HERO (blueprint at night) ================= -->
+    <section
+        class="blueprint overflow-hidden"
+        data-hero
+    >
+        <div class="spotlight"></div>
+        <div class="vignette"></div>
 
-{% block content %}
-
-    <!-- Hero Section -->
-    <section class="pt-24 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold mb-8">
-            <span class="flex h-2 w-2 relative">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
-            </span>
-            [NEW] Built for BC Strata Property Act & Ontario Condominium Act Compliance &rarr;
-        </div>
-        
-        <h1 class="text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight mb-6">
-            Protect your decisions.<br/>
-            <span class="text-blue-600">Bulletproof your bylaw enforcement.</span>
-        </h1>
-        
-        <p class="mt-4 text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed mb-10">
-            Stop digging through messy email chains and unverified CCTV clips. CivicDesk gives your council a centralized operations hub to log complaints, enforce statutory response windows, and coordinate with your property manager—without forcing them to learn a new tool.
-        </p>
-        
-        <div class="flex flex-col sm:flex-row justify-center gap-4 mb-14">
-            <a href="{% url 'account_signup' %}" class="px-8 py-4 bg-slate-900 text-white rounded-full font-semibold text-lg hover:bg-slate-800 shadow-lg transition">Start Free 45-Day Council Trial</a>
-            <button class="px-8 py-4 bg-white text-slate-900 border border-slate-200 rounded-full font-semibold text-lg hover:bg-slate-50 transition shadow-sm">View Interactive Live Demo</button>
-        </div>
-
-        <!-- Trust Badges -->
-        <div class="flex flex-wrap justify-center gap-6 text-sm font-medium text-slate-500 mb-20">
-            <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg> Section 135 & CRT Compliant</span>
-            <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg> Zero Software Install for Managers</span>
-            <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg> 1-Click Evidentiary Packets</span>
-            <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg> Canadian Data Residency (PIPA)</span>
-        </div>
-
-        <!-- Hero Mockup -->
-        <div class="relative mx-auto max-w-5xl">
-            <div class="rounded-xl border border-slate-200 bg-white shadow-2xl overflow-hidden text-left">
-                <div class="bg-slate-100 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
-                    <div class="font-semibold text-slate-800">Strata Plan EPS 412 &bull; Active Docket</div>
-                    <div class="text-xs bg-slate-900 text-white px-3 py-1.5 rounded-full font-mono cursor-pointer shadow-sm">Generate CRT Evidence PDF &darr;</div>
-                </div>
-                <div class="divide-y divide-slate-100">
-                    <div class="px-6 py-5 flex items-center justify-between hover:bg-slate-50 transition">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center font-bold">402</div>
-                            <div>
-                                <div class="font-bold text-slate-900">Bylaw 3.2 (Noise)</div>
-                                <div class="text-sm text-slate-500">Incident reported Oct 14</div>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-mono font-bold rounded">14-Day Clock: 8 Days Left</span>
-                            <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded">Notice Sent &bull; Verified</span>
-                        </div>
-                    </div>
-                    <div class="px-6 py-5 flex items-center justify-between hover:bg-slate-50 transition">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold">108</div>
-                            <div>
-                                <div class="font-bold text-slate-900">Bylaw 7.1 (Parking)</div>
-                                <div class="text-sm text-slate-500">Response period expired</div>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded">Council Quorum Pending: 2/3 Votes</span>
-                        </div>
-                    </div>
-                </div>
+        <!-- Nav -->
+        <nav class="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
+            <a
+                href="/"
+                aria-label="CivicDesk home"
+            ><c-brand.wordmark tone="light" /></a>
+            <div class="hidden items-center gap-8 text-sm text-slate-300 md:flex">
+                <a
+                    href="#ask"
+                    class="hover:text-white"
+                >Ask your bylaws</a>
+                <a
+                    href="#features"
+                    class="hover:text-white"
+                >Features</a>
+                <a
+                    href="#how"
+                    class="hover:text-white"
+                >How it works</a>
+                <a
+                    href="#roles"
+                    class="hover:text-white"
+                >Councils &amp; managers</a>
             </div>
-        </div>
-    </section>
+            <div class="flex items-center gap-3">
+                {% if user.is_authenticated %}
+                    <a
+                        href="{% url 'dashboard' %}"
+                        class="cta-ghost !py-2 text-sm"
+                    >Open dashboard</a>
+                {% else %}
+                    <a
+                        href="{% url 'account_login' %}"
+                        class="hidden text-sm text-slate-300 hover:text-white sm:inline"
+                    >Log in</a>
+                    <a
+                        href="{% url 'account_signup' %}"
+                        class="cta !py-2 !px-4 text-sm"
+                    >Get early access</a>
+                {% endif %}
+            </div>
+        </nav>
 
-    <!-- The Pain Section -->
-    <section class="py-24 bg-white border-y border-slate-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <span class="text-xs font-bold tracking-widest text-slate-400 uppercase">The Reality of Bylaw Enforcement</span>
-                <h2 class="mt-2 text-3xl md:text-4xl font-extrabold text-slate-900">Why 70% of Strata Fines Get Overturned at the Civil Resolution Tribunal (CRT)</h2>
-                <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto">
-                    When an owner disputes a fine, the tribunal does not care about what council members remember in private emails. The tribunal demands an airtight, chronological evidentiary paper trail.
+        <div class="relative z-10 mx-auto grid max-w-7xl items-center gap-12 px-5 pb-20 pt-10 sm:px-8 lg:grid-cols-[1.05fr_1fr] lg:pb-28 lg:pt-16">
+            <!-- Copy -->
+            <div>
+                <p class="mb-6 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300">
+                    <span class="blip"></span>
+                    Built by a sitting BC strata council treasurer
                 </p>
-            </div>
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="p-8 rounded-2xl bg-slate-50 border border-slate-200">
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">1. Deemed Service Failures</h3>
-                    <p class="text-sm text-slate-600 mb-4"><strong>The Problem:</strong> Sending an email from a manager's inbox lacks certified delivery logs. Councils routinely count 14 days without factoring in the mandatory 4-day statutory deemed delivery buffer.</p>
-                    <p class="text-sm text-rose-700 font-medium bg-rose-50 p-3 rounded-lg border border-rose-100"><strong>CRT Consequence:</strong> The tribunal declares the notice defective and wipes out the fine entirely.</p>
-                </div>
-                <div class="p-8 rounded-2xl bg-slate-50 border border-slate-200">
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">2. Missing Quorum & Votes</h3>
-                    <p class="text-sm text-slate-600 mb-4"><strong>The Problem:</strong> A property manager debits $200 onto a unit ledger without a recorded, formal council majority vote logged after the response deadline expired.</p>
-                    <p class="text-sm text-rose-700 font-medium bg-rose-50 p-3 rounded-lg border border-rose-100"><strong>CRT Consequence:</strong> Adjudicators strike down the penalty for procedural unfairness.</p>
-                </div>
-                <div class="p-8 rounded-2xl bg-slate-50 border border-slate-200">
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">3. Unsearchable Inboxes</h3>
-                    <p class="text-sm text-slate-600 mb-4"><strong>The Problem:</strong> When a dispute escalates 9 months later, the original property manager has changed jobs, and critical emails, CCTV exports, and hearing notes are gone forever.</p>
-                    <p class="text-sm text-rose-700 font-medium bg-rose-50 p-3 rounded-lg border border-rose-100"><strong>CRT Consequence:</strong> Council spends 20+ unpaid hours scrambling for lost files and loses by default.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Feature Deep Dive -->
-    <section id="how-it-works" class="py-24 bg-slate-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <span class="text-xs font-bold tracking-widest text-blue-600 uppercase">Procedural Integrity on Autopilot</span>
-                <h2 class="mt-2 text-3xl md:text-4xl font-extrabold text-slate-900">From Incident to CRT-Proof Record in Three Steps</h2>
-            </div>
-            <div class="grid md:grid-cols-3 gap-12 relative">
-                <div class="hidden md:block absolute top-8 left-[15%] right-[15%] h-0.5 bg-slate-200 -z-10"></div>
-                <div class="text-center relative z-10">
-                    <div class="w-16 h-16 mx-auto bg-slate-900 text-white rounded-full flex items-center justify-center text-2xl font-bold mb-6 shadow-md border-4 border-slate-50">1</div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">Contemporaneous Capture</h3>
-                    <p class="text-slate-600 text-sm">Council members, caretakers, or residents submit timestamped photos, audio, or CCTV clips in 30 seconds from any device. Every piece of evidence is immutably timestamped.</p>
-                </div>
-                <div class="text-center relative z-10">
-                    <div class="w-16 h-16 mx-auto bg-slate-900 text-white rounded-full flex items-center justify-center text-2xl font-bold mb-6 shadow-md border-4 border-slate-50">2</div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">Section 135 Notice Engine</h3>
-                    <p class="text-slate-600 text-sm">CivicDesk auto-drafts a formal Notice of Complaint citing the exact bylaw. It automatically locks in the mandatory 4-day deemed service window plus the 14-day response clock.</p>
-                </div>
-                <div class="text-center relative z-10">
-                    <div class="w-16 h-16 mx-auto bg-slate-900 text-white rounded-full flex items-center justify-center text-2xl font-bold mb-6 shadow-md border-4 border-slate-50">3</div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">Quorum & CRT Binder</h3>
-                    <p class="text-slate-600 text-sm">Once the deadline passes, council votes with a single click. If appealed, download a pre-paginated, 5-tab Evidentiary PDF Packet (Exhibits A-E) complete with proof-of-service.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Manager Bridge -->
-    <section id="managers" class="py-24 bg-slate-900 text-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <span class="text-xs font-bold tracking-widest text-slate-400 uppercase">Collaboration Without Overhead</span>
-                <h2 class="mt-2 text-3xl md:text-4xl font-extrabold text-white">Built for Councils. Loved by Busy Managers.</h2>
-                <p class="mt-4 text-lg text-slate-300 max-w-3xl mx-auto">
-                    We know your property manager is overloaded with 12 other buildings. That is why CivicDesk does not force your manager to download an app, remember a password, or adopt another complex portal.
+                <h1 class="font-display text-[2.6rem] leading-[1.04] text-white sm:text-6xl lg:text-[4.4rem]">
+                    Your building runs on email.
+                    <span class="glow-text block italic">Give it a desk.</span>
+                </h1>
+                <p class="mt-7 max-w-xl text-lg leading-relaxed text-slate-300">
+                    CivicDesk is where your strata council and manager keep every bylaw, complaint, vote and email thread:
+                    summarized by AI, searchable in seconds, and on the record when it matters.
                 </p>
+                <div class="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <a
+                        href="{% url 'account_signup' %}"
+                        class="cta justify-center text-base"
+                    >
+                        Bring your building
+                        <span class="arrow" aria-hidden="true">&rarr;</span>
+                    </a>
+                    <a
+                        href="#ask"
+                        class="cta-ghost justify-center"
+                    >
+                        Try “Ask your bylaws”
+                    </a>
+                </div>
+                <dl class="mt-12 grid max-w-lg grid-cols-3 gap-4 border-t sm:gap-6 border-white/10 pt-6">
+                    <div>
+                        <dt class="plan-label">Bylaw search</dt>
+                        <dd class="mt-1 font-display text-xl text-white sm:text-2xl">Seconds</dd>
+                    </div>
+                    <div>
+                        <dt class="plan-label">Email threads</dt>
+                        <dd class="mt-1 font-display text-xl text-white sm:text-2xl">1 summary</dd>
+                    </div>
+                    <div>
+                        <dt class="plan-label">s.135 steps</dt>
+                        <dd class="mt-1 font-display text-xl text-white sm:text-2xl">Tracked</dd>
+                    </div>
+                </dl>
             </div>
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="bg-slate-800/50 border border-slate-700 p-8 rounded-2xl">
-                    <h3 class="text-xl font-bold text-white mb-3">Zero-Login Magic Links</h3>
-                    <p class="text-slate-400 text-sm">When council approves an action, the manager receives a concise email with a pre-drafted PDF. One click confirms: <code>[Mark Issued]</code>. Done.</p>
-                </div>
-                <div class="bg-slate-800/50 border border-slate-700 p-8 rounded-2xl">
-                    <h3 class="text-xl font-bold text-white mb-3">No 11:30 PM Email Chaos</h3>
-                    <p class="text-slate-400 text-sm">Stop sorting through 15 conflicting emails from five different council members. Council deliberates privately inside CivicDesk and delivers one single, unified directive.</p>
-                </div>
-                <div class="bg-slate-800/50 border border-slate-700 p-8 rounded-2xl">
-                    <h3 class="text-xl font-bold text-white mb-3">Automatic Audit Trail</h3>
-                    <p class="text-slate-400 text-sm">Protects the management brokerage against liability claims by proving every letter and fine was formally directed and voted on by the elected board.</p>
-                </div>
+
+            <!-- Living building -->
+            <div
+                class="building-stage building mx-auto w-full max-w-[520px]"
+                data-building
+            >
+                <svg
+                    viewBox="0 0 420 520"
+                    role="img"
+                    aria-label="A strata building whose windows light up as council activity happens"
+                >
+                    <!-- dimension lines & labels -->
+                    <path class="dim" d="M40 92 V470 M34 92 H46 M34 470 H46" />
+                    <path class="dim" d="M70 494 H350 M70 488 V500 M350 488 V500" />
+                    <text x="18" y="290" fill="rgba(255,181,71,.7)" font-family="Geist Mono" font-size="10" transform="rotate(-90 18 290)">9 STOREYS · 45 LOTS</text>
+                    <text x="160" y="512" fill="rgba(255,181,71,.7)" font-family="Geist Mono" font-size="10">EPS 1234 · ELEVATION A</text>
+                    <!-- building outline (draws in) -->
+                    <path class="stroke draw" d="M70 470 V92 H350 V470 Z M60 470 H360 M70 92 L80 80 H340 L350 92 M196 470 V444 H224 V470" />
+                    <path class="stroke" d="M300 80 V56" />
+                    <circle class="beacon" cx="300" cy="54" r="3" />
+                    <g id="windows"></g>
+                </svg>
+                <div
+                    class="pointer-events-none absolute inset-0"
+                    data-events
+                ></div>
             </div>
         </div>
     </section>
 
-    <!-- Product Breadth -->
-    <section class="py-24 bg-white border-b border-slate-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <span class="text-xs font-bold tracking-widest text-slate-400 uppercase">Complete Operational Clarity</span>
-                <h2 class="mt-2 text-3xl md:text-4xl font-extrabold text-slate-900">One Workspace for the Entire Building</h2>
+    <!-- ================= ASK YOUR BYLAWS ================= -->
+    <section
+        id="ask"
+        class="paper-grid scroll-mt-10 py-24"
+    >
+        <div class="mx-auto grid max-w-7xl items-center gap-14 px-5 sm:px-8 lg:grid-cols-[0.9fr_1.1fr]">
+            <div data-reveal>
+                <p class="font-mono text-xs uppercase tracking-[0.16em] text-[#8a6a2c]">01 · Documents</p>
+                <h2 class="mt-3 font-display text-4xl leading-[1.08] sm:text-5xl">
+                    Stop digging through PDFs.<br>
+                    <em class="text-[#4b3fd1]">Ask your bylaws.</em>
+                </h2>
+                <p class="mt-6 max-w-lg text-lg leading-relaxed text-slate-600">
+                    Upload your bylaws, rules and minutes once. CivicDesk summarizes each one by topic, and answers questions in plain
+                    language, with the exact page it came from, so you can check before you act.
+                </p>
+                <ul class="mt-8 space-y-3 text-slate-700">
+                    <li class="flex gap-3"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#ffb547]"></span>Summaries by topic: parking, pets, rentals, renovations, fines</li>
+                    <li class="flex gap-3"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#ffb547]"></span>Every answer cites the document and page</li>
+                    <li class="flex gap-3"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#ffb547]"></span>Past questions stay searchable for the next council</li>
+                </ul>
             </div>
-            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="p-6 border border-slate-200 rounded-xl hover:shadow-lg transition cursor-default bg-slate-50">
-                    <h3 class="text-lg font-bold text-slate-900 mb-2">1. Caretaker Sweeps</h3>
-                    <p class="text-sm text-slate-600">Confirm physical inspections of boiler rooms, fire exits, and amenities with QR rounds—without manual paper logs.</p>
+
+            <div
+                class="ask-shell p-5 sm:p-7"
+                data-ask-demo
+                data-reveal="2"
+            >
+                <div class="flex items-center justify-between">
+                    <p class="font-mono text-[11px] uppercase tracking-[0.16em] text-slate-500">EPS 1234 · Documents</p>
+                    <span class="inline-flex items-center gap-2 font-mono text-[11px] text-slate-500"><span class="blip mint"></span>3 documents</span>
                 </div>
-                <div class="p-6 border border-slate-200 rounded-xl hover:shadow-lg transition cursor-default bg-slate-50">
-                    <h3 class="text-lg font-bold text-slate-900 mb-2">2. Meeting Packs</h3>
-                    <p class="text-sm text-slate-600">Auto-compile every active bylaw, pending vote, and caretaker check into a clean agenda PDF for your monthly council meeting.</p>
+                <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-[15px] text-slate-900">
+                    <span data-q></span><span class="caret"></span>
                 </div>
-                <div class="p-6 border border-slate-200 rounded-xl hover:shadow-lg transition cursor-default bg-slate-50">
-                    <h3 class="text-lg font-bold text-slate-900 mb-2">3. Email Inbox Sync</h3>
-                    <p class="text-sm text-slate-600">Forward emails from your shared council alias directly into CivicDesk; our engine extracts unit numbers and photos automatically.</p>
+                <p
+                    class="thinking mt-5 text-sm font-semibold"
+                    data-state
+                    hidden
+                >Reading every page of your bylaws…</p>
+                <p
+                    class="mt-5 min-h-[7.5rem] text-[15px] leading-relaxed text-slate-800"
+                    data-a
+                ></p>
+                <div class="mt-6 flex flex-wrap gap-2 border-t border-slate-100 pt-5">
+                    <button
+                        type="button"
+                        class="chip"
+                        data-chip
+                    >Short-term rentals?</button>
+                    <button
+                        type="button"
+                        class="chip"
+                        data-chip
+                    >Visitor parking?</button>
+                    <button
+                        type="button"
+                        class="chip"
+                        data-chip
+                    >How many pets?</button>
                 </div>
-                <div class="p-6 border border-slate-200 rounded-xl hover:shadow-lg transition cursor-default bg-slate-50">
-                    <h3 class="text-lg font-bold text-slate-900 mb-2">4. AGM Governance Archive</h3>
-                    <p class="text-sm text-slate-600">Outgoing boards generate an instant Annual Stewardship Report for the AGM package so institutional knowledge is never lost.</p>
-                </div>
+                <p class="mt-4 text-xs text-slate-400">Sample answers from a demo building. Your answers come from your own documents.</p>
             </div>
         </div>
     </section>
 
-    <!-- Pricing -->
-    <section id="pricing" class="py-24 bg-slate-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <span class="text-xs font-bold tracking-widest text-slate-400 uppercase">Predictable Building Pricing</span>
-                <h2 class="mt-2 text-3xl md:text-4xl font-extrabold text-slate-900">Simple, Flat Pricing Based on Your Building Size</h2>
-                <p class="mt-4 text-slate-600">Zero per-seat charges. Unlimited council seats, caretakers, and manager collaborators.</p>
+    <!-- ================= FEATURES ================= -->
+    <section
+        id="features"
+        class="scroll-mt-10 bg-[var(--paper-2)] py-24"
+    >
+        <div class="mx-auto max-w-7xl px-5 sm:px-8">
+            <div
+                class="max-w-2xl"
+                data-reveal
+            >
+                <p class="font-mono text-xs uppercase tracking-[0.16em] text-[#8a6a2c]">02 · One desk</p>
+                <h2 class="mt-3 font-display text-4xl leading-[1.08] sm:text-5xl">Everything your council chases by email, in one place.</h2>
             </div>
-            
-            <div class="grid md:grid-cols-3 gap-8 items-center max-w-5xl mx-auto">
-                <div class="bg-white border border-slate-200 p-8 rounded-2xl shadow-sm">
-                    <h3 class="text-lg font-bold text-slate-900">Boutique Strata</h3>
-                    <p class="text-sm text-slate-500 mb-4">Up to 40 Units</p>
-                    <div class="mb-6"><span class="text-4xl font-extrabold text-slate-900">$99</span><span class="text-slate-500"> / month</span></div>
-                    <ul class="space-y-3 mb-8 text-sm text-slate-700">
-                        <li class="flex items-center gap-2"><svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Unlimited council seats</li>
-                        <li class="flex items-center gap-2"><svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Full S.135 Statutory Engine</li>
-                        <li class="flex items-center gap-2"><svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Evidence Vault & CCTV attachments</li>
-                        <li class="flex items-center gap-2"><svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Standard Email Delivery Logs</li>
-                    </ul>
-                    <a href="{% url 'account_signup' %}" class="block text-center w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold rounded-full transition">Start Trial</a>
-                </div>
-                
-                <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-2xl transform md:-translate-y-4 relative">
-                    <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Most Popular</div>
-                    <h3 class="text-lg font-bold text-white">Mid-Rise Community</h3>
-                    <p class="text-sm text-slate-400 mb-4">41 to 150 Units</p>
-                    <div class="mb-6"><span class="text-4xl font-extrabold text-white">$179</span><span class="text-slate-400"> / month</span></div>
-                    <ul class="space-y-3 mb-8 text-sm text-slate-300">
-                        <li class="flex items-center gap-2"><svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Everything in Boutique</li>
-                        <li class="flex items-center gap-2"><svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Caretaker QR Physical Sweeps</li>
-                        <li class="flex items-center gap-2"><svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Inbound Email-to-Ticket Parsing</li>
-                        <li class="flex items-center gap-2"><svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> 1-Click CRT Binder Generator</li>
-                        <li class="flex items-center gap-2"><svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Automated Meeting Agenda Packs</li>
-                    </ul>
-                    <a href="{% url 'account_signup' %}" class="block text-center w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full transition">Start Trial</a>
-                </div>
-                
-                <div class="bg-white border border-slate-200 p-8 rounded-2xl shadow-sm">
-                    <h3 class="text-lg font-bold text-slate-900">High-Rise & Complexes</h3>
-                    <p class="text-sm text-slate-500 mb-4">151 to 350+ Units</p>
-                    <div class="mb-6"><span class="text-4xl font-extrabold text-slate-900">$279</span><span class="text-slate-500"> / month</span></div>
-                    <ul class="space-y-3 mb-8 text-sm text-slate-700">
-                        <li class="flex items-center gap-2"><svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Everything in Mid-Rise</li>
-                        <li class="flex items-center gap-2"><svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Multi-building / section support</li>
-                        <li class="flex items-center gap-2"><svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Custom Bylaw Matrix Configuration</li>
-                        <li class="flex items-center gap-2"><svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Priority Legal Formatting</li>
-                        <li class="flex items-center gap-2"><svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> AGM Handover Audit</li>
-                    </ul>
-                    <a href="{% url 'account_signup' %}" class="block text-center w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold rounded-full transition">Start Trial</a>
-                </div>
-            </div>
-            
-            <div class="mt-12 max-w-3xl mx-auto bg-blue-50 border border-blue-100 p-6 rounded-xl text-sm text-blue-800 italic text-center">
-                "Fits directly within standard discretionary council spending limits. Most councils approve CivicDesk under their annual Administrative Contingency budget with a simple majority vote."
-            </div>
-        </div>
-    </section>
-
-    <!-- FAQ -->
-    <section class="py-24 bg-white border-t border-slate-200">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-3xl font-extrabold text-slate-900 text-center mb-12">Frequently Asked Questions</h2>
-            <div class="space-y-6">
-                <div class="border border-slate-200 rounded-xl p-6 bg-slate-50">
-                    <h4 class="font-bold text-slate-900 mb-2">Q: Does our property manager have to create an account?</h4>
-                    <p class="text-slate-600 text-sm">A: No. Property managers interact via secure, one-click magic links sent to their existing email inbox. They never have to learn or log into a new software system.</p>
-                </div>
-                <div class="border border-slate-200 rounded-xl p-6 bg-slate-50">
-                    <h4 class="font-bold text-slate-900 mb-2">Q: Can our council approve this without an owners' vote at the AGM?</h4>
-                    <p class="text-slate-600 text-sm">A: Yes. In almost all jurisdictions (including BC Strata Property Act limits), annual subscriptions under $2,000 to $3,000 fall well within the council’s statutory discretionary spending authority.</p>
-                </div>
-                <div class="border border-slate-200 rounded-xl p-6 bg-slate-50">
-                    <h4 class="font-bold text-slate-900 mb-2">Q: Is CivicDesk legal advice?</h4>
-                    <p class="text-slate-600 text-sm">A: No. CivicDesk is an administrative compliance and record-keeping tool that automates mandatory statutory timelines and document checklists. It guarantees procedural compliance, not tribunal verdicts.</p>
-                </div>
-                <div class="border border-slate-200 rounded-xl p-6 bg-slate-50">
-                    <h4 class="font-bold text-slate-900 mb-2">Q: Where is our building's surveillance and resident data stored?</h4>
-                    <p class="text-slate-600 text-sm">A: All data is hosted on secure, SOC2-compliant servers physically located in Canada, adhering strictly to provincial privacy laws (including BC PIPA and PIPEDA).</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Bottom CTA -->
-    <section class="py-24 bg-blue-600 text-white text-center">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-4xl font-extrabold mb-6">Ready to eliminate email chaos and bulletproof your bylaw enforcement?</h2>
-            <p class="text-xl text-blue-100 mb-10">Join forward-thinking strata councils running faster, fairer, and dispute-free building operations.</p>
-            <div class="flex flex-col sm:flex-row justify-center gap-4 items-center">
-                <a href="{% url 'account_signup' %}" class="px-8 py-4 bg-slate-900 text-white rounded-full font-semibold text-lg hover:bg-slate-800 shadow-xl transition">Start Your 45-Day Free Trial</a>
-                <a href="#" class="text-blue-100 hover:text-white font-medium underline">Generate a Free Section 135 Notice Template &rarr;</a>
+            <div class="mt-14 grid gap-5 md:grid-cols-3">
+                <!-- Inbox -->
+                <article
+                    class="feature"
+                    data-reveal
+                >
+                    <svg
+                        viewBox="0 0 120 60"
+                        class="mb-6 h-16 w-full"
+                        aria-hidden="true"
+                    >
+                        <rect x="8" y="14" width="38" height="28" rx="4" fill="none" stroke="#0a0f1c" stroke-opacity=".35" />
+                        <path d="M8 18 L27 31 L46 18" fill="none" stroke="#0a0f1c" stroke-opacity=".35" />
+                        <g class="mail-fly">
+                            <rect x="70" y="12" width="42" height="9" rx="4.5" fill="#8b7bff" fill-opacity=".85" />
+                            <rect x="70" y="26" width="32" height="9" rx="4.5" fill="#ffb547" />
+                            <rect x="70" y="40" width="38" height="9" rx="4.5" fill="#0a0f1c" fill-opacity=".15" />
+                        </g>
+                        <path d="M52 30 H64" stroke="#0a0f1c" stroke-opacity=".35" stroke-dasharray="2 3" />
+                    </svg>
+                    <p class="tag">Email inbox</p>
+                    <h3 class="mt-2 font-display text-2xl">Forward the thread. Get the issue.</h3>
+                    <p class="mt-3 text-slate-600">Every building gets its own address. Forward a 40-reply chain and get back who's involved, what's still open, urgency and a next step, by email and in the app.</p>
+                </article>
+                <!-- Dockets -->
+                <article
+                    class="feature"
+                    data-reveal="2"
+                >
+                    <svg
+                        viewBox="0 0 120 60"
+                        class="mb-6 h-16 w-full"
+                        aria-hidden="true"
+                    >
+                        <g transform="translate(16 12)">
+                            <g class="clock-ring">
+                                <circle cx="18" cy="18" r="18" fill="none" stroke="#0a0f1c" stroke-opacity=".1" stroke-width="5" />
+                                <circle class="run" cx="18" cy="18" r="18" fill="none" stroke="#ffb547" stroke-width="5" stroke-linecap="round" />
+                            </g>
+                        </g>
+                        <text x="62" y="28" font-family="Geist Mono" font-size="9" fill="#0a0f1c" fill-opacity=".55">S.135 NOTICE</text>
+                        <text x="62" y="42" font-family="Geist Mono" font-size="9" fill="#0a0f1c" fill-opacity=".55">14-DAY CLOCK</text>
+                    </svg>
+                    <p class="tag">Bylaw enforcement</p>
+                    <h3 class="mt-2 font-display text-2xl">From complaint to decision, on the record.</h3>
+                    <p class="mt-3 text-slate-600">Log a docket, send the s.135 notice, collect the owner's response, and let council vote online. Every step is timestamped in an audit trail.</p>
+                </article>
+                <!-- Documents -->
+                <article
+                    class="feature"
+                    data-reveal="3"
+                >
+                    <svg
+                        viewBox="0 0 120 60"
+                        class="mb-6 h-16 w-full"
+                        aria-hidden="true"
+                    >
+                        <rect x="34" y="4" width="40" height="52" rx="3" fill="#fff" stroke="#0a0f1c" stroke-opacity=".35" />
+                        <path d="M42 16 H66 M42 24 H62 M42 32 H66 M42 40 H58" stroke="#0a0f1c" stroke-opacity=".2" />
+                        <rect class="page-scan" x="36" y="10" width="36" height="5" rx="2.5" fill="#8b7bff" fill-opacity=".35" />
+                        <rect x="82" y="22" width="30" height="12" rx="6" fill="#8b7bff" fill-opacity=".15" stroke="#8b7bff" stroke-opacity=".5" />
+                        <text x="88" y="31" font-family="Geist Mono" font-size="7.5" fill="#4b3fd1">p.12</text>
+                    </svg>
+                    <p class="tag">Documents</p>
+                    <h3 class="mt-2 font-display text-2xl">Every rule, one search away.</h3>
+                    <p class="mt-3 text-slate-600">Bylaws, rules, minutes and insurance in one library, summarized by topic, with cited answers for owners' questions.</p>
+                </article>
             </div>
         </div>
     </section>
 
-{% endblock %}
+    <!-- ================= HOW IT WORKS ================= -->
+    <section
+        id="how"
+        class="paper-grid scroll-mt-10 py-24"
+    >
+        <div class="mx-auto grid max-w-7xl gap-14 px-5 sm:px-8 lg:grid-cols-2">
+            <div data-reveal>
+                <p class="font-mono text-xs uppercase tracking-[0.16em] text-[#8a6a2c]">03 · How it works</p>
+                <h2 class="mt-3 font-display text-4xl leading-[1.08] sm:text-5xl">Set up your building in an afternoon.</h2>
+                <p class="mt-6 max-w-md text-lg text-slate-600">No new habits required. Keep using email; CivicDesk turns it into a record.</p>
+            </div>
+            <div
+                class="relative"
+                data-reveal-group
+            >
+                <div class="step-line"></div>
+                <ol class="space-y-10">
+                <li class="relative flex gap-5">
+                    <span class="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--ink)] font-mono text-sm text-[var(--lamp)]">1</span>
+                    <div>
+                        <h3 class="font-display text-2xl">Claim your building</h3>
+                        <p class="mt-1 text-slate-600">Sign up, choose your strata plan and role. We approve every member, so only your council and manager get in.</p>
+                    </div>
+                </li>
+                <li class="relative flex gap-5">
+                    <span class="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--ink)] font-mono text-sm text-[var(--lamp)]">2</span>
+                    <div>
+                        <h3 class="font-display text-2xl">Upload, then forward</h3>
+                        <p class="mt-1 text-slate-600">Drop in your bylaws and minutes. Forward the email threads that matter to your building's CivicDesk address.</p>
+                    </div>
+                </li>
+                <li class="relative flex gap-5">
+                    <span class="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--ink)] font-mono text-sm text-[var(--lamp)]">3</span>
+                    <div>
+                        <h3 class="font-display text-2xl">Decide together</h3>
+                        <p class="mt-1 text-slate-600">Council and manager see the same summaries, deadlines and votes, and everyone is notified when something needs them.</p>
+                    </div>
+                </li>
+                </ol>
+            </div>
+        </div>
+    </section>
 
+    <!-- ================= ROLES ================= -->
+    <section
+        id="roles"
+        class="scroll-mt-10 bg-[var(--paper-2)] py-24"
+    >
+        <div class="mx-auto grid max-w-7xl gap-5 px-5 sm:px-8 md:grid-cols-2">
+            <div
+                class="feature"
+                data-reveal
+            >
+                <p class="tag">For strata councils</p>
+                <h3 class="mt-2 font-display text-3xl">Volunteer hours, not volunteer weekends.</h3>
+                <ul class="mt-5 space-y-2.5 text-slate-700">
+                    <li>· Know what's waiting on you: votes, approvals, deadlines</li>
+                    <li>· Answer owners' bylaw questions with a page reference</li>
+                    <li>· Hand over to the next council with everything on record</li>
+                </ul>
+            </div>
+            <div
+                class="feature"
+                data-reveal="2"
+            >
+                <p class="tag">For strata managers</p>
+                <h3 class="mt-2 font-display text-3xl">Every building, one desk.</h3>
+                <ul class="mt-5 space-y-2.5 text-slate-700">
+                    <li>· Switch between buildings without switching tools</li>
+                    <li>· Send s.135 notices and fine letters from one workflow</li>
+                    <li>· Get council decisions without chasing reply-all chains</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= FINAL CTA ================= -->
+    <section class="blueprint overflow-hidden py-24">
+        <div class="vignette"></div>
+        <div
+            class="relative z-10 mx-auto max-w-3xl px-5 text-center sm:px-8"
+            data-reveal
+        >
+            <p class="plan-label">Now onboarding BC strata councils</p>
+            <h2 class="mt-4 font-display text-4xl leading-[1.08] text-white sm:text-5xl">
+                Turn the lights on<br>
+                <span class="glow-text italic">in your building.</span>
+            </h2>
+            <p class="mx-auto mt-5 max-w-xl text-lg text-slate-300">Early access is open for councils and the managers who work with them.</p>
+            <div class="mt-9 flex justify-center">
+                <a
+                    href="{% url 'account_signup' %}"
+                    class="cta text-base"
+                >
+                    Get early access
+                    <span class="arrow" aria-hidden="true">&rarr;</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-[var(--ink)] py-10 text-sm text-slate-400">
+        <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-5 sm:flex-row sm:px-8">
+            <c-brand.wordmark tone="light" />
+            <p>Made in British Columbia for strata councils and managers · &copy; {% now "Y" %} CivicDesk</p>
+            <div class="flex gap-5">
+                <a
+                    href="{% url 'account_login' %}"
+                    class="hover:text-white"
+                >Log in</a>
+                <a
+                    href="{% url 'account_signup' %}"
+                    class="hover:text-white"
+                >Sign up</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

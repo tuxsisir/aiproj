@@ -83,10 +83,24 @@ Planned production domain: `usecivicdesk.com`.
   Setup: `uv venv --python 3.13 .venv && uv pip install --python .venv/bin/python -r requirements.txt`.
   (System default Python is 3.15, which Django 5.2 doesn't support.)
 - Local DB is Postgres `stratacorp` (from `.env`), already migrated with demo data.
+- **Local logins** (DEBUG only, `core/dev.py`): one-click "Log in as" on the login page and a "Dev:" switcher in
+  the dashboard header. Accounts: admin / manager / president / treasurer / newcomer (pending) `@civicdesk.test`,
+  password `DEV_ACCOUNT_PASSWORD`. Recreate/repair anytime: `manage.py seed_dev_accounts`. Demo users must use
+  reserved domains (.test / example.*) so they never receive real email.
 - `python manage.py runserver`, `python manage.py migrate`, `python manage.py init_demo_data`
-- Tests: `.venv/bin/python manage.py test core stratas dockets documents inbox payments` (factories in `core/testing.py`).
+- Tests: `.venv/bin/python manage.py test core stratas dockets documents inbox payments` (dev-login tests in
+  `core/tests_dev.py` use their own urlconf because tests run with DEBUG off) (factories in `core/testing.py`).
 - Quick throwaway DB: `DATABASE_URL="sqlite://:memory:" python manage.py shell -c "..."` (run `migrate` first inside).
 
 ## Style
 - Python: `ruff`. Templates: `djlint`, one HTML attribute per line.
-- Dark-mode, shadcn-inspired UI; theme preference in `localStorage`.
+- Design language "blueprint & lamplight": night ink `#0a0f1c` + blueprint grid, warm paper `#f6f3ec`,
+  lamp amber `#ffb547` = activity, violet `#8b7bff` = AI. Type: Fraunces (display, 600; italic 500 for accents), Geist (UI),
+  Geist Mono (plan labels). Brand: `<c-brand.wordmark/>` / `<c-brand.mark/>`.
+- Landing (`core/templates/landing.html`) is standalone with `core/static/core/landing.css|js` (living building,
+  ask demo, reveals). App-wide motion in `core/static/core/alive.css|js`: `.btn-glow` on primary buttons,
+  `.card-hover`, `.live-dot`, `data-count-up`, `.page-enter` wraps dashboard content. Always respect
+  `prefers-reduced-motion`. Public pages are light-only (`dark:` follows the `.dark` class, not the OS).
+- Dashboard: dark-mode capable, theme preference in `localStorage`.
+- Visual checks: `DEBUG_TOOLBAR=False manage.py runserver` + headless Chrome screenshots (min width 500px;
+  CSS animations don't advance in headless virtual time, so freeze them via `document.getAnimations()`).

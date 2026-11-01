@@ -1,0 +1,47 @@
+/* App-wide motion layer ("blueprint & lamplight"). Small, purposeful movement; off for reduced motion. */
+:root {
+  --lamp: #ffb547;
+  --signal: #8b7bff;
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+}
+body { font-family: var(--font-sans); }
+.font-display { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.02em;  font-variation-settings: "WONK" 0; }
+
+/* Page entrance: top-level blocks of the page fade up in a quick stagger. */
+.page-enter > * > * { animation: page-up 0.5s cubic-bezier(.2, .8, .2, 1) both; }
+.page-enter > * > *:nth-child(2) { animation-delay: 0.05s; }
+.page-enter > * > *:nth-child(3) { animation-delay: 0.1s; }
+.page-enter > * > *:nth-child(4) { animation-delay: 0.15s; }
+.page-enter > * > *:nth-child(5) { animation-delay: 0.2s; }
+.page-enter > * > *:nth-child(n+6) { animation-delay: 0.25s; }
+@keyframes page-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* Primary buttons: a light sheen passes every few seconds; glow on hover. */
+.btn-glow { position: relative; overflow: hidden; isolation: isolate; transition: transform 0.15s, box-shadow 0.25s; }
+.btn-glow::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  transform: translateX(-130%); animation: btn-sheen 4.5s ease-in-out infinite;
+}
+.btn-glow:hover { transform: translateY(-1px); box-shadow: 0 8px 24px -8px rgba(79, 70, 229, 0.6), 0 0 0 3px rgba(255, 181, 71, 0.18); }
+@keyframes btn-sheen { 0%, 65% { transform: translateX(-130%); } 100% { transform: translateX(130%); } }
+
+/* Cards that lift slightly on hover. */
+.card-hover { transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s; }
+.card-hover:hover { transform: translateY(-2px); box-shadow: 0 14px 30px -18px rgba(15, 23, 42, 0.45); border-color: rgba(255, 181, 71, 0.55); }
+
+/* "Needs you" dot. */
+.live-dot { position: relative; display: inline-flex; width: 8px; height: 8px; flex-shrink: 0; }
+.live-dot::before, .live-dot::after { content: ""; position: absolute; inset: 0; border-radius: 9999px; background: currentColor; }
+.live-dot::before { animation: live-ping 1.8s ease-out infinite; }
+@keyframes live-ping { from { transform: scale(1); opacity: 0.7; } to { transform: scale(3); opacity: 0; } }
+
+/* The lit window in the brand mark breathes. */
+.brand-lamp { animation: lamp 3.5s ease-in-out infinite; }
+@keyframes lamp { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter > * > *, .btn-glow::after, .live-dot::before, .brand-lamp { animation: none !important; }
+  .btn-glow, .card-hover { transition: none; }
+}

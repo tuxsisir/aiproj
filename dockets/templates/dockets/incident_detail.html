@@ -238,7 +238,7 @@
                                     </button>
                                     <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-2 text-center">Missing unit or email to dispatch.</p>
                                 {% else %}
-                                    <button type="button" @click="dispatchNoticeOpen = true" class="w-full flex justify-center items-center gap-2 rounded-md bg-blue-600 hover:bg-blue-500 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition">
+                                    <button type="button" @click="dispatchNoticeOpen = true" class="btn-glow w-full flex justify-center items-center gap-2 rounded-md bg-blue-600 hover:bg-blue-500 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition">
                                         {% heroicon_outline "envelope" class="w-5 h-5" %}
                                         Dispatch S.135 Notice
                                     </button>
@@ -515,7 +515,7 @@
                                 </div>
                             </div>
                             <div class="mt-6 flex flex-row-reverse gap-3">
-                                <button type="submit" class="inline-flex justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition">Save Event</button>
+                                <button type="submit" class="btn-glow inline-flex justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition">Save Event</button>
                                 <button type="button" @click="logEventOpen = false" class="inline-flex justify-center rounded-md bg-white dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-900 dark:text-slate-300 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition">Cancel</button>
                             </div>
                         </form>
@@ -573,7 +573,7 @@ Strata Management</div>
                         <form method="POST" action="{% url 'dockets:dispatch_section_135' incident.pk %}">
                             {% csrf_token %}
                             <div class="flex flex-row-reverse gap-3">
-                                <button type="submit" class="inline-flex justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition">Confirm & Dispatch Notice</button>
+                                <button type="submit" class="btn-glow inline-flex justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition">Confirm & Dispatch Notice</button>
                                 <button type="button" @click="dispatchNoticeOpen = false" class="inline-flex justify-center rounded-md bg-white dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-900 dark:text-slate-300 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition">Cancel</button>
                             </div>
                         </form>
