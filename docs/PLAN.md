@@ -1,108 +1,119 @@
-# CivicDesk — Product & Build Plan
+# CivicDesk — Build Plan
 
-_Living document. Last updated: 2026-10-31._
+_Living document. Last updated: 2026-11-01. The "why" is in [`VISION.md`](VISION.md); this is the "what and when"._
 
-## Vision
-
-Take a BC strata council and its strata manager **off email**. Every issue, decision, approval and
-document for a building lives in one place, with a clear record of who decided what and when.
-
-**Edge:** built by a sitting council treasurer, starting from real day-to-day council work, not a feature list.
-
-**First customer:** our own council and our strata manager. Then other councils that use the same manager.
-
-## Users (MVP)
+## Users
 
 | User | Account | Needs |
 |---|---|---|
 | Platform admin (me) | Superuser | Approve every building and member, see everything |
-| Council member (President, VP, Treasurer, Secretary, Member-at-large) | Yes, one building | See what needs a decision, vote, track issues, see finances |
-| Strata manager | Yes, many buildings | One place per building: open items, deadlines, approvals waiting on council |
-| Owner / tenant | **No account** | Only token links (e.g. s.135 response portal) |
+| Council member (President, VP, Treasurer, Secretary, Member-at-large) | Yes, one building/section | See live status, decide and vote, never lose an issue |
+| Strata manager | Yes, many buildings | Update once; agenda, minutes and reports come from the record; see what waits on council |
+| Owner / tenant | **No account** | Notices and secure response links only |
 
-## Competitor: managestrata.ca
+## Pillars (from the vision)
 
-Features they advertise (reviewed 2026-10-31):
+**Issues** · **Projects** · **Enforcement** · **Maintenance** · **Money** · **Building brain**,
+sharing **Decisions**, **Meetings**, **Capture** (email + PDF → proposed items) and an unchangeable **timeline/audit log**.
 
-| Area | ManageStrata | CivicDesk today | Plan |
-|---|---|---|---|
-| Statutory deadline calendar (BC/AB/ON) | ✅ | s.135 deadline only | Phase 4 (BC only) |
-| Document library + AI Q&A over bylaws/minutes | ✅ | ✅ Summaries by topic + Q&A with page citations | Phase 0.5 (built) |
-| Meetings: notice, quorum, e-voting, minutes | ✅ | Council e-vote on bylaw cases only | Phase 2 (decisions) → Phase 5 (meetings) |
-| Minutes approval workflow | ✅ | ❌ | Phase 5 |
-| Finance: operating vs CRF, per-lot ledger, payments | ✅ | ❌ | Phase 3 (council-side first) |
-| AI agents drafting reminders, council approves | ✅ | ❌ | Later |
-| Prioritized action list dashboard | ✅ | Generic KPIs | Phase 1 |
-| Owner portal (dues, repairs, voting) | ✅ | Token links only | Out of MVP scope |
-| Data stored in Canada | ✅ | Not hosted yet | Host in Canada (Phase 6) |
-| **s.135 bylaw enforcement end-to-end** | Not advertised | ✅ (our wedge) | Harden in Phase 0 |
+## Key design decisions
 
-**Positioning:** they are broad. We go deep on **council ↔ manager collaboration** (decisions,
-approvals, finances, enforcement) for BC, where most of the email pain is.
+- **Sections are separate tenants.** EPS 7431 has an apartment section and a townhouse section with separate
+  councils and budgets. Each section gets its own workspace (members, issues, enforcement, budget). A parent
+  strata plan links them for shared documents and bylaws. To be designed in Phase 1 before new models land.
+- **Separate item types, shared plumbing.** Issue, Project, Enforcement case and Maintenance item are their
+  own models with their own rules. Timeline entries, attachments, decisions and audit logging are shared.
+- **AI proposes, people confirm.** Anything extracted from an email or PDF is a proposal until a person accepts it.
+- **Legal procedure is data, reviewed by a person.** Enforcement steps, deadlines and fine limits come from
+  the Act and the building's bylaws and are confirmed by the council/a professional, never assumed.
+- **Real documents never enter the repo.** Development uses anonymized copies only.
 
 ## Architecture principles
 
-- **Django apps = domains**: `core` (users, audit), `stratas` (buildings, memberships), `dockets`
-  (bylaw enforcement), `payments` (parked). New domains get new apps (e.g. `decisions`, `finance`, `documents`).
+- **Django apps = domains**: `core` (users, audit, email, AI plumbing), `stratas` (buildings, sections,
+  memberships), `dockets` (enforcement today), `documents` (building brain), `inbox` (capture by email),
+  `payments` (parked). New pillars get new apps (`issues`, `projects`, `maintenance`, `finance`, `meetings`).
 - **Function-based views only.** Views stay thin: parse request → call service → render/redirect.
-- **`services.py` per app** holds business rules and side effects (emails, state changes). Admin and views both call it.
+- **`services.py` per app** holds business rules and side effects. Admin and views both call it.
 - **QuerySet methods** for common reads (`Membership.objects.active().council()`).
 - **Forms** validate all user input; never trust POSTed choice values.
-- **Tenant boundary**: every query filters by `strata=request.strata`.
-- **Additive migrations**; convert data in its own migration (Postgres needs that).
+- **Tenant boundary**: every query filters by the active building/section.
+- **Additive migrations**; data conversions in their own migration (Postgres needs that).
 - **Every view gets tests** (Django `TestCase`, factories in `core/testing.py`).
-- **Secrets only in `.env`**; features degrade gracefully when keys are missing (email falls back to console).
+- **Secrets only in `.env`**; features degrade gracefully when keys are missing.
+
+## How we work
+
+1. **Plan first.** Each feature starts as a short plan (models, screens, rules, tests) agreed before code.
+2. **One feature per branch/commit**, small enough to review and undo.
+3. **Tests define done.** Views and services tested; AI calls mocked.
+4. **Independent review.** `code-reviewer` agent checks each change against `CLAUDE.md`;
+   `qa-tester` agent exercises the app as each role and files findings in `docs/qa/`. Neither writes code.
+5. **Check the real thing.** Click through / screenshot, not only test output.
+6. **Every feature names the email it removes** (Vision principle 8).
 
 ## Roadmap
 
-### Phase 0 — Foundation _(in progress)_
-- [x] Local environment running (Python 3.13 `.venv`)
-- [x] Membership approval by platform admin; council positions incl. Treasurer; tests
-- [x] Fix audit log silently dropping events
-- [x] Lock down `log_incident_event` (fake owner responses)
-- [ ] Workflow fixes: null bylaw crash, re-dispatch guards, duplicate fine dispatch, email-before-save ordering
+### Done so far
+- [x] Local environment (Python 3.13 `.venv`), membership approval by platform admin, council positions
+- [x] Audit log records every explicit event; manual timeline entries locked down
+- [x] Building brain v1: PDF library, AI summaries by topic, cited Q&A
+- [x] Email pipeline (`core/emails.py`) for all major events; staff preview at `/admin/emails/`
+- [x] Forward-to-CivicDesk inbox per building with AI summary
+- [x] s.135 enforcement v1 (complaint → notice → owner response → council vote → fine)
+- [x] Landing page, design language, dev logins
+
+### Phase 1 — Ways of working + foundations
+- [ ] `qa-tester` and `code-reviewer` agents (`.claude/agents/`), report folder `docs/qa/`
+- [ ] First QA pass on what exists (report only)
+- [ ] Sections: design and migrate (Building → Section as the tenant)
+- [ ] Shared plumbing: timeline entries + attachments usable by any item type
 - [ ] Hide Billing from nav (payments parked)
 
-### Phase 0.5 — Document library (the "aha") _(built 2026-10-31)_
-- [x] Upload building PDFs; AI summary by topic (Parking, Pets, Rentals…) with page links
-- [x] "Ask your documents" with answers citing document + page; questions saved as history
-- [ ] Try on our real bylaws once `ANTHROPIC_API_KEY` is added; tune the prompts
-- [ ] Later: pick relevant documents first when a building has too many to send at once (600-page request limit)
-- [ ] Later: summaries/answers on the dashboards; bylaw codes in Dockets linked to the bylaws PDF
+### Phase 2 — Issues + capture ("nothing raised is lost")
+- [ ] Issues: raise, assign (manager/council/vendor), status, "waiting since", close with outcome
+- [ ] Forwarded email → proposed issue (inbox already summarizes it)
+- [ ] Upload agenda / inspection / fire report PDF → AI proposes issues; person confirms
+      (test fixture: anonymized copy of the Oct 2026 agenda package)
+- [ ] Manager reply by email lands on the issue timeline
+- [ ] Role dashboards: manager portfolio "needs action"; council "waiting on me" + unanswered issues
+- [ ] Weekly digest email
 
-### Phase 0.6 — Email in and out _(built 2026-10-31)_
-- [x] One email pipeline (`core/emails.py`): welcome, password reset, membership request/approve/reject,
-      docket logged, s.135 notice, vote open, decision reached, fine notice, summary ready
-- [x] Forward-to-CivicDesk inbox per building with AI issue summary, emailed back to the forwarder
-- [x] AI "working" animations (shimmer text, glowing orb, skeleton lines)
-- [ ] Configure Resend: verify `usecivicdesk.com` for sending, inbound domain + webhook (needs deploy)
-- [ ] Later: read PDF/image attachments in forwarded emails; turn an inbox summary into a docket or task
+### Milestone — Deploy and onboard our council
+- [ ] Hosting (Canada), Resend domain + inbound, `ANTHROPIC_API_KEY`
+- [ ] Load our section's real data (privately, in production only)
 
-### Phase 1 — Role dashboards
-- [ ] Manager: per-building "needs action" list across portfolio (approvals, deadlines, cases)
-- [ ] Council: "waiting on me" (votes, approvals), building activity
-- [ ] Council meeting updates (to be added)
+### Phase 3 — Enforcement, bulletproof
+- [ ] Procedure engine: steps in order, deadlines, fine amounts checked against the bylaw
+      (rules reviewed by council/professional before use)
+- [ ] Fix known gaps: null bylaw crash, re-dispatch guards, duplicate fine dispatch, save-before-send, bylaw edit permissions, deadline expiry
+- [ ] Notices with delivery record; corrections as new entries only
+- [ ] One case covering many units (e.g. 13 units refusing fire-inspection access)
+- [ ] Collections: arrears → letter → lien warning → lien → CRT/court, with limitation-period alerts
+- [ ] CRT evidence package export (ordered, timestamped PDF)
 
-### Phase 2 — Replace email: decisions & tasks
-- [ ] Council decisions/motions with e-vote (generalise the docket vote)
-- [ ] Action items with owner + due date, comments per item
-- [ ] Notification digest instead of reply-all chains
-
-### Phase 3 — Treasurer & finance
-- [ ] Invoice/expense approval (manager submits → council/treasurer approves)
-- [ ] Operating budget vs actual, CRF balance tracking
-- [ ] Monthly financial statements upload + sign-off
-
-### Phase 4 — Documents & compliance
-- [ ] Document library (bylaws, minutes, insurance, depreciation report, contracts)
-- [ ] BC statutory calendar (AGM, insurance renewal, depreciation report, etc.) with reminders
+### Phase 4 — Projects + decisions
+- [ ] Projects: quotes compared side by side, council decision, vendor, cost, completion
+- [ ] Decisions/motions generalized from the docket vote; attach to issue, project or case
+- [ ] Vendors and contracts register (term, price lock, expiry)
 
 ### Phase 5 — Meetings
-- [ ] Agenda, minutes drafting, minutes approval
+- [ ] Agenda generated from open items (the manager's hook)
+- [ ] Meeting records decisions → minutes draft; minutes approval
 
-### Phase 6 — Launch
-- [ ] Deploy to `usecivicdesk.com` (Canada-hosted), Resend domain verified
-- [ ] Onboard our council + manager; collect feedback; then 2–3 pilot councils
+### Phase 6 — Maintenance
+- [ ] Recurring obligations with dates and costs (elevator Cat 1/Cat 5, fire inspection, gutters, windows, carpets, snow)
+- [ ] Reminders; next-year cost forecast for the budget
+
+### Phase 7 — Money (Treasurer)
+- [ ] Fiscal year per section; budget lines
+- [ ] Monthly statement upload → AI reads budget vs actual; overruns flagged
+- [ ] Arrears by unit and collection stage (council only), linked to enforcement collections
+
+### Building brain (ongoing)
+- [ ] Bulk upload (the 56 PDFs); primer for new council members
+- [ ] When a building has too many pages for one request, pick relevant documents first
+- [ ] Answers link to issues, projects and cases
 
 ## Timeline (draft)
 
@@ -110,27 +121,31 @@ approvals, finances, enforcement) for BC, where most of the email pain is.
 gantt
     title CivicDesk build plan (draft)
     dateFormat YYYY-MM-DD
-    section Phase 0 Foundation
-    Env + approvals + roles        :done,    p0a, 2026-10-31, 1d
-    Critical + workflow fixes      :active,  p0b, 2026-11-02, 7d
-    section Phase 1 Dashboards
-    Manager & council dashboards   :         p1,  after p0b, 10d
-    section Phase 2 Decisions
-    Decisions, tasks, comments     :         p2,  after p1, 14d
-    section Phase 3 Finance
-    Invoice approval, budget, CRF  :         p3,  after p2, 14d
-    section Phase 4 Docs & compliance
-    Library + statutory calendar   :         p4,  after p3, 14d
-    section Phase 6 Launch
-    Deploy + onboard our council   :milestone, m1, after p1, 0d
-    Pilot councils                 :         p6,  after p4, 21d
+    section Foundations
+    Agents, QA pass, sections, shared timeline :p1, 2026-11-02, 7d
+    section Issues
+    Issues + capture + dashboards             :p2, after p1, 14d
+    Deploy + onboard our council              :milestone, m1, after p2, 0d
+    section Enforcement
+    Procedure engine, collections, CRT pack   :p3, after p2, 21d
+    section Projects
+    Projects, decisions, vendors              :p4, after p3, 10d
+    section Meetings
+    Agenda + minutes                          :p5, after p4, 10d
+    section Maintenance
+    Recurring obligations                     :p6, after p5, 7d
+    section Money
+    Treasurer views                           :p7, after p6, 14d
 ```
 
-> Deploying right after Phase 1 lets our council start using it while later phases are built.
+## Competitor: managestrata.ca
+
+They are broad (multi-province, owner portal, accounting). We go deep on **council ↔ manager coordination and
+procedurally tight enforcement** in BC, built from a sitting council's real documents.
 
 ## Go-to-market notes
 
-- Start with our own council and manager; their feedback shapes Phases 2–3.
-- Then councils served by the same management firm (one warm intro, many buildings).
-- Content: short LinkedIn posts on CRT decisions about procedural mistakes.
+- Our council and manager first; then other buildings our manager serves (one warm intro, many buildings).
+- Pitch to managers: "your agenda builds itself." Pitch to councils: "nothing you raise gets lost."
+- Content: short posts on CRT decisions lost on procedure.
 - Pricing: per building per month; decide after the first pilot.
