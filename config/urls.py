@@ -25,7 +25,8 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     
-    import debug_toolbar
-    urlpatterns = [
-        path('__debug__/', include(debug_toolbar.urls)),
-    ] + urlpatterns
+    from core.dev import login_as
+    urlpatterns = [path('dev/login-as/<str:key>/', login_as, name='dev_login_as')] + urlpatterns
+    if "debug_toolbar" in settings.INSTALLED_APPS:
+        import debug_toolbar
+        urlpatterns = [path('__debug__/', include(debug_toolbar.urls))] + urlpatterns

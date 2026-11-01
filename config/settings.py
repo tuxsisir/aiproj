@@ -81,6 +81,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "stratas.context_processors.strata_context",
+                "core.dev.dev_tools",
             ],
             "builtins": [
                 "heroicons.templatetags.heroicons",
@@ -164,8 +165,11 @@ STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
 # Claude (document summaries and Q&A). Features degrade gracefully when unset.
 ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
 
-# Debug Toolbar
-if DEBUG:
+# Local dev accounts (core/dev.py): shared password, used only when DEBUG is on.
+DEV_ACCOUNT_PASSWORD = env("DEV_ACCOUNT_PASSWORD", default="helloworld")
+
+# Debug Toolbar (DEBUG_TOOLBAR=False in .env to hide it, e.g. for screenshots)
+if DEBUG and env.bool("DEBUG_TOOLBAR", default=True):
     INSTALLED_APPS += ["debug_toolbar"]
     MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
 

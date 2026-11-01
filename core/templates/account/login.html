@@ -59,7 +59,10 @@
         {% endfor %}
     </div>
     
-    <c-ui.button type="submit" class="w-full">Sign In</c-ui.button>
+    <button
+        type="submit"
+        class="btn-glow flex w-full items-center justify-center rounded-md bg-[#0a0f1c] px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
+    >Sign in</button>
 </form>
 
 <div class="mt-6">
@@ -86,4 +89,7 @@
 <p class="mt-8 text-center text-sm text-slate-500">
     Don't have an account? <a href="{% url 'account_signup' %}" class="font-semibold text-blue-600 hover:text-blue-500">Sign up</a>
 </p>
+<div class="mt-6">
+    {% include "dev/login_as.html" %}
+</div>
 {% endblock %}

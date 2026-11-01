@@ -16,6 +16,7 @@ EXEMPT_PATHS = [
     r'^/anymail/',
     r'^/admin/',
     r'^/__debug__/',
+    r'^/dev/',
     r'^/$'
 ]
 

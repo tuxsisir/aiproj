@@ -1,9 +1,12 @@
 import random
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
 from stratas.models import StrataPlan, Membership
 from dockets.models import Incident, IncidentEvent, Bylaw
+from django.conf import settings
 from faker import Faker
+
+from core.dev import ensure_dev_accounts
 
 User = get_user_model()
 
@@ -11,6 +14,8 @@ class Command(BaseCommand):
     help = 'Initialize the database with demo users, stratas, and memberships.'
 
     def handle(self, *args, **options):
+        if not settings.DEBUG:
+            raise CommandError("Refusing to create demo data with known passwords while DEBUG is off.")
         fake = Faker()
         self.stdout.write(self.style.WARNING("Starting demo data generation..."))
 
@@ -32,13 +37,15 @@ class Command(BaseCommand):
         # Helper to generate random members
         def create_random_members(strata, role, count):
             for _ in range(count):
-                email = fake.unique.email()
+                # .test domain: demo members must never receive real email
+                first, last = fake.first_name(), fake.last_name()
+                email = f"{first}.{last}.{random.randint(1000, 9999)}@civicdesk.test".lower()
                 user = User.objects.create_user(
-                    username=email.split('@')[0] + str(random.randint(1000, 9999)),
+                    username=email,
                     email=email,
-                    first_name=fake.first_name(),
-                    last_name=fake.last_name(),
-                    password="helloworld"
+                    first_name=first,
+                    last_name=last,
+                    password=settings.DEV_ACCOUNT_PASSWORD
                 )
                 unit_num = str(random.randint(100, 999))
                 Membership.objects.create(
@@ -51,59 +58,13 @@ class Command(BaseCommand):
                 )
             self.stdout.write(f"  -> Generated {count} random {role}(s)")
 
-        # 2. Create Specific Manager
-        manager_user, created = User.objects.get_or_create(
-            email="manager@manager.com",
-            defaults={
-                "username": "manager",
-                "first_name": "Mike",
-                "last_name": "M",
-            }
-        )
-        if created:
-            manager_user.set_password("helloworld")
-            manager_user.save()
-        else:
-            manager_user.set_password("helloworld")
-            manager_user.save()
+        # 2. Fixed dev accounts (admin, manager, president, treasurer, pending newcomer) - see core/dev.py
+        accounts = ensure_dev_accounts(s1)
+        manager_user = accounts["manager"]
+        self.stdout.write(self.style.SUCCESS("  -> Dev accounts ready (manage.py seed_dev_accounts lists them)"))
 
-        Membership.objects.get_or_create(
-            user=manager_user,
-            strata=s1,
-            defaults={"role": Membership.Role.MANAGER, "status": Membership.Status.ACTIVE}
-        )
-        self.stdout.write(self.style.SUCCESS("  -> Created specific Manager: Mike M"))
-
-        # 3. Create Specific Council Member
-        council_user, created = User.objects.get_or_create(
-            email="council@council.com",
-            defaults={
-                "username": "council",
-                "first_name": "Sara",
-                "last_name": "G",
-            }
-        )
-        if created:
-            council_user.set_password("helloworld")
-            council_user.save()
-        else:
-            council_user.set_password("helloworld")
-            council_user.save()
-
-        Membership.objects.get_or_create(
-            user=council_user,
-            strata=s1,
-            defaults={
-                "role": Membership.Role.COUNCIL,
-                "position": Membership.Position.PRESIDENT,
-                "unit_number": "PH1",
-                "status": Membership.Status.ACTIVE,
-            }
-        )
-        self.stdout.write(self.style.SUCCESS("  -> Created specific Council Member: Sara G"))
-
-        # 4. Create 7 random council members
-        create_random_members(s1, Membership.Role.COUNCIL, 7)
+        # 3. A few random council members
+        create_random_members(s1, Membership.Role.COUNCIL, 5)
 
         # 5. Generate 15 Mock Incidents
         self.stdout.write(f"Generating 15 mock incidents for {s1.name}...")
