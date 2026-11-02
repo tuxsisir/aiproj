@@ -19,6 +19,8 @@ urlpatterns = [
     path("documents/", include("documents.urls")),
     path("inbox/", include("inbox.urls")),
     path("calendar/", include("schedule.urls")),
+    path("issues/", include("issues.urls")),
+    path("meetings/", include("meetings.urls")),
     path("", include("core.urls")),
 ]
 

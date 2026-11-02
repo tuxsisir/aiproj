@@ -6,7 +6,7 @@
   <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
     <div>
       <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Calendar</h1>
-      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Every date across the building: key dates and enforcement deadlines. Projects, maintenance and meetings join as they're built.</p>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Every date across the building: key dates, issue fix-by dates and enforcement deadlines. Projects, maintenance and meetings join as they're built.</p>
     </div>
     <a
       href="{% url 'schedule:key_date_create' %}"
@@ -63,7 +63,7 @@
           <ul class="mt-3 space-y-1.5">
             {% for event in m.highlights %}
               <li class="flex items-center gap-2 text-xs {% if event.status == 'done' or event.status == 'past' %}opacity-60{% endif %}">
-                <span class="h-2 w-2 shrink-0 rounded-full {% if event.pillar == 'Enforcement' %}bg-rose-500{% else %}bg-amber-400{% endif %}"></span>
+                <span class="h-2 w-2 shrink-0 rounded-full {% if event.pillar == 'Enforcement' %}bg-rose-500{% elif event.pillar == 'Issue' %}bg-sky-500{% elif event.pillar == 'Meeting' %}bg-teal-500{% else %}bg-amber-400{% endif %}"></span>
                 <span class="w-11 shrink-0 font-mono text-slate-500 dark:text-slate-400">{{ event.date|date:"M j" }}</span>
                 <span class="truncate text-slate-700 dark:text-slate-200">{{ event.title }}</span>
               </li>
@@ -101,6 +101,8 @@
   <!-- Legend -->
   <div class="flex flex-wrap gap-4 text-xs text-slate-500 dark:text-slate-400">
     <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-amber-400"></span>Key date</span>
+    <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-sky-500"></span>Building issue</span>
+    <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-teal-500"></span>Meeting</span>
     <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-rose-500"></span>Enforcement</span>
   </div>
 
@@ -130,7 +132,7 @@
                   href="{{ event.url }}"
                   title="{{ event.title }}{% if event.detail %} · {{ event.detail }}{% endif %}"
                   class="block truncate rounded px-1.5 py-0.5 text-[11px] font-medium leading-tight
-                    {% if event.pillar == 'Enforcement' %}bg-rose-50 text-rose-800 dark:bg-rose-950/50 dark:text-rose-200{% else %}bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200{% endif %}
+                    {% if event.pillar == 'Enforcement' %}bg-rose-50 text-rose-800 dark:bg-rose-950/50 dark:text-rose-200{% elif event.pillar == 'Issue' %}bg-sky-50 text-sky-800 dark:bg-sky-950/50 dark:text-sky-200{% elif event.pillar == 'Meeting' %}bg-teal-50 text-teal-800 dark:bg-teal-950/50 dark:text-teal-200{% else %}bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200{% endif %}
                     {% if event.status == 'overdue' %}ring-1 ring-rose-500{% elif event.status == 'done' or event.status == 'past' %}opacity-60{% endif %}"
                 >{% if event.status == 'overdue' %}! {% endif %}{{ event.title }}</a>
               {% endfor %}
@@ -156,7 +158,7 @@
               class="flex items-center gap-4 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50"
             >
               <span class="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-md text-white
-                {% if event.pillar == 'Enforcement' %}bg-rose-500{% else %}bg-amber-500{% endif %}">
+                {% if event.pillar == 'Enforcement' %}bg-rose-500{% elif event.pillar == 'Issue' %}bg-sky-500{% elif event.pillar == 'Meeting' %}bg-teal-500{% else %}bg-amber-500{% endif %}">
                 <span class="text-[9px] font-bold uppercase leading-none">{{ event.date|date:"M" }}</span>
                 <span class="text-base font-bold leading-tight">{{ event.date.day }}</span>
               </span>

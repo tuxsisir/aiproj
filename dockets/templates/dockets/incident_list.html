@@ -8,13 +8,13 @@
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
     <div>
       <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Enforcement cases</h1>
-      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage infractions, deficiencies, and statutory notices for {{ active_strata.name }}.</p>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Bylaw contraventions by units, run by procedure: notice, response, council vote, fine. For {{ active_strata.name }}.</p>
     </div>
     <div>
       {% if request.membership and request.membership.role in 'COUNCIL,PRESIDENT,MANAGER' %}
         <a href="{% url 'dockets:incident_create' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-sm font-semibold rounded-md shadow hover:bg-slate-800 dark:hover:bg-slate-200 transition">
           {% heroicon_outline "plus" class="w-4 h-4 shrink-0" %}
-          Log New Docket
+          New case
         </a>
       {% endif %}
     </div>
@@ -23,7 +23,7 @@
   <!-- Metrics Cards -->
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
     <div class="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
-      <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Total Open Dockets</div>
+      <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Open cases</div>
       <div class="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">{{ total_open }}</div>
     </div>
     <div class="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
@@ -117,7 +117,7 @@
         {% empty %}
         <tr>
           <td colspan="5" class="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
-            No dockets found for this strata plan.
+            No enforcement cases yet.
           </td>
         </tr>
         {% endfor %}

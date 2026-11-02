@@ -1,0 +1,18 @@
+{# Read-only minutes. Used on the meeting page once minutes are locked. #}
+<ol class="space-y-3">
+  {% for item in items %}
+    <li class="rounded-lg bg-white dark:bg-slate-900 p-4 ring-1 ring-slate-200 dark:ring-slate-800">
+      <p class="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+        <span class="font-mono text-xs text-slate-400">{{ forloop.counter }}.</span>
+        {{ item.title }}
+        {% if item.in_camera %}<span class="rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-px text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">In camera</span>{% endif %}
+      </p>
+      {% if item.minutes %}<p class="mt-2 whitespace-pre-line text-sm text-slate-700 dark:text-slate-200">{{ item.minutes }}</p>{% endif %}
+      {% if item.decision %}<p class="mt-2 whitespace-pre-line rounded-md bg-emerald-50 dark:bg-emerald-950/30 px-3 py-2 text-sm text-emerald-900 dark:text-emerald-100"><strong>Decision:</strong> {{ item.decision }}</p>{% endif %}
+      {% if not item.minutes and not item.decision %}<p class="mt-1 text-xs text-slate-400">Nothing minuted.</p>{% endif %}
+    </li>
+  {% endfor %}
+</ol>
+<p class="mt-4 text-sm text-slate-500 dark:text-slate-400">
+  Present: {% for user in attendees %}{{ user.get_full_name|default:user.email }}{% if not forloop.last %}, {% endif %}{% empty %}not recorded{% endfor %}{% if meeting.guests %}. Also present: {{ meeting.guests }}{% endif %}.
+</p>

@@ -1,0 +1,7 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>{{ recorded_by.get_full_name|default:recorded_by.email }} recorded the minutes of the <strong>{{ meeting.get_kind_display|lower }}</strong> held {{ meeting.starts_at|date:"F j, Y" }} at {{ meeting.strata }}.</p>
+<p>They are a draft until council approves them. Read them through and approve, or add corrections first.</p>
+{% url 'meetings:detail' meeting.pk as path %}
+{% include "emails/_button.html" with url=site_url|add:path label="Review the minutes" %}
+{% endblock %}

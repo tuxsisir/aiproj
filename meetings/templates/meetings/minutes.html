@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+  <title>{% if meeting.status == 'PLANNED' %}Agenda{% else %}Minutes{% endif %} · {{ meeting }} · {{ meeting.strata.plan_number }}</title>
+  <style>
+    body { font: 15px/1.55 Georgia, "Times New Roman", serif; color: #111; background: #fff; max-width: 720px; margin: 32px auto; padding: 0 16px; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    .meta { color: #555; margin: 0 0 4px; }
+    .draft { display: inline-block; margin: 8px 0; padding: 2px 8px; border: 1px solid #b45309; color: #b45309; font: 600 12px/1.6 system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+    ol { padding-left: 22px; }
+    li { margin: 14px 0; }
+    .title { font-weight: bold; }
+    .camera { font: 600 11px system-ui, sans-serif; color: #555; text-transform: uppercase; letter-spacing: .06em; }
+    .decision { margin-top: 4px; padding-left: 10px; border-left: 3px solid #047857; }
+    .muted { color: #666; }
+    .bar { font: 13px system-ui, sans-serif; margin-bottom: 24px; display: flex; gap: 14px; flex-wrap: wrap; }
+    .bar a { color: #1d4ed8; }
+    @media print { .bar { display: none; } body { margin: 0 auto; } }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <a href="{% url 'meetings:detail' meeting.pk %}">&larr; Back to the meeting</a>
+    {% if meeting.status != 'PLANNED' %}
+      {% if owners_copy %}<a href="?">Council copy (everything)</a>{% else %}<a href="?copy=owners">Owners' copy (in-camera details left out)</a>{% endif %}
+    {% endif %}
+    <a
+      href="#"
+      onclick="window.print(); return false;"
+    >Print</a>
+  </div>
+
+  <p class="meta">{{ meeting.strata.name }} · Strata Plan {{ meeting.strata.plan_number }}</p>
+  <h1>{% if meeting.status == 'PLANNED' %}Agenda{% else %}Minutes{% endif %}: {{ meeting.get_kind_display }}</h1>
+  <p class="meta">{{ meeting.starts_at|date:"l, F j, Y, g:i a" }}{% if meeting.location %} · {{ meeting.location }}{% endif %}</p>
+  {% if meeting.status == 'HELD' %}<span class="draft">Draft: not yet approved by council</span>{% endif %}
+  {% if meeting.status == 'CANCELLED' %}<span class="draft">Cancelled</span>{% endif %}
+  {% if owners_copy %}<p class="muted">Owners' copy. Matters heard in camera are listed without their details.</p>{% endif %}
+
+  {% if meeting.status != 'PLANNED' %}
+    <p><strong>Present:</strong> {% for user in attendees %}{{ user.get_full_name|default:user.email }}{% if not forloop.last %}, {% endif %}{% empty %}not recorded{% endfor %}{% if meeting.guests and not owners_copy %}. <strong>Also present:</strong> {{ meeting.guests }}{% endif %}</p>
+  {% endif %}
+
+  <ol>
+    {% for item in items %}
+      <li>
+        {% if owners_copy and item.in_camera %}
+          <span class="title">In-camera matter</span> <span class="camera">details withheld</span>
+        {% else %}
+          <span class="title">{{ item.title }}</span>{% if item.in_camera %} <span class="camera">In camera</span>{% endif %}
+          {% if meeting.status == 'PLANNED' and item.details %}<div class="muted">{{ item.details|linebreaksbr }}</div>{% endif %}
+          {% if item.minutes %}<div>{{ item.minutes|linebreaksbr }}</div>{% endif %}
+          {% if item.decision %}<div class="decision"><strong>Decision:</strong> {{ item.decision|linebreaksbr }}</div>{% endif %}
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ol>
+
+  {% if meeting.status == 'APPROVED' %}
+    <p class="muted">Minutes approved by council on {{ meeting.approved_at|date:"F j, Y" }}{% if meeting.approved_by %} ({{ meeting.approved_by.get_full_name|default:meeting.approved_by.email }}){% endif %}.</p>
+  {% endif %}
+</body>
+</html>

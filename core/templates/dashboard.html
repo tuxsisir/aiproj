@@ -116,7 +116,7 @@
                 href="{{ event.url }}"
                 class="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800/60"
               >
-                <span class="flex h-9 w-9 shrink-0 flex-col items-center justify-center rounded-md text-white {% if event.pillar == 'Enforcement' %}bg-rose-500{% else %}bg-amber-500{% endif %}">
+                <span class="flex h-9 w-9 shrink-0 flex-col items-center justify-center rounded-md text-white {% if event.pillar == 'Enforcement' %}bg-rose-500{% elif event.pillar == 'Issue' %}bg-sky-500{% else %}bg-amber-500{% endif %}">
                   <span class="text-[8px] font-bold uppercase leading-none">{{ event.date|date:"M" }}</span>
                   <span class="text-sm font-bold leading-tight">{{ event.date.day }}</span>
                 </span>
@@ -140,7 +140,24 @@
   <!-- Pillars -->
   <section>
     <h2 class="mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Your building at a glance</h2>
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <a
+        href="{% url 'issues:list' %}"
+        class="card-hover rounded-lg bg-white dark:bg-slate-900 p-4 ring-1 ring-slate-200 dark:ring-slate-800"
+      >
+        <span class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">{% heroicon_outline "flag" class="h-4 w-4 text-sky-500" %} Building issues</span>
+        <span
+          data-count-up
+          class="mt-2 block text-3xl font-bold text-slate-900 dark:text-slate-100"
+        >{{ pillars.issues.open }}</span>
+        <span class="block text-xs text-slate-500 dark:text-slate-400">open issue{{ pillars.issues.open|pluralize }}</span>
+        <span class="mt-3 flex flex-wrap gap-1.5 text-[11px]">
+          {% if pillars.issues.unanswered %}<span class="rounded-full bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 font-semibold text-amber-800 dark:text-amber-300">{{ pillars.issues.unanswered }} no response</span>{% endif %}
+          {% if pillars.issues.overdue %}<span class="rounded-full bg-rose-100 dark:bg-rose-950/60 px-2 py-0.5 font-semibold text-rose-700 dark:text-rose-300">{{ pillars.issues.overdue }} past fix-by</span>{% endif %}
+          <span class="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-slate-600 dark:text-slate-300">{{ pillars.issues.resolved }} fixed in 30 days</span>
+        </span>
+      </a>
+
       <a
         href="{% url 'dockets:incident_list' %}"
         class="card-hover rounded-lg bg-white dark:bg-slate-900 p-4 ring-1 ring-slate-200 dark:ring-slate-800"
@@ -201,7 +218,7 @@
         {% endif %}
       </a>
     </div>
-    <p class="mt-3 text-xs text-slate-400 dark:text-slate-500">Coming next: Issues, Projects, Maintenance and Money will appear here as they're built.</p>
+    <p class="mt-3 text-xs text-slate-400 dark:text-slate-500">Coming next: Projects, Maintenance, Meetings and Money will appear here as they're built.</p>
   </section>
 
   <!-- Recent activity -->

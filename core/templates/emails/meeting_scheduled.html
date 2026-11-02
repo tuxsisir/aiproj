@@ -1,0 +1,13 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>{{ meeting.created_by.get_full_name|default:meeting.created_by.email|default:"Someone" }} planned a <strong>{{ meeting.get_kind_display|lower }}</strong> for {{ meeting.strata }}.</p>
+<p style="margin:16px 0;padding:12px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
+  <strong>{{ meeting.starts_at|date:"l, F j, Y, g:i a" }}</strong>{% if meeting.location %}<br>{{ meeting.location }}{% endif %}
+</p>
+<p><strong>Agenda</strong></p>
+<ol style="margin:0 0 16px;padding-left:20px;">
+  {% for item in items %}<li>{{ item.title }}{% if item.in_camera %} <em>(in camera)</em>{% endif %}</li>{% endfor %}
+</ol>
+{% url 'meetings:detail' meeting.pk as path %}
+{% include "emails/_button.html" with url=site_url|add:path label="Open the agenda" %}
+{% endblock %}

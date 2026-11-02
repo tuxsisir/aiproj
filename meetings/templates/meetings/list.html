@@ -1,0 +1,61 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Meetings · {{ active_strata.plan_number }}{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Meetings</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">The agenda builds itself from open issues and enforcement cases. Minutes are recorded item by item and approved by council.</p>
+    </div>
+    <a
+      href="{% url 'meetings:create' %}"
+      class="btn-glow inline-flex shrink-0 items-center gap-2 rounded-md bg-slate-900 dark:bg-slate-100 px-3 py-2 text-sm font-semibold text-white dark:text-slate-900 shadow-sm"
+    >
+      {% heroicon_outline "plus" class="h-4 w-4" %}
+      Plan a meeting
+    </a>
+  </div>
+
+  {% if awaiting %}
+    <section>
+      <h2 class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300">Minutes waiting for council approval</h2>
+      <ul class="divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden rounded-lg bg-white dark:bg-slate-900 ring-1 ring-amber-200 dark:ring-amber-900/60">
+        {% for meeting in awaiting %}{% include "meetings/partials/row.html" %}{% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
+  {% if unrecorded %}
+    <section>
+      <h2 class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-rose-700 dark:text-rose-300">Held? Record the minutes</h2>
+      <ul class="divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden rounded-lg bg-white dark:bg-slate-900 ring-1 ring-rose-200 dark:ring-rose-900/60">
+        {% for meeting in unrecorded %}{% include "meetings/partials/row.html" %}{% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
+  <section>
+    <h2 class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Upcoming</h2>
+    {% if upcoming %}
+      <ul class="divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden rounded-lg bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-800">
+        {% for meeting in upcoming %}{% include "meetings/partials/row.html" %}{% endfor %}
+      </ul>
+    {% else %}
+      <div class="rounded-lg border border-dashed border-slate-300 dark:border-slate-700 px-4 py-8 text-center">
+        <p class="text-sm font-medium text-slate-700 dark:text-slate-200">No meeting planned.</p>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Plan one and the agenda is drafted from what's open in the building.</p>
+      </div>
+    {% endif %}
+  </section>
+
+  {% if past %}
+    <section>
+      <h2 class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Past meetings</h2>
+      <ul class="divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden rounded-lg bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-800">
+        {% for meeting in past %}{% include "meetings/partials/row.html" %}{% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+</div>
+{% endblock %}

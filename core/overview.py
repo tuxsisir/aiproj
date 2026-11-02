@@ -15,12 +15,15 @@ from django.utils.timesince import timesince
 
 from dockets.models import CouncilVote, Incident, IncidentEvent
 from documents.models import Document
+from issues.models import Issue, IssueUpdate
+from meetings.models import Meeting
 from schedule import feed
 from stratas.models import Membership, StrataPlan
 
 CLOSED = [Incident.Status.RESOLVED_FINED, Incident.Status.RESOLVED_DISMISSED]
 URGENT_EMAIL = ["high", "urgent"]
 LOOKAHEAD_DAYS = 14
+QUIET_DAYS = 14  # an open issue with no activity this long is flagged as gone quiet
 
 # Most urgent first.
 SEVERITY_ORDER = {"overdue": 0, "action": 1, "soon": 2, "waiting": 3}
@@ -89,8 +92,11 @@ def needs_you(membership, today=None):
             needs.append(_need("waiting", f"Fine notice not sent yet: {case.title}",
                                f"{_unit(case)}council voted to fine; waiting on the manager.", case, _day(case.updated_at)))
 
-    # Shown for 14 days; not counted as "on you" because an email can't be marked handled yet.
-    for email in strata.inbound_emails.filter(summary__urgency__in=URGENT_EMAIL,
+    needs += _issue_needs(membership, today)
+    needs += _meeting_needs(membership, today)
+
+    # Urgent emails nobody has turned into an issue yet; shown for 14 days, not counted as "on you".
+    for email in strata.inbound_emails.filter(summary__urgency__in=URGENT_EMAIL, issues__isnull=True,
                                               received_at__date__gte=today - datetime.timedelta(days=LOOKAHEAD_DAYS)):
         needs.append(Need("action" if is_manager else "waiting", f"Urgent email: {email.title}",
                           email.summary.get("suggested_next_step", ""),
@@ -102,6 +108,61 @@ def needs_you(membership, today=None):
                           event.url, "Calendar", event.date))
 
     return sorted(needs, key=lambda n: (SEVERITY_ORDER[n.severity], n.sort_date))
+
+
+def _meeting_needs(membership, today):
+    """Minutes to record (a planned meeting whose time passed), minutes to approve, and the next meeting."""
+    me, needs = membership.user, []
+    meetings = membership.strata.meetings.select_related("created_by").annotate(item_count=Count("items"))
+    for meeting in meetings.filter(status=Meeting.Status.PLANNED).order_by("starts_at"):
+        url, day = reverse("meetings:detail", args=[meeting.pk]), _day(meeting.starts_at)
+        if day < today:
+            mine = membership.is_manager or meeting.created_by_id == me.id
+            needs.append(Need("action" if mine else "waiting", f"Record the minutes: {meeting}",
+                              "Was it held? Record the minutes and attendance, or cancel it.", url, "Meetings", day,
+                              on_you=mine))
+        elif (day - today).days <= LOOKAHEAD_DAYS:
+            when = "today" if day == today else f"in {timesince(today, day)}"
+            needs.append(Need("soon", f"{meeting.get_kind_display()} {_md(day)} ({when})",
+                              f"{meeting.item_count} items on the agenda.", url, "Meetings", day))
+    for meeting in meetings.filter(status=Meeting.Status.HELD).order_by("starts_at"):
+        url, day = reverse("meetings:detail", args=[meeting.pk]), _day(meeting.starts_at)
+        if membership.is_council:
+            needs.append(Need("action", f"Approve the minutes: {meeting}", "Read them through, then approve.",
+                              url, "Meetings", day, on_you=True))
+        else:
+            needs.append(Need("waiting", f"Minutes waiting for council approval: {meeting}", "", url, "Meetings", day))
+    return needs
+
+
+def _issue_needs(membership, today):
+    me, is_manager = membership.user, membership.is_manager
+    quiet_since = timezone.now() - datetime.timedelta(days=QUIET_DAYS)
+    needs = []
+    for issue in membership.strata.issues.open().select_related("assigned_to").order_by("created_at"):
+        url, mine = reverse("issues:detail", args=[issue.pk]), issue.assigned_to_id == me.id
+        where = f"{issue.location} · " if issue.location else ""
+        if issue.due_date and issue.due_date < today:
+            needs.append(Need("overdue", f"Issue past its fix-by date: {issue.title}",
+                              f"{where}was due {_md(issue.due_date)}.", url, "Building issues", issue.due_date,
+                              on_you=mine or (is_manager and not issue.assigned_to_id)))
+        elif mine:
+            needs.append(Need("action", f"Assigned to you: {issue.title}", f"{where}{issue.get_status_display()}.",
+                              url, "Building issues", _day(issue.last_activity_at), on_you=True))
+        elif issue.status == Issue.Status.OPEN:
+            age = f"raised {timesince(issue.created_at)} ago"
+            if is_manager:
+                needs.append(Need("action", f"New issue: {issue.title}", f"{where}{age}. Acknowledge it or take it on.",
+                                  url, "Building issues", _day(issue.created_at), on_you=True))
+            else:
+                needs.append(Need("waiting", f"No response yet: {issue.title}", f"{where}{age}.",
+                                  url, "Building issues", _day(issue.created_at)))
+        elif issue.last_activity_at < quiet_since:
+            owner = (issue.assigned_to.get_full_name() or issue.assigned_to.email) if issue.assigned_to else "nobody"
+            needs.append(Need("waiting", f"Gone quiet: {issue.title}",
+                              f"{where}no update in {timesince(issue.last_activity_at)} (owner: {owner}).",
+                              url, "Building issues", _day(issue.last_activity_at)))
+    return needs
 
 
 def pillars(strata, today=None):
@@ -121,7 +182,14 @@ def pillars(strata, today=None):
         recent=Count("id", filter=Q(received_at__date__gte=since)),
         urgent=Count("id", filter=Q(summary__urgency__in=URGENT_EMAIL, received_at__date__gte=since)),
     )
+    issues = strata.issues.aggregate(
+        open=Count("id", filter=~Q(status__in=Issue.CLOSED)),
+        unanswered=Count("id", filter=Q(status=Issue.Status.OPEN)),
+        overdue=Count("id", filter=~Q(status__in=Issue.CLOSED) & Q(due_date__lt=today)),
+        resolved=Count("id", filter=Q(status=Issue.Status.RESOLVED, resolved_at__date__gte=today - datetime.timedelta(days=30))),
+    )
     return {
+        "issues": issues,
         "cases": cases,
         "upcoming": upcoming,
         "next_event": upcoming[0] if upcoming else None,
@@ -140,6 +208,12 @@ def recent_activity(strata, limit=8):
         items.append({"when": event.occurred_at, "pillar": "Enforcement", "who": who,
                       "text": f"{event.get_event_type_display()}: {event.incident.title}",
                       "url": reverse("dockets:incident_detail", args=[event.incident_id])})
+    for update in IssueUpdate.objects.filter(issue__strata=strata).select_related("issue", "author") \
+            .order_by("-created_at")[:limit]:
+        who = update.author.get_full_name() if update.author else ""
+        items.append({"when": update.created_at, "pillar": "Building issues", "who": who,
+                      "text": f"{update.get_kind_display()}: {update.issue.title}",
+                      "url": reverse("issues:detail", args=[update.issue_id])})
     for email in strata.inbound_emails.select_related("forwarded_by").order_by("-received_at")[:limit]:
         who = email.forwarded_by.get_full_name() if email.forwarded_by else email.from_email
         items.append({"when": email.received_at, "pillar": "Forwarded email", "who": who,

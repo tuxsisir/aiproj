@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     "documents",
     "inbox",
     "schedule",
+    "issues",
+    "meetings",
     
     # UI
     "django_cotton",
@@ -86,6 +88,7 @@ TEMPLATES = [
             ],
             "builtins": [
                 "heroicons.templatetags.heroicons",
+                "core.templatetags.listbox",
             ]
         },
     },

@@ -22,7 +22,8 @@ def inbox_home(request):
 
 @membership_required
 def email_detail(request, pk):
-    return render(request, "inbox/detail.html", {"email": _get_email(request, pk)})
+    email = _get_email(request, pk)
+    return render(request, "inbox/detail.html", {"email": email, "issue": email.issues.first()})
 
 
 @membership_required

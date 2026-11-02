@@ -73,14 +73,14 @@ sharing **Decisions**, **Meetings**, **Capture** (email + PDF → proposed items
 - [x] Hide Billing from nav (payments parked)
 
 ### Phase 2 — Issues + capture ("nothing raised is lost")
-- [ ] Issues: raise, assign (manager/council/vendor), status, "waiting since", close with outcome
-- [ ] Forwarded email → proposed issue (inbox already summarizes it)
+- [x] Building issues: raise, owner, status, fix-by date, vendor, timeline, "quiet for", close with outcome; on calendar and Overview
+- [x] Forwarded email → issue (one click, prefilled from the AI summary; marks the email handled)
+- [x] Enforcement is bylaw-only; user-facing "docket" wording is now "enforcement case"
+- [ ] Move existing "Common Property Deficiency" cases into Issues (data migration, needs approval)
 - [ ] Upload agenda / inspection / fire report PDF → AI proposes issues; person confirms
       (test fixture: anonymized copy of the Oct 2026 agenda package)
 - [ ] Manager reply by email lands on the issue timeline
-- [x] Role-aware Overview: "needs attention" per role, pillar cards, next 30 days, recent activity, manager portfolio
-- [ ] Add issues to the Overview (unanswered issues, "waiting since")
-- [ ] Forwarded email: mark handled / turn into an issue (urgent emails sit on the Overview for 14 days until then)
+- [x] Role-aware Overview: "needs attention" per role, pillar cards, next 30 days, recent activity, manager portfolio, issues
 - [ ] Weekly digest email
 
 ### Milestone — Deploy and onboard our council
@@ -102,8 +102,10 @@ sharing **Decisions**, **Meetings**, **Capture** (email + PDF → proposed items
 - [ ] Vendors and contracts register (term, price lock, expiry)
 
 ### Phase 5 — Meetings
-- [ ] Agenda generated from open items (the manager's hook)
-- [ ] Meeting records decisions → minutes draft; minutes approval
+- [x] Agenda generated from open items (the manager's hook); standard items per meeting kind; in-camera cases
+- [x] Meeting records decisions → minutes draft; minutes approval (council only); owners' copy without in-camera details
+- [ ] Minutes PDF and sending the owners' copy; AGM notice timing (2 weeks) and quorum/votes for general meetings
+- [x] Decisions reach the issue/case timeline only when council approves the minutes (corrections included)
 
 ### Phase 6 — Maintenance
 - [ ] Recurring obligations with dates and costs (elevator Cat 1/Cat 5, fire inspection, gutters, windows, carpets, snow)

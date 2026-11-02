@@ -1,0 +1,13 @@
+<li>
+  <a
+    href="{% url 'meetings:detail' meeting.pk %}"
+    class="flex flex-col gap-1 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 sm:flex-row sm:items-center sm:gap-4"
+  >
+    <span class="w-24 shrink-0 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ meeting.starts_at|date:"D M j" }}</span>
+    <span class="min-w-0 flex-1">
+      <span class="block truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{ meeting.get_kind_display }}</span>
+      <span class="block truncate text-xs text-slate-500 dark:text-slate-400">{{ meeting.starts_at|date:"g:i a" }}{% if meeting.location %} · {{ meeting.location }}{% endif %}</span>
+    </span>
+    {% include "meetings/partials/status.html" %}
+  </a>
+</li>

@@ -1,0 +1,16 @@
+<fieldset>
+  <legend class="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">{{ field.label }}</legend>
+  {% if field.field.queryset %}
+    <div class="space-y-1.5 rounded-md bg-slate-50 dark:bg-slate-950/50 p-3 ring-1 ring-slate-200 dark:ring-slate-800">
+      {% for choice in field %}
+        <label class="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-200">
+          {{ choice.tag }}
+          <span>{{ choice.choice_label }}</span>
+        </label>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-sm text-slate-500 dark:text-slate-400">{{ empty }}</p>
+  {% endif %}
+  {% for error in field.errors %}<p class="mt-1 text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>{% endfor %}
+</fieldset>

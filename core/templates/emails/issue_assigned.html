@@ -1,0 +1,11 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>{{ assigned_by.get_full_name|default:assigned_by.email }} made you the owner of a building issue at <strong>{{ issue.strata }}</strong>.</p>
+<p style="margin:16px 0;padding:12px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
+  <strong>{{ issue.title }}</strong><br>
+  {{ issue.get_category_display }}{% if issue.location %} · {{ issue.location }}{% endif %}{% if issue.due_date %} · fix by {{ issue.due_date|date:"M j, Y" }}{% endif %}
+</p>
+<p>Update it as it moves, and close it with the outcome when it's done.</p>
+{% url 'issues:detail' issue.pk as path %}
+{% include "emails/_button.html" with url=site_url|add:path label="Open the issue" %}
+{% endblock %}

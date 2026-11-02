@@ -47,8 +47,20 @@ Planned production domain: `usecivicdesk.com`.
   with an AI issue summary. anymail's Resend inbound webhook (`/anymail/resend/inbound/`) fires the `inbound`
   signal (`inbox/signals.py`); only active members of that building are accepted; the summary is emailed back to
   the forwarder. Try locally: `manage.py inbox_simulate <PLAN> <member email> <thread.txt>`.
+- `issues` — **Building issues** (`/issues/`): things wrong with the building that need fixing. `Issue` (status
+  OPEN → ACKNOWLEDGED → IN_PROGRESS → RESOLVED/CLOSED with a required outcome; owner = any active member; fix-by
+  date feeds the calendar; `source_email` when raised from a forwarded email) and `IssueUpdate` (append-only
+  timeline). Logic in `issues/services.py`. No procedure or CRT path; that's enforcement.
+- `meetings` — council / general meetings (`/meetings/`). `Meeting` (PLANNED → HELD "minutes in draft" → APPROVED,
+  locked; or CANCELLED) and `AgendaItem` (position, minutes, decision, `in_camera`, optional `issue` / `incident`).
+  `services.build_agenda` drafts the agenda from standard items + chosen open issues + enforcement cases (cases are
+  always in camera). Marking held emails council for approval; approving posts each decision to the linked issue/case timeline
+  (never draft decisions: a case timeline is a legal record). Held/approve lock the row against double submits. Only
+  council approves. Printable minutes at `<pk>/minutes/`; `?copy=owners` hides in-camera details and guests.
+- **Naming:** code names stay (`dockets`, `Incident`); users see "Enforcement" / "enforcement case". Enforcement is
+  bylaw-only: new cases are always `Incident.Type.BYLAW`; building problems are Issues.
 - `schedule` — building calendar at `/calendar/`. `schedule/feed.py` merges dated events from every pillar
-  (`SOURCES`: key dates, enforcement notices/deadlines; add a source when a pillar gains dates). `KeyDate` =
+  (`SOURCES`: key dates, enforcement notices/deadlines, issue fix-by dates, meetings; add a source when a pillar gains dates). `KeyDate` =
   hand-entered dates (AGM, insurance renewal…), optionally yearly. Named `schedule` because `calendar` would
   shadow Python's stdlib module. `TIME_ZONE` is `America/Vancouver` so "today" and deadlines are Pacific.
 - `payments` — Stripe checkout, customer portal, webhook at `/payments/webhooks/stripe/`.
@@ -61,6 +73,13 @@ Planned production domain: `usecivicdesk.com`.
 - Permission checks via `membership.is_council` / `membership.is_manager`; display via `membership.title`.
 - Data conversions go in their own migration (Postgres "pending trigger events" error otherwise).
 - Owners/tenants have no accounts; they only use token links.
+- Uploaded files are never linked by `.url`: serve them through a view that checks access, then
+  `core.files.serve_upload` (images/PDF inline, anything else downloads). `/media/` is only served in DEBUG.
+- **Selects:** never a native `<select>`. Use `<c-listbox :field="form.x" />` (form field: options, current value,
+  empty label) or `<c-listbox name=".." value=".."> <c-ui.menu.item value=".." label=".."/> </c-listbox>`
+  (`core/templates/cotton/listbox.html`, cotton-ui listbox; submits via a hidden input). Pass hand-written labels
+  through `|safe_quotes`: cotton-ui puts them in single-quoted JS. Listen for the bubbling `select-change` event
+  to react in Alpine. Field partials use `{% if field|is_select %}`.
 - AI "working" UI: `<c-ai.working message=... hint=.../>` + `.ai-*` classes in `core/static/core/ai.css`
   (`.ai-indicator` for HTMX loading slots, `.ai-reveal` on results).
 
@@ -101,6 +120,12 @@ Planned production domain: `usecivicdesk.com`.
 - Root-level `test_*.py` scripts are NOT tests; they write to the real DB on import. Always run tests with
   app labels (below) so the runner never discovers them.
 
+## Deployment
+Render (Oregon), see `docs/DEPLOY.md`: `render.yaml` blueprint (Docker web + Postgres + 1 GB disk at
+`/var/data`), `Dockerfile` (WeasyPrint libs, collectstatic at build), `bin/start` (migrate → gunicorn 2×8 threads).
+Production = `DEBUG=False`: `SECRET_KEY` required, HTTPS redirect/secure cookies/HSTS, WhiteNoise static files,
+`/healthz/` for the platform. Secrets live only in Render's env vars.
+
 ## Commands
 - Env: `.venv` on Python **3.13** (`.python-version`), managed with uv. Use `.venv/bin/python`.
   Setup: `uv venv --python 3.13 .venv && uv pip install --python .venv/bin/python -r requirements.txt`.
@@ -112,10 +137,11 @@ Planned production domain: `usecivicdesk.com`.
   reserved domains (.test / example.*) so they never receive real email.
 - `python manage.py runserver`, `python manage.py migrate`
 - Demo data: `manage.py init_demo_data` (DEBUG only, run on an empty/flushed DB, refuses to run twice). DEMO STRATA
-  gets a 5-person council (president, treasurer, vp, secretary, member @civicdesk.test), the manager (plus two
+  gets a 7-person council (president = Nora, treasurer = Sisir, plus sandesh (VP), deep, akhila, aaron, allen
+  @civicdesk.test, first names only), the manager (plus two
   other buildings), a pending newcomer, cases in every enforcement stage, summarized documents with saved Q&A,
   forwarded emails and key dates, all dated relative to today. Content is fictional; keep it that way.
-- Tests: `.venv/bin/python manage.py test core stratas dockets documents inbox payments schedule` (dev-login tests in
+- Tests: `.venv/bin/python manage.py test core stratas dockets documents inbox payments schedule issues meetings` (dev-login tests in
   `core/tests_dev.py` use their own urlconf because tests run with DEBUG off) (factories in `core/testing.py`).
 - Quick throwaway DB: `DATABASE_URL="sqlite://:memory:" python manage.py shell -c "..."` (run `migrate` first inside).
 

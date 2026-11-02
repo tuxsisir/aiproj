@@ -1,0 +1,95 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}{{ issue.title }} · Building issues{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <div class="border-b border-slate-200 dark:border-slate-800 pb-5">
+    <a
+      href="{% url 'issues:list' %}"
+      class="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+    >&larr; Building issues</a>
+    <div class="mt-2 flex flex-wrap items-center gap-3">
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{{ issue.title }}</h1>
+      {% include "issues/partials/status.html" %}
+      {% if issue.priority == 'URGENT' or issue.priority == 'HIGH' %}
+        <span class="rounded bg-rose-100 dark:bg-rose-950/60 px-1.5 py-px text-[10px] font-bold uppercase tracking-wider text-rose-700 dark:text-rose-300">{{ issue.get_priority_display }}</span>
+      {% endif %}
+    </div>
+    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+      {{ issue.get_category_display }}{% if issue.location %} · {{ issue.location }}{% endif %}
+      · raised by {{ issue.raised_by.get_full_name|default:issue.raised_by.email|default:"someone" }} {{ issue.created_at|timesince }} ago
+    </p>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-3">
+    <div class="space-y-6 lg:col-span-2">
+      {% if issue.description %}
+        <section class="rounded-lg bg-white dark:bg-slate-900 p-5 ring-1 ring-slate-200 dark:ring-slate-800">
+          <p class="whitespace-pre-line text-sm text-slate-700 dark:text-slate-200">{{ issue.description }}</p>
+          {% if issue.source_email %}
+            <a
+              href="{% url 'inbox:detail' issue.source_email.pk %}"
+              class="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-violet-700 dark:text-violet-300 hover:underline"
+            >{% heroicon_outline "inbox-arrow-down" class="h-3.5 w-3.5" %} From forwarded email: {{ issue.source_email.title }}</a>
+          {% endif %}
+        </section>
+      {% endif %}
+
+      {% if not issue.is_open %}
+        <section class="rounded-lg bg-emerald-50 dark:bg-emerald-950/30 p-4 ring-1 ring-emerald-200 dark:ring-emerald-900/60">
+          <p class="text-xs font-semibold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">Outcome · {{ issue.resolved_at|date:"M j, Y" }}</p>
+          <p class="mt-1 text-sm text-emerald-900 dark:text-emerald-100">{{ issue.outcome }}</p>
+        </section>
+      {% endif %}
+
+      <section>
+        <h2 class="mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Timeline</h2>
+        <ol class="relative space-y-4 border-l border-slate-200 dark:border-slate-800 pl-5">
+          {% for update in updates %}
+            <li class="relative">
+              <span class="absolute -left-[25px] top-1.5 h-2 w-2 rounded-full {% if update.kind == 'COMMENT' %}bg-sky-400{% elif update.kind == 'STATUS' %}bg-amber-400{% else %}bg-slate-300 dark:bg-slate-600{% endif %}"></span>
+              <p class="text-sm text-slate-800 dark:text-slate-200 {% if update.kind == 'COMMENT' %}whitespace-pre-line{% endif %}">{{ update.body }}</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400">{{ update.get_kind_display }} · {{ update.author.get_full_name|default:update.author.email|default:"someone" }} · {{ update.created_at|date:"M j, g:i a" }}</p>
+            </li>
+          {% endfor %}
+        </ol>
+      </section>
+    </div>
+
+    <aside class="space-y-4">
+      <dl class="rounded-lg bg-white dark:bg-slate-900 p-4 text-sm ring-1 ring-slate-200 dark:ring-slate-800 space-y-2">
+        <div class="flex justify-between gap-3"><dt class="text-slate-500">Owner</dt><dd class="text-right font-medium text-slate-900 dark:text-slate-100">{% if issue.assigned_to %}{{ issue.assigned_to.get_full_name|default:issue.assigned_to.email }}{% else %}<span class="text-amber-700 dark:text-amber-300">Nobody yet</span>{% endif %}</dd></div>
+        <div class="flex justify-between gap-3"><dt class="text-slate-500">Fix by</dt><dd class="text-right text-slate-900 dark:text-slate-100">{{ issue.due_date|date:"M j, Y"|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-3"><dt class="text-slate-500">Vendor</dt><dd class="text-right text-slate-900 dark:text-slate-100">{{ issue.vendor|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-3"><dt class="text-slate-500">Last activity</dt><dd class="text-right text-slate-900 dark:text-slate-100">{{ issue.last_activity_at|timesince }} ago</dd></div>
+      </dl>
+
+      <form
+        method="post"
+        action="{% url 'issues:update' issue.pk %}"
+        class="space-y-3 rounded-lg bg-white dark:bg-slate-900 p-4 ring-1 ring-slate-200 dark:ring-slate-800"
+        x-data="{ status: '{{ form.status|listbox_value }}' }"
+      >
+        {% csrf_token %}
+        <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Update</h2>
+        {% for error in form.non_field_errors %}<p class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>{% endfor %}
+        <div @select-change="status = $event.detail.value">
+          <p class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Status</p>
+          <c-listbox :field="form.status" />
+        </div>
+        <div x-show="status === 'RESOLVED' || status === 'CLOSED'">
+          {% include "issues/partials/field.html" with field=form.outcome %}
+        </div>
+        {% include "issues/partials/field.html" with field=form.assigned_to %}
+        {% include "issues/partials/field.html" with field=form.due_date %}
+        {% include "issues/partials/field.html" with field=form.vendor %}
+        {% include "issues/partials/field.html" with field=form.comment %}
+        <button
+          type="submit"
+          class="w-full rounded-md bg-slate-900 dark:bg-slate-100 px-4 py-2 text-sm font-semibold text-white dark:text-slate-900"
+        >Save update</button>
+      </form>
+    </aside>
+  </div>
+</div>
+{% endblock %}

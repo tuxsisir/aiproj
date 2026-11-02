@@ -1,9 +1,14 @@
 """Sample data for the staff email preview page. Unsaved objects only: previewing never touches the database."""
+import datetime
+
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from dockets.models import Bylaw, Incident
 from documents.models import Document
 from inbox.models import InboundEmail
+from issues.models import Issue
+from meetings.models import AgendaItem, Meeting
 from stratas.models import Membership, StrataPlan
 
 
@@ -42,8 +47,24 @@ def sample_context():
             "suggested_next_step": "Approve the call-out today and ask 404 to check their bathroom for leaks.",
         },
     )
+    issue = Issue(
+        strata=strata, title="Storage room 5 door doesn't latch", location="Parkade P1, storage room 5",
+        category=Issue.Category.SECURITY, priority=Issue.Priority.HIGH, raised_by=user, assigned_to=user,
+        description="The strike plate is bent and the door swings open. Two lockers were entered last month.",
+    )
+    meeting = Meeting(
+        strata=strata, kind=Meeting.Kind.COUNCIL, location="Amenity room", created_by=user,
+        starts_at=timezone.now() + datetime.timedelta(days=10),
+    )
+    items = [AgendaItem(title=t) for t in ["Call to order", "Financial report", f"Issue: {issue.title}"]]
+    items.append(AgendaItem(title="Enforcement: Unit 1204, loud music", in_camera=True))
     return {
         "user": user,
+        "meeting": meeting,
+        "items": items,
+        "recorded_by": user,
+        "issue": issue,
+        "assigned_by": user,
         "membership": membership,
         "incident": incident,
         "document": document,

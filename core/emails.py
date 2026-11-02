@@ -45,9 +45,9 @@ EMAILS = {
     "membership_rejected": EmailType(
         "Your CivicDesk request for {{ membership.strata.plan_number }}", "membership_rejected", "membership",
     ),
-    # Bylaw enforcement (dockets)
+    # Bylaw enforcement (app: dockets; users see "enforcement case")
     "docket_logged": EmailType(
-        "New docket for {{ incident.strata.plan_number }}: {{ incident.title }}", "docket_logged", "docket",
+        "New enforcement case at {{ incident.strata.plan_number }}: {{ incident.title }}", "docket_logged", "docket",
     ),
     "s135_notice": EmailType(
         "FORMAL NOTICE OF COMPLAINT - {{ incident.strata.plan_number }}", "s135_notice", "s135-notice",
@@ -61,6 +61,17 @@ EMAILS = {
     "fine_notice": EmailType(
         "Notice of Formal Fine - Strata Plan {{ incident.strata.plan_number }}", "fine_notice", "fine-notice",
     ),
+    # Building issues
+    "issue_raised": EmailType(
+        "New building issue at {{ issue.strata.plan_number }}: {{ issue.title }}", "issue_raised", "issue",
+    ),
+    "issue_assigned": EmailType("You now own: {{ issue.title }}", "issue_assigned", "issue"),
+    # Meetings
+    "meeting_scheduled": EmailType(
+        "{{ meeting.get_kind_display }} on {{ meeting.starts_at|date:'M j' }}: agenda for {{ meeting.strata.plan_number }}",
+        "meeting_scheduled", "meeting",
+    ),
+    "minutes_ready": EmailType("Minutes to approve: {{ meeting }}", "minutes_ready", "meeting"),
     # Documents & inbox (AI)
     "document_summarized": EmailType("Summary ready: {{ document.title }}", "document_summarized", "documents"),
     "inbound_summarized": EmailType("Summary: {{ email.summary.title|default:email.subject }}", "inbound_summarized", "inbox"),

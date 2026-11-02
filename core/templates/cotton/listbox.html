@@ -1,0 +1,34 @@
+{% comment %}
+App-wide select: cotton-ui's listbox (submits through a hidden input named like the field).
+  <c-listbox :field="form.category" />                        options and current value from a form field
+  <c-listbox name="bylaw" value="..."> <c-ui.menu.item value=".." label=".."/> </c-listbox>   explicit options
+Labels pass through |safe_quotes because cotton-ui puts them inside single-quoted JavaScript.
+{% endcomment %}
+<c-vars
+    field
+    name=""
+    value=""
+    placeholder="Select an option"
+/>
+{% if field %}
+    <c-ui.menu
+        name="{{ field.html_name }}"
+        value="{{ field|listbox_value }}"
+        placeholder="{{ field|listbox_placeholder:placeholder|safe_quotes }}"
+        :attrs="attrs"
+    >
+        {% for option_value, option_label in field|listbox_choices %}
+            <c-ui.menu.item
+                value="{{ option_value }}"
+                label="{{ option_label|safe_quotes }}"
+            />
+        {% endfor %}
+    </c-ui.menu>
+{% else %}
+    <c-ui.menu
+        name="{{ name }}"
+        value="{{ value }}"
+        placeholder="{{ placeholder|safe_quotes }}"
+        :attrs="attrs"
+    >{{ slot }}</c-ui.menu>
+{% endif %}

@@ -30,9 +30,10 @@ Sidebar grouped by the pillars in docs/VISION.md. Pillars not built yet show as 
         <p class="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Work</p>
         <div class="space-y-0.5">
             <c-sidebar.nav_item
+                href="{% url 'issues:list' %}"
                 icon="flag"
-                label="Issues"
-                soon="true"
+                label="Building issues"
+                active="{% if app == 'issues' %}true{% endif %}"
             />
             <c-sidebar.nav_item
                 icon="clipboard-document-list"
@@ -108,9 +109,10 @@ Sidebar grouped by the pillars in docs/VISION.md. Pillars not built yet show as 
                 active="{% if app == 'inbox' %}true{% endif %}"
             />
             <c-sidebar.nav_item
+                href="{% url 'meetings:list' %}"
                 icon="presentation-chart-bar"
                 label="Meetings"
-                soon="true"
+                active="{% if app == 'meetings' %}true{% endif %}"
             />
         </div>
     </div>

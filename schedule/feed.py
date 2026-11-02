@@ -2,7 +2,7 @@
 The building calendar: every pillar contributes dated events here.
 
 A source is a function (strata, start, end) -> iterable of Event for dates within [start, end].
-New pillars (projects, maintenance, meetings) add a source to SOURCES; the calendar page needs no change.
+New pillars (projects, maintenance) add a source to SOURCES; the calendar page needs no change.
 """
 import datetime
 from dataclasses import dataclass
@@ -12,6 +12,8 @@ from django.urls import reverse
 from django.utils import timezone
 
 from dockets.models import Incident
+from issues.models import Issue
+from meetings.models import Meeting
 from .models import KeyDate
 
 SOON_DAYS = 3
@@ -72,6 +74,38 @@ def enforcement_events(strata, start, end):
                 yield event
 
 
+def issue_events(strata, start, end):
+    """Fix-by dates of building issues; overdue only while the issue is still open."""
+    today = timezone.localdate()
+    for issue in strata.issues.filter(due_date__range=(start, end)):
+        status = deadline_status(issue.due_date, today) if issue.is_open else "done"
+        yield Event(issue.due_date, f"Fix by · {issue.title}", "Issue",
+                    reverse("issues:detail", args=[issue.pk]), status, issue.location or issue.get_category_display())
+
+
+def meeting_events(strata, start, end):
+    """Meetings by their local date. A planned meeting whose day has passed shows overdue until it's recorded."""
+    today = timezone.localdate()
+    window = (_day_start(start), _day_start(end + datetime.timedelta(days=1)))
+    meetings = strata.meetings.exclude(status=Meeting.Status.CANCELLED).filter(starts_at__gte=window[0],
+                                                                              starts_at__lt=window[1])
+    for meeting in meetings:
+        when = timezone.localtime(meeting.starts_at)
+        if meeting.status == Meeting.Status.PLANNED:
+            status = deadline_status(when.date(), today) if when.date() >= today else "overdue"
+        else:
+            status = "done"
+        detail = f"{when.hour % 12 or 12}:{when:%M} {'am' if when.hour < 12 else 'pm'}"  # "7:00 pm", portable
+        if meeting.location:
+            detail += f" · {meeting.location}"
+        yield Event(when.date(), meeting.get_kind_display(), "Meeting", reverse("meetings:detail", args=[meeting.pk]),
+                    status, detail)
+
+
+def _day_start(day):
+    return timezone.make_aware(datetime.datetime.combine(day, datetime.time.min))
+
+
 def _response_due(incident, today):
     """The owner's response deadline; only overdue while the case still waits on the owner."""
     deadline = timezone.localtime(incident.statutory_deadline).date()
@@ -96,4 +130,4 @@ def deadline_status(day, today):
     return ""
 
 
-SOURCES = [key_date_events, enforcement_events]
+SOURCES = [key_date_events, enforcement_events, issue_events, meeting_events]

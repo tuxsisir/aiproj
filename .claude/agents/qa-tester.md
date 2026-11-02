@@ -24,7 +24,7 @@ unless you see something severe elsewhere.
 
 ## How to test
 
-1. **Automated suite:** `.venv/bin/python manage.py test core stratas dockets documents inbox payments schedule`.
+1. **Automated suite:** `.venv/bin/python manage.py test core stratas dockets documents inbox payments schedule issues meetings`.
    Report failures with their output.
 2. **Behaviour through the app**, for every role that touches the area:
    - Prefer the Django test client against a throwaway database so the dev data is untouched:

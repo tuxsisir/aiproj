@@ -56,12 +56,11 @@ def incident_create(request):
         return redirect('dashboard')
 
     if request.membership and not request.membership.is_council:
-        messages.error(request, "Permission denied: Only Council Members can log new dockets.")
+        messages.error(request, "Only council members can open enforcement cases.")
         return redirect('dockets:incident_list')
 
     if request.method == "POST":
         title = request.POST.get("title")
-        incident_type = request.POST.get("incident_type")
         unit_number = request.POST.get("unit_number", "")
         bylaw_id = request.POST.get("bylaw")
         description = request.POST.get("description")
@@ -74,7 +73,7 @@ def incident_create(request):
         incident = Incident.objects.create(
             strata=request.strata,
             created_by=request.user,
-            incident_type=incident_type,
+            incident_type=Incident.Type.BYLAW,  # building problems are Issues, not enforcement
             title=title,
             unit_number=unit_number,
             bylaw=bylaw,
@@ -85,11 +84,11 @@ def incident_create(request):
         record_audit_log(incident, request.user, action=AuditLog.Action.CREATE, request=request)
         emails.send("docket_logged", member_emails(incident.strata, Membership.Role.MANAGER), {"incident": incident})
         
-        messages.success(request, "Docket successfully logged and awaiting manager review.")
+        messages.success(request, "Enforcement case opened. It's waiting for the manager to review.")
         return redirect('dockets:incident_list')
 
     bylaws = Bylaw.objects.filter(strata=request.strata, is_archived=False).order_by('code')
-    return render(request, 'dockets/incident_create.html', {'bylaws': bylaws, 'types': Incident.Type.choices})
+    return render(request, 'dockets/incident_create.html', {'bylaws': bylaws})
 
 @login_required
 def incident_detail(request, pk):
@@ -145,7 +144,7 @@ def cast_council_vote(request, pk):
     incident = get_object_or_404(Incident, pk=pk, strata=request.strata)
     
     if incident.status != Incident.Status.VOTING_OPEN:
-        messages.error(request, "Voting is not currently open for this docket.")
+        messages.error(request, "Voting is not open for this case.")
         return redirect('dockets:incident_detail', pk=pk)
 
     if CouncilVote.objects.filter(incident=incident, member=request.membership).exists():
@@ -534,7 +533,7 @@ def generate_fine_pdf(request, pk):
         return redirect('dockets:incident_detail', pk=pk)
 
     if incident.status != Incident.Status.RESOLVED_FINED:
-        messages.error(request, "No fine has been authorized for this docket.")
+        messages.error(request, "No fine has been authorized for this case.")
         return redirect('dockets:incident_detail', pk=pk)
 
     fine_dispatched_event = incident.events.filter(event_type=IncidentEvent.EventType.FINE_DISPATCHED).first()

@@ -1,12 +1,12 @@
 {% extends 'base_dashboard.html' %}
 
-{% block title %}Log New Docket • {{ active_strata.plan_number }}{% endblock %}
+{% block title %}New enforcement case • {{ active_strata.plan_number }}{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto space-y-6">
   <div class="border-b border-slate-200 dark:border-slate-800 pb-5">
-    <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Log New Docket</h1>
-    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Submit a new bylaw infraction or property deficiency for {{ active_strata.name }}.</p>
+    <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">New enforcement case</h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Open a case for a unit breaking a bylaw at {{ active_strata.name }}.</p>
   </div>
 
   <form method="post" enctype="multipart/form-data" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-6 space-y-6">
@@ -17,15 +17,15 @@
       <input type="text" name="title" required class="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-slate-500 focus:ring-slate-500">
     </div>
 
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <label class="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">Incident Type</label>
-        <select name="incident_type" required class="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-slate-500 focus:ring-slate-500">
-          {% for value, label in types %}
-            <option value="{{ value }}">{{ label }}</option>
-          {% endfor %}
-        </select>
-      </div>
+    <p class="rounded-md bg-sky-50 dark:bg-sky-950/30 px-3 py-2 text-sm text-sky-900 dark:text-sky-200 ring-1 ring-sky-200 dark:ring-sky-900/60">
+      Enforcement is for a unit breaking a bylaw. Something broken or unsafe in the building?
+      <a
+        href="{% url 'issues:create' %}"
+        class="font-semibold underline"
+      >Raise a building issue</a> instead.
+    </p>
+
+    <div class="grid grid-cols-1 gap-4">
       <div>
         <label class="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">Unit Number <span class="text-slate-400 font-normal">(Optional)</span></label>
         <input type="text" name="unit_number" class="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-slate-500 focus:ring-slate-500">
@@ -34,12 +34,17 @@
 
     <div>
       <label class="block text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">Violated Bylaw <span class="text-slate-400 font-normal">(If applicable)</span></label>
-      <select name="bylaw" class="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-slate-500 focus:ring-slate-500">
-        <option value="">-- Select a Bylaw --</option>
+      <c-listbox
+        name="bylaw"
+        placeholder="Select a bylaw"
+      >
         {% for bylaw in bylaws %}
-          <option value="{{ bylaw.id }}">{{ bylaw.code }} - {{ bylaw.title }} (Fine: ${{ bylaw.standard_fine }})</option>
+          <c-ui.menu.item
+            value="{{ bylaw.id }}"
+            label="{{ bylaw.code|safe_quotes }} · {{ bylaw.title|safe_quotes }} (fine ${{ bylaw.standard_fine }})"
+          />
         {% endfor %}
-      </select>
+      </c-listbox>
     </div>
 
     <div>

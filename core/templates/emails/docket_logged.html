@@ -1,11 +1,11 @@
 {% extends "emails/base.html" %}
 {% block content %}
-<p>A new docket was logged for <strong>{{ incident.strata }}</strong> and is waiting for manager review.</p>
+<p>A new enforcement case was opened for <strong>{{ incident.strata }}</strong> and is waiting for manager review.</p>
 <p style="margin:16px 0;padding:12px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
   <strong>{{ incident.title }}</strong><br>
   {% if incident.unit_number %}Unit {{ incident.unit_number }} · {% endif %}{% if incident.bylaw %}Bylaw {{ incident.bylaw.code }} ({{ incident.bylaw.title }}){% else %}{{ incident.get_incident_type_display }}{% endif %}<br>
   {{ incident.description|truncatewords:60 }}
 </p>
 {% url 'dockets:incident_detail' incident.pk as path %}
-{% include "emails/_button.html" with url=site_url|add:path label="Review docket" %}
+{% include "emails/_button.html" with url=site_url|add:path label="Review the case" %}
 {% endblock %}

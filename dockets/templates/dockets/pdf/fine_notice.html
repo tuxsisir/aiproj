@@ -118,7 +118,7 @@
             <tr>
                 <td class="meta-label">Date Issued:</td>
                 <td>{{ fine_dispatched_event.occurred_at|date:"F j, Y"|default:incident.updated_at|date:"F j, Y" }}</td>
-                <td class="meta-label">Docket No:</td>
+                <td class="meta-label">Case No:</td>
                 <td style="font-family: monospace;">#{{ incident.id|stringformat:"s"|slice:":8"|upper }}</td>
             </tr>
             <tr>

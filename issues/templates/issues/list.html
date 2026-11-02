@@ -1,0 +1,89 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Building issues · {{ active_strata.plan_number }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Building issues</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Problems with the building that need fixing. Every issue has an owner and a status, and silence shows.</p>
+    </div>
+    <a
+      href="{% url 'issues:create' %}"
+      class="btn-glow inline-flex shrink-0 items-center gap-2 rounded-md bg-slate-900 dark:bg-slate-100 px-3 py-2 text-sm font-semibold text-white dark:text-slate-900 shadow-sm"
+    >
+      {% heroicon_outline "plus" class="h-4 w-4" %}
+      Raise an issue
+    </a>
+  </div>
+
+  <nav
+    aria-label="Filter issues"
+    class="flex flex-wrap items-center gap-2 text-sm"
+  >
+    <a
+      href="?show=open"
+      {% if show == 'open' %}aria-current="page"{% endif %}
+      class="rounded-full px-3 py-1 font-medium {% if show == 'open' %}bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900{% else %}text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800{% endif %}"
+    >Open · {{ counts.open }}</a>
+    <a
+      href="?show=mine"
+      {% if show == 'mine' %}aria-current="page"{% endif %}
+      class="rounded-full px-3 py-1 font-medium {% if show == 'mine' %}bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900{% else %}text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800{% endif %}"
+    >Mine · {{ counts.mine }}</a>
+    <a
+      href="?show=closed"
+      {% if show == 'closed' %}aria-current="page"{% endif %}
+      class="rounded-full px-3 py-1 font-medium {% if show == 'closed' %}bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900{% else %}text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800{% endif %}"
+    >Closed · {{ counts.closed }}</a>
+    <a
+      href="?show=all"
+      {% if show == 'all' %}aria-current="page"{% endif %}
+      class="rounded-full px-3 py-1 font-medium {% if show == 'all' %}bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900{% else %}text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800{% endif %}"
+    >All</a>
+    {% if counts.unanswered %}
+      <span class="ml-auto rounded-full bg-amber-100 dark:bg-amber-950/60 px-2.5 py-1 text-xs font-semibold text-amber-800 dark:text-amber-300">{{ counts.unanswered }} with no response yet</span>
+    {% endif %}
+  </nav>
+
+  {% if issues %}
+    <ul class="divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden rounded-lg bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-800">
+      {% for issue in issues %}
+        <li>
+          <a
+            href="{% url 'issues:detail' issue.pk %}"
+            class="flex flex-col gap-2 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 sm:flex-row sm:items-center sm:gap-4"
+          >
+            <span class="min-w-0 flex-1">
+              <span class="flex items-center gap-2">
+                {% if issue.priority == 'URGENT' or issue.priority == 'HIGH' %}
+                  <span class="rounded bg-rose-100 dark:bg-rose-950/60 px-1.5 py-px text-[10px] font-bold uppercase tracking-wider text-rose-700 dark:text-rose-300">{{ issue.get_priority_display }}</span>
+                {% endif %}
+                <span class="truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{ issue.title }}</span>
+              </span>
+              <span class="mt-0.5 block truncate text-xs text-slate-500 dark:text-slate-400">
+                {{ issue.get_category_display }}{% if issue.location %} · {{ issue.location }}{% endif %}
+                · {% if issue.assigned_to %}{{ issue.assigned_to.get_full_name|default:issue.assigned_to.email }}{% else %}<span class="text-amber-700 dark:text-amber-300">no owner</span>{% endif %}
+                {% if issue.due_date and issue.is_open %} · fix by {{ issue.due_date|date:"M j" }}{% endif %}
+              </span>
+            </span>
+            <span class="flex shrink-0 items-center gap-3 text-xs">
+              {% if issue.is_open %}
+                <span class="text-slate-500 dark:text-slate-400" title="Last activity">quiet {{ issue.last_activity_at|timesince }}</span>
+              {% else %}
+                <span class="text-slate-500 dark:text-slate-400">closed {{ issue.resolved_at|date:"M j" }}</span>
+              {% endif %}
+              {% include "issues/partials/status.html" %}
+            </span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="rounded-lg border border-dashed border-slate-300 dark:border-slate-700 px-4 py-10 text-center">
+      <p class="text-sm font-medium text-slate-700 dark:text-slate-200">{% if show == 'mine' %}Nothing assigned to you.{% elif show == 'closed' %}No closed issues yet.{% else %}No open issues.{% endif %}</p>
+      <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Raise anything broken, unsafe or unclean in the building, or turn a forwarded email into an issue.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

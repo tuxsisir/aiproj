@@ -24,7 +24,7 @@
           for="{{ field.id_for_label }}"
           class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
         >{{ field.label }}</label>
-        {{ field }}
+        {% if field|is_select %}<c-listbox :field="field" />{% else %}{{ field }}{% endif %}
         {% for error in field.errors %}
           <p class="mt-1 text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>
         {% endfor %}

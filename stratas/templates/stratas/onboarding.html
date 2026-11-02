@@ -102,17 +102,24 @@
                         <div class="mb-4 sm:col-span-6">
                             <label for="strata_id" class="block text-sm font-medium text-slate-700">Select your Strata Plan</label>
                             <div class="mt-1">
-                                <select id="strata_id" name="strata_id" :required="mode === 'select'" class="block w-full rounded-md border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm">
-                                    <option value="" disabled selected>Select an existing building...</option>
-                                    {% for s in existing_stratas %}
-                                        <option value="{{ s.id }}">{{ s.plan_number }} - {{ s.name }}</option>
-                                    {% endfor %}
-                                </select>
+                                <template x-if="mode === 'select'">
+                                    <c-listbox
+                                        name="strata_id"
+                                        placeholder="Select an existing building..."
+                                    >
+                                        {% for s in existing_stratas %}
+                                            <c-ui.menu.item
+                                                value="{{ s.id }}"
+                                                label="{{ s.plan_number|safe_quotes }} - {{ s.name|safe_quotes }}"
+                                            />
+                                        {% endfor %}
+                                    </c-listbox>
+                                </template>
                             </div>
                         </div>
                         <p class="text-sm text-slate-500 mb-6 mt-2">
                             Didn't find your building? 
-                            <button type="button" @click="mode = 'create'; document.getElementById('strata_id').value='';" class="text-blue-600 hover:text-blue-500 font-semibold focus:outline-none">Create a new one</button>
+                            <button type="button" @click="mode = 'create'" class="text-blue-600 hover:text-blue-500 font-semibold focus:outline-none">Create a new one</button>
                         </p>
                     </div>
 
@@ -153,12 +160,17 @@
                             <div class="sm:col-span-3">
                                 <label for="position" class="block text-sm font-medium text-slate-700">Your Council Position</label>
                                 <div class="mt-1">
-                                    <select id="position" name="position" :required="persona === 'COUNCIL'" class="block w-full rounded-md border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm">
-                                        <option value="" disabled selected>Select your position...</option>
+                                    <c-listbox
+                                        name="position"
+                                        placeholder="Select your position..."
+                                    >
                                         {% for value, label in positions %}
-                                            <option value="{{ value }}">{{ label }}</option>
+                                            <c-ui.menu.item
+                                                value="{{ value }}"
+                                                label="{{ label|safe_quotes }}"
+                                            />
                                         {% endfor %}
-                                    </select>
+                                    </c-listbox>
                                 </div>
                             </div>
 

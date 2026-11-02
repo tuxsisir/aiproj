@@ -157,7 +157,7 @@ class SidebarTests(TestCase):
     def test_unbuilt_pillars_are_labels_not_links(self):
         nav = self.main_nav(reverse("dashboard"))
 
-        self.assertIn('title="Issues is coming soon"', nav)
+        self.assertIn('title="Projects is coming soon"', nav)
         self.assertNotIn('href="#"', nav)
 
     def test_billing_is_not_in_the_nav_for_any_role(self):
@@ -169,3 +169,22 @@ class SidebarTests(TestCase):
             nav = self.main_nav(reverse("dashboard"))
             self.assertNotIn(reverse("payments:subscription_dashboard"), nav)
             self.assertIn(reverse("dockets:voting_center"), nav)
+
+
+class ListboxTests(TestCase):
+    def test_form_fields_render_as_listbox_with_value_and_safe_labels(self):
+        from django import forms
+        from django.template import Context, Template
+
+        class F(forms.Form):
+            owner = forms.ChoiceField(choices=[("", "Nobody yet"), ("1", "Pat O'Brien")])
+
+        from django_cotton.compiler_regex import CottonCompiler
+
+        source = CottonCompiler().process('<c-listbox :field="form.owner" />')  # cotton compiles file templates only
+        html = Template(source).render(Context({"form": F(initial={"owner": "1"})}))
+        self.assertIn('name="owner"', html)
+        self.assertIn("selected: '1'", html)
+        self.assertIn("Pat O’Brien", html)  # a straight apostrophe would break cotton-ui's inline JavaScript
+        self.assertNotIn("O'Brien", html)
+        self.assertNotIn("<select", html)
