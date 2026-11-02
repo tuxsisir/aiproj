@@ -62,13 +62,15 @@ sharing **Decisions**, **Meetings**, **Capture** (email + PDF → proposed items
 - [x] Forward-to-CivicDesk inbox per building with AI summary
 - [x] s.135 enforcement v1 (complaint → notice → owner response → council vote → fine)
 - [x] Landing page, design language, dev logins
+- [x] Pillar-based sidebar; review agents; destructive-action guardrails
+- [x] Building calendar (`/calendar/`): key dates + enforcement deadlines; every pillar feeds it
 
 ### Phase 1 — Ways of working + foundations
-- [ ] `qa-tester` and `code-reviewer` agents (`.claude/agents/`), report folder `docs/qa/`
+- [x] `qa-tester` and `code-reviewer` agents (`.claude/agents/`), report folder `docs/qa/`
 - [ ] First QA pass on what exists (report only)
 - [ ] Sections: design and migrate (Building → Section as the tenant)
 - [ ] Shared plumbing: timeline entries + attachments usable by any item type
-- [ ] Hide Billing from nav (payments parked)
+- [x] Hide Billing from nav (payments parked)
 
 ### Phase 2 — Issues + capture ("nothing raised is lost")
 - [ ] Issues: raise, assign (manager/council/vendor), status, "waiting since", close with outcome
@@ -76,7 +78,9 @@ sharing **Decisions**, **Meetings**, **Capture** (email + PDF → proposed items
 - [ ] Upload agenda / inspection / fire report PDF → AI proposes issues; person confirms
       (test fixture: anonymized copy of the Oct 2026 agenda package)
 - [ ] Manager reply by email lands on the issue timeline
-- [ ] Role dashboards: manager portfolio "needs action"; council "waiting on me" + unanswered issues
+- [x] Role-aware Overview: "needs attention" per role, pillar cards, next 30 days, recent activity, manager portfolio
+- [ ] Add issues to the Overview (unanswered issues, "waiting since")
+- [ ] Forwarded email: mark handled / turn into an issue (urgent emails sit on the Overview for 14 days until then)
 - [ ] Weekly digest email
 
 ### Milestone — Deploy and onboard our council
@@ -86,7 +90,7 @@ sharing **Decisions**, **Meetings**, **Capture** (email + PDF → proposed items
 ### Phase 3 — Enforcement, bulletproof
 - [ ] Procedure engine: steps in order, deadlines, fine amounts checked against the bylaw
       (rules reviewed by council/professional before use)
-- [ ] Fix known gaps: null bylaw crash, re-dispatch guards, duplicate fine dispatch, save-before-send, bylaw edit permissions, deadline expiry
+- [ ] Fix known gaps: null bylaw crash, re-dispatch guards, duplicate fine dispatch, save-before-send, bylaw edit permissions, deadline expiry (a missed owner deadline has no next-step action yet; the Overview flags it as "Decide the next step")
 - [ ] Notices with delivery record; corrections as new entries only
 - [ ] One case covering many units (e.g. 13 units refusing fire-inspection access)
 - [ ] Collections: arrears → letter → lien warning → lien → CRT/court, with limitation-period alerts

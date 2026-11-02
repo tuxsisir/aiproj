@@ -2,328 +2,229 @@
 
 {% block title %}Overview | CivicDesk{% endblock %}
 
-{% block head_scripts %}
-<script src="https://cdn.jsdelivr.net/npm/apexcharts@8.7.0"></script>
-{% endblock %}
-
 {% block content %}
-<div class="space-y-6">
-  
-  <!-- Header -->
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+<div class="space-y-8">
+
+  <!-- Greeting -->
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-5">
     <div>
-      <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Command Center</h1>
-      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Executive overview for {{ active_strata.name }}</p>
+      <p class="text-sm text-slate-500 dark:text-slate-400">{% if hour < 12 %}Good morning{% elif hour < 18 %}Good afternoon{% else %}Good evening{% endif %}, {{ user.first_name|default:user.email }}</p>
+      <h1
+        class="mt-1 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100"
+        style="font-family: 'Fraunces', Georgia, serif;"
+      >{{ active_strata.name }}</h1>
+      <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        <span class="font-mono">{{ active_strata.plan_number }}</span> · {{ active_strata.total_units }} lots · you're the {{ request.membership.title|lower }}
+      </p>
     </div>
+    <p class="text-sm font-medium {% if on_you %}text-amber-700 dark:text-amber-300{% else %}text-emerald-700 dark:text-emerald-300{% endif %}">
+      {% if on_you %}
+        <span class="live-dot mr-1.5 align-middle"></span>{{ on_you }} thing{{ on_you|pluralize }} need{{ on_you|pluralize:"s," }} you
+      {% else %}
+        Nothing is waiting on you
+      {% endif %}
+    </p>
   </div>
 
-  {% if active_strata %}
-  <!-- A. Executive KPI Cards -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-    <!-- Card 1: Active Dockets -->
-    <div class="card-hover bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-      <div class="flex justify-between items-start">
-        <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Active Dockets</p>
-        <div class="h-8 w-8 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-          {% heroicon_outline "document-duplicate" class="h-5 w-5" %}
-        </div>
+  {% if portfolio %}
+    <!-- Manager portfolio -->
+    <section>
+      <h2 class="mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Your buildings</h2>
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {% for building in portfolio %}
+          <form
+            method="post"
+            action="{% url 'switch_strata' building.id %}"
+          >
+            {% csrf_token %}
+            <button
+              type="submit"
+              {% if building.id == active_strata.id %}aria-current="true"{% endif %}
+              class="card-hover w-full rounded-lg p-4 text-left ring-1 transition
+                bg-white dark:bg-slate-900 {% if building.id == active_strata.id %}ring-2 ring-amber-400{% else %}ring-slate-200 hover:ring-slate-400 dark:ring-slate-800 dark:hover:ring-slate-600{% endif %}"
+            >
+              <span class="flex items-baseline justify-between gap-2">
+                <span class="truncate font-semibold text-slate-900 dark:text-slate-100">{{ building.name }}</span>
+                <span class="shrink-0 font-mono text-[11px] text-slate-400">{% if building.id == active_strata.id %}viewing · {% endif %}{{ building.plan_number }}</span>
+              </span>
+              <span class="mt-2 flex flex-wrap gap-1.5 text-[11px] font-semibold">
+                {% if building.overdue %}<span class="rounded-full bg-rose-100 px-2 py-0.5 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">{{ building.overdue }} overdue</span>{% endif %}
+                {% if building.new_cases %}<span class="rounded-full bg-amber-100 px-2 py-0.5 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">{{ building.new_cases }} to review</span>{% endif %}
+                {% if building.voting %}<span class="rounded-full bg-sky-100 px-2 py-0.5 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300">{{ building.voting }} in vote</span>{% endif %}
+                {% if not building.overdue and not building.new_cases and not building.voting %}<span class="text-slate-400">All clear</span>{% endif %}
+              </span>
+            </button>
+          </form>
+        {% endfor %}
       </div>
-      <div class="mt-4">
-        <h3 data-count-up class="text-3xl font-bold text-slate-900 dark:text-slate-100">{{ active_incidents }}</h3>
-      </div>
-    </div>
-
-    <!-- Card 2: Pending Votes -->
-    <div class="card-hover bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-      <div class="flex justify-between items-start">
-        <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Pending Votes</p>
-        <div class="h-8 w-8 rounded-md {% if pending_votes > 0 %}bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400{% else %}bg-slate-50 dark:bg-slate-800 text-slate-400{% endif %} flex items-center justify-center">
-          {% heroicon_outline "check-badge" class="h-5 w-5" %}
-        </div>
-      </div>
-      <div class="mt-4 flex items-center justify-between">
-        <h3 data-count-up class="text-3xl font-bold text-slate-900 dark:text-slate-100">{{ pending_votes }}</h3>
-        {% if pending_votes > 0 %}
-          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"><span class="live-dot text-amber-500"></span>Action Required</span>
-        {% endif %}
-      </div>
-    </div>
-
-    <!-- Card 3: Statutory Deadlines -->
-    <div class="card-hover bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-      <div class="flex justify-between items-start">
-        <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Clocks Running</p>
-        <div class="h-8 w-8 rounded-md bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 flex items-center justify-center">
-          {% heroicon_outline "clock" class="h-5 w-5" %}
-        </div>
-      </div>
-      <div class="mt-4">
-        <h3 data-count-up class="text-3xl font-bold text-slate-900 dark:text-slate-100">{{ deadlines_active }}</h3>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">14-Day statutory periods</p>
-      </div>
-    </div>
-
-    <!-- Card 4: Resolved This Month -->
-    <div class="card-hover bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-      <div class="flex justify-between items-start">
-        <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Resolved Files</p>
-        <div class="h-8 w-8 rounded-md bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-          {% heroicon_outline "shield-check" class="h-5 w-5" %}
-        </div>
-      </div>
-      <div class="mt-4">
-        <h3 data-count-up class="text-3xl font-bold text-slate-900 dark:text-slate-100">{{ resolved_this_month }}</h3>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Closed this month</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Inject Chart Data -->
-  {{ activity_chart_data|json_script:"activity-data" }}
-  {{ breakdown_chart_data|json_script:"breakdown-data" }}
-
-  <!-- B. Visual Analytics Section -->
-  <div x-data="dashboardCharts()" class="grid grid-cols-1 lg:grid-cols-3 gap-5 my-6">
-    
-    <!-- 1. Main Trend Chart -->
-    <div class="lg:col-span-2 min-w-0 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm p-5">
-      <div class="flex justify-between items-center mb-4">
-        <div>
-          <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Infraction & Compliance Activity</h3>
-          <p class="text-sm text-slate-500 dark:text-slate-400">6-month volume of Section 135 notices vs resolutions</p>
-        </div>
-        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 shrink-0">
-          Last 6 Months
-        </span>
-      </div>
-      <div x-ref="timelineChart" class="w-full min-h-[290px]"></div>
-    </div>
-
-    <!-- 2. Category Distribution Chart -->
-    <div class="lg:col-span-1 min-w-0 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm p-5">
-      <div class="mb-4">
-        <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Bylaw Distribution</h3>
-        <p class="text-sm text-slate-500 dark:text-slate-400">Breakdown by active categories</p>
-      </div>
-      <div x-ref="breakdownChart" class="w-full flex justify-center min-h-[290px]"></div>
-    </div>
-
-  </div>
-
-  <!-- C. Recent Activity Table -->
-  <div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-    <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
-      <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Activity Monitor</h3>
-      <a href="{% url 'dockets:incident_list' %}" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 transition">View All Dockets &rarr;</a>
-    </div>
-    
-    {% if recent_incidents %}
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
-          <tbody class="divide-y divide-slate-100 dark:divide-slate-800/50">
-            {% for incident in recent_incidents %}
-            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition cursor-pointer group" onclick="window.location='{% url 'dockets:incident_detail' incident.pk %}'">
-              <td class="px-5 py-3.5">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <div class="flex items-center gap-2 mb-1">
-                      <span class="font-mono text-xs text-slate-500 dark:text-slate-400">{{ incident.unit_number|default:"Common Area" }}</span>
-                      <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-                      {% if incident.incident_type == 'BYLAW' %}
-                        <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60">Bylaw {{ incident.bylaw.code }}</span>
-                      {% else %}
-                        <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">Deficiency</span>
-                      {% endif %}
-                    </div>
-                    <div class="font-medium text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">{{ incident.title }}</div>
-                  </div>
-                  <div class="text-right flex flex-col items-end">
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold border
-                      {% if 'RESOLVED' in incident.status %}
-                        bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800
-                      {% elif incident.status == 'NOTICE_ISSUED' %}
-                        bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800
-                        animate-pulse
-                      {% else %}
-                        bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800
-                      {% endif %}">
-                      {% if 'RESOLVED' in incident.status %}
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      {% elif incident.status == 'NOTICE_ISSUED' %}
-                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                      {% else %}
-                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                      {% endif %}
-                      {{ incident.get_status_display }}
-                    </span>
-                    <span class="text-xs text-slate-400 mt-1">{{ incident.created_at|timesince }} ago</span>
-                  </div>
-                </div>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% else %}
-      <div class="p-8 text-center">
-        <p class="text-sm text-slate-500 dark:text-slate-400">No recent activity found.</p>
-      </div>
-    {% endif %}
-  </div>
-
-  <script>
-    function dashboardCharts() {
-      return {
-        timelineChart: null,
-        breakdownChart: null,
-        
-        init() {
-          const activityData = JSON.parse(document.getElementById('activity-data').textContent);
-          const breakdownData = JSON.parse(document.getElementById('breakdown-data').textContent);
-          
-          const isDark = document.documentElement.classList.contains('dark');
-          const textColor = isDark ? '#94a3b8' : '#64748b'; // slate-400 : slate-500
-          const borderColor = isDark ? '#334155' : '#e2e8f0'; // slate-700 : slate-200
-
-          // Timeline Chart
-          const timelineOptions = {
-            series: activityData.series,
-            chart: {
-              type: 'area',
-              height: 290,
-              fontFamily: 'inherit',
-              toolbar: { show: false },
-              zoom: { enabled: false },
-              background: 'transparent',
-              width: '100%'
-            },
-            colors: ['#3b82f6', '#10b981'], // Blue, Emerald
-            dataLabels: { enabled: false },
-            stroke: {
-              curve: 'smooth',
-              width: 2
-            },
-            fill: {
-              type: 'gradient',
-              gradient: {
-                shadeIntensity: 1,
-                opacityFrom: 0.35,
-                opacityTo: 0.05,
-                stops: [0, 100]
-              }
-            },
-            xaxis: {
-              categories: activityData.labels,
-              axisBorder: { show: false },
-              axisTicks: { show: false },
-              labels: {
-                style: { colors: textColor, fontSize: '12px' }
-              }
-            },
-            yaxis: {
-              labels: {
-                style: { colors: textColor, fontSize: '12px' },
-                formatter: (val) => { return Math.round(val) }
-              }
-            },
-            grid: {
-              borderColor: borderColor,
-              strokeDashArray: 4,
-              xaxis: { lines: { show: true } },
-              yaxis: { lines: { show: true } },
-              padding: { top: 0, right: 0, bottom: 0, left: 10 }
-            },
-            legend: {
-              position: 'top',
-              horizontalAlign: 'right',
-              labels: { colors: textColor }
-            },
-            theme: { mode: isDark ? 'dark' : 'light' }
-          };
-
-          // Breakdown Donut Chart
-          const breakdownOptions = {
-            series: breakdownData.series,
-            labels: breakdownData.labels,
-            chart: {
-              type: 'donut',
-              height: 290,
-              fontFamily: 'inherit',
-              background: 'transparent',
-              width: '100%'
-            },
-            colors: ['#3b82f6', '#6366f1', '#f59e0b', '#ec4899', '#64748b'],
-            plotOptions: {
-              pie: {
-                donut: {
-                  size: '75%',
-                  labels: {
-                    show: true,
-                    name: { show: false },
-                    value: {
-                      show: true,
-                      fontSize: '36px',
-                      fontWeight: 700,
-                      color: isDark ? '#f8fafc' : '#0f172a', // slate-50 : slate-900
-                      formatter: function (val) { return val }
-                    },
-                    total: {
-                      show: true,
-                      showAlways: true,
-                      label: 'Active',
-                      fontSize: '12px',
-                      color: textColor,
-                      formatter: function (w) {
-                        return breakdownData.total
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            dataLabels: { enabled: false },
-            stroke: { show: false },
-            legend: {
-              position: 'bottom',
-              labels: { colors: textColor },
-              markers: { width: 8, height: 8, radius: 12 }
-            },
-            theme: { mode: isDark ? 'dark' : 'light' }
-          };
-
-          setTimeout(() => {
-            this.timelineChart = new ApexCharts(this.$refs.timelineChart, timelineOptions);
-            this.timelineChart.render();
-
-            this.breakdownChart = new ApexCharts(this.$refs.breakdownChart, breakdownOptions);
-            this.breakdownChart.render();
-          }, 50);
-          
-          // Cleanup on HTMX swap
-          document.body.addEventListener('htmx:beforeSwap', () => {
-            if (this.timelineChart) this.timelineChart.destroy();
-            if (this.breakdownChart) this.breakdownChart.destroy();
-          }, { once: true });
-        }
-      }
-    }
-  </script>
-  
-  {% else %}
-  <div class="bg-white dark:bg-slate-900 p-8 rounded-lg border border-slate-200 dark:border-slate-800 text-center shadow-sm">
-    <div class="mx-auto h-12 w-12 text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-      {% heroicon_outline "building-office" class="h-6 w-6" %}
-    </div>
-    <h3 class="text-lg font-medium text-slate-900 dark:text-slate-100">Welcome to CivicDesk</h3>
-    <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Please register or select a strata plan to view your portfolio analytics.</p>
-    <div class="mt-6">
-      <a href="{% url 'onboarding' %}" class="btn-glow inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition">
-        Get Started
-      </a>
-    </div>
-  </div>
+    </section>
   {% endif %}
 
+  <div class="grid gap-8 lg:grid-cols-3">
+
+    <!-- Needs you -->
+    <section class="lg:col-span-2">
+      <div class="mb-3 flex items-baseline justify-between">
+        <h2 class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Needs attention</h2>
+        <span class="text-xs text-slate-400">{{ needs|length }} item{{ needs|length|pluralize }}, most urgent first</span>
+      </div>
+      {% if needs %}
+        <ul class="divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden rounded-lg bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-800">
+          {% for need in needs %}
+            <li>
+              <a
+                href="{{ need.url }}"
+                class="group flex items-start gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+              >
+                <span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full
+                  {% if need.severity == 'overdue' %}bg-rose-500{% elif need.severity == 'action' %}bg-amber-500{% elif need.severity == 'soon' %}bg-sky-500{% else %}bg-slate-300 dark:bg-slate-600{% endif %}"></span>
+                <span class="min-w-0 flex-1">
+                  <span class="block text-sm font-medium text-slate-900 dark:text-slate-100">{{ need.title }}</span>
+                  <span class="block text-xs text-slate-500 dark:text-slate-400">{{ need.detail }}</span>
+                </span>
+                <span class="hidden sm:inline shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider
+                  {% if need.severity == 'overdue' %}bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300{% elif need.severity == 'action' %}bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300{% elif need.severity == 'soon' %}bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300{% else %}bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400{% endif %}">
+                  {% if need.severity == 'overdue' %}Overdue{% elif need.severity == 'action' %}On you{% elif need.severity == 'soon' %}Coming up{% else %}Waiting on others{% endif %}
+                </span>
+                {% heroicon_outline "chevron-right" class="mt-1 h-4 w-4 shrink-0 text-slate-300 group-hover:text-slate-500" %}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="rounded-lg border border-dashed border-slate-300 dark:border-slate-700 px-4 py-10 text-center">
+          <p class="text-sm font-medium text-slate-700 dark:text-slate-200">All caught up.</p>
+          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Nothing overdue, nothing waiting on anyone, nothing due in the next two weeks.</p>
+        </div>
+      {% endif %}
+    </section>
+
+    <!-- Coming up -->
+    <section>
+      <div class="mb-3 flex items-baseline justify-between">
+        <h2 class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Next 30 days</h2>
+        <a
+          href="{% url 'schedule:month' %}"
+          class="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:underline"
+        >Calendar &rarr;</a>
+      </div>
+      {% if pillars.upcoming %}
+        <ul class="space-y-2">
+          {% for event in pillars.upcoming|slice:":6" %}
+            <li>
+              <a
+                href="{{ event.url }}"
+                class="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800/60"
+              >
+                <span class="flex h-9 w-9 shrink-0 flex-col items-center justify-center rounded-md text-white {% if event.pillar == 'Enforcement' %}bg-rose-500{% else %}bg-amber-500{% endif %}">
+                  <span class="text-[8px] font-bold uppercase leading-none">{{ event.date|date:"M" }}</span>
+                  <span class="text-sm font-bold leading-tight">{{ event.date.day }}</span>
+                </span>
+                <span class="min-w-0">
+                  <span class="block truncate text-sm text-slate-900 dark:text-slate-100">{{ event.title }}</span>
+                  <span class="block truncate text-xs text-slate-500 dark:text-slate-400">{{ event.pillar }}{% if event.detail %} · {{ event.detail }}{% endif %}</span>
+                </span>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="rounded-lg border border-dashed border-slate-300 dark:border-slate-700 px-4 py-6 text-center text-sm text-slate-500">Nothing scheduled. <a
+          href="{% url 'schedule:key_date_create' %}"
+          class="font-semibold underline"
+        >Add a key date</a></p>
+      {% endif %}
+    </section>
+  </div>
+
+  <!-- Pillars -->
+  <section>
+    <h2 class="mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Your building at a glance</h2>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <a
+        href="{% url 'dockets:incident_list' %}"
+        class="card-hover rounded-lg bg-white dark:bg-slate-900 p-4 ring-1 ring-slate-200 dark:ring-slate-800"
+      >
+        <span class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">{% heroicon_outline "shield-exclamation" class="h-4 w-4 text-rose-500" %} Enforcement</span>
+        <span
+          data-count-up
+          class="mt-2 block text-3xl font-bold text-slate-900 dark:text-slate-100"
+        >{{ pillars.cases.open }}</span>
+        <span class="block text-xs text-slate-500 dark:text-slate-400">open case{{ pillars.cases.open|pluralize }}</span>
+        <span class="mt-3 flex flex-wrap gap-1.5 text-[11px]">
+          {% if pillars.cases.overdue %}<span class="rounded-full bg-rose-100 dark:bg-rose-950/60 px-2 py-0.5 font-semibold text-rose-700 dark:text-rose-300">{{ pillars.cases.overdue }} overdue</span>{% endif %}
+          <span class="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-slate-600 dark:text-slate-300">{{ pillars.cases.new }} new</span>
+          <span class="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-slate-600 dark:text-slate-300">{{ pillars.cases.voting }} in vote</span>
+        </span>
+      </a>
+
+      <a
+        href="{% url 'schedule:month' %}"
+        class="card-hover rounded-lg bg-white dark:bg-slate-900 p-4 ring-1 ring-slate-200 dark:ring-slate-800"
+      >
+        <span class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">{% heroicon_outline "calendar-days" class="h-4 w-4 text-amber-500" %} Calendar</span>
+        <span
+          data-count-up
+          class="mt-2 block text-3xl font-bold text-slate-900 dark:text-slate-100"
+        >{{ pillars.upcoming|length }}</span>
+        <span class="block text-xs text-slate-500 dark:text-slate-400">date{{ pillars.upcoming|length|pluralize }} in the next 30 days</span>
+        {% if pillars.next_event %}
+          <span class="mt-3 block truncate text-[11px] text-slate-600 dark:text-slate-300">Next: {{ pillars.next_event.title }} · {{ pillars.next_event.date|date:"M j" }}</span>
+        {% endif %}
+      </a>
+
+      <a
+        href="{% url 'documents:library' %}"
+        class="card-hover rounded-lg bg-white dark:bg-slate-900 p-4 ring-1 ring-slate-200 dark:ring-slate-800"
+      >
+        <span class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">{% heroicon_outline "sparkles" class="h-4 w-4 text-violet-500" %} Building brain</span>
+        <span
+          data-count-up
+          class="mt-2 block text-3xl font-bold text-slate-900 dark:text-slate-100"
+        >{{ pillars.documents.total }}</span>
+        <span class="block text-xs text-slate-500 dark:text-slate-400">document{{ pillars.documents.total|pluralize }}, {{ pillars.documents.ready }} summarized</span>
+        <span class="mt-3 block text-[11px] text-slate-600 dark:text-slate-300">{{ pillars.questions }} question{{ pillars.questions|pluralize }} answered</span>
+      </a>
+
+      <a
+        href="{% url 'inbox:home' %}"
+        class="card-hover rounded-lg bg-white dark:bg-slate-900 p-4 ring-1 ring-slate-200 dark:ring-slate-800"
+      >
+        <span class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">{% heroicon_outline "inbox-arrow-down" class="h-4 w-4 text-sky-500" %} Forwarded email</span>
+        <span
+          data-count-up
+          class="mt-2 block text-3xl font-bold text-slate-900 dark:text-slate-100"
+        >{{ pillars.emails.recent }}</span>
+        <span class="block text-xs text-slate-500 dark:text-slate-400">in the last 30 days</span>
+        {% if pillars.emails.urgent %}
+          <span class="mt-3 inline-block rounded-full bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300">{{ pillars.emails.urgent }} high urgency</span>
+        {% endif %}
+      </a>
+    </div>
+    <p class="mt-3 text-xs text-slate-400 dark:text-slate-500">Coming next: Issues, Projects, Maintenance and Money will appear here as they're built.</p>
+  </section>
+
+  <!-- Recent activity -->
+  <section>
+    <h2 class="mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Recent activity</h2>
+    {% if recent %}
+      <ol class="relative space-y-4 border-l border-slate-200 dark:border-slate-800 pl-5">
+        {% for item in recent %}
+          <li class="relative">
+            <span class="absolute -left-[25px] top-1.5 h-2 w-2 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+            <a
+              href="{{ item.url }}"
+              class="block hover:underline"
+            >
+              <span class="block text-sm text-slate-800 dark:text-slate-200">{{ item.text }}</span>
+              <span class="block text-xs text-slate-500 dark:text-slate-400">{{ item.pillar }}{% if item.who %} · {{ item.who }}{% endif %} · {{ item.when|timesince }} ago</span>
+            </a>
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p class="text-sm text-slate-500 dark:text-slate-400">Nothing yet. Activity across cases, documents and email will show up here.</p>
+    {% endif %}
+  </section>
 </div>
 {% endblock %}

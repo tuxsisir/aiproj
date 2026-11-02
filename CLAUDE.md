@@ -27,6 +27,9 @@ Planned production domain: `usecivicdesk.com`.
 - `core` — `User` (UUID pk, avatar, phone, brokerage), `BaseModel` (UUID pk + timestamps),
   `FieldTrackerMixin` (dirty-field snapshot via `TRACKED_FIELDS`), immutable `AuditLog` (generic FK),
   `core/services.py::record_audit_log`, landing/dashboard/profile views, `init_demo_data` command.
+- Overview page (`/dashboard/`): logic in `core/overview.py` (`needs_you` per role, `pillars`, `recent_activity`,
+  manager `portfolio`); `core.views.dashboard` only renders it. When a pillar gains things that wait on someone,
+  add them to `needs_you`.
 - `stratas` — `StrataPlan` (tenant boundary), `Membership` (user↔strata: `role` COUNCIL | MANAGER drives
   permissions; `position` PRESIDENT / VICE_PRESIDENT / TREASURER / SECRETARY / MEMBER_AT_LARGE is the council
   office; `status` PENDING | ACTIVE | REJECTED | INACTIVE), `StrataInvitation` (model exists, not wired up),
@@ -44,6 +47,10 @@ Planned production domain: `usecivicdesk.com`.
   with an AI issue summary. anymail's Resend inbound webhook (`/anymail/resend/inbound/`) fires the `inbound`
   signal (`inbox/signals.py`); only active members of that building are accepted; the summary is emailed back to
   the forwarder. Try locally: `manage.py inbox_simulate <PLAN> <member email> <thread.txt>`.
+- `schedule` — building calendar at `/calendar/`. `schedule/feed.py` merges dated events from every pillar
+  (`SOURCES`: key dates, enforcement notices/deadlines; add a source when a pillar gains dates). `KeyDate` =
+  hand-entered dates (AGM, insurance renewal…), optionally yearly. Named `schedule` because `calendar` would
+  shadow Python's stdlib module. `TIME_ZONE` is `America/Vancouver` so "today" and deadlines are Pacific.
 - `payments` — Stripe checkout, customer portal, webhook at `/payments/webhooks/stripe/`.
 
 ## Architecture conventions (see `docs/PLAN.md`)
@@ -84,6 +91,9 @@ Planned production domain: `usecivicdesk.com`.
   without one it only logs inferred field UPDATEs. Audit logs are viewable read-only in admin.
 - Manual timeline entries go through `dockets.forms.IncidentEventForm` (NOTE / RECURRENCE / EVIDENCE only).
 - `incident.bylaw` is nullable; notice/fine emails dereference it.
+- Datetimes are stored in UTC and shown in `TIME_ZONE` (America/Vancouver). Templates (`|date`) convert for you;
+  in Python never call `.strftime()` / `.date()` on a DB datetime directly: use `timezone.localtime(dt)` or
+  `timezone.localdate()` first.
 - `cotton-ui.css` ships its own Tailwind utilities build. The Tailwind browser `<script>` must come **after** it in
   `<head>` (base templates), or its `.hidden`/`.flex`/… override responsive classes like `hidden sm:inline`.
 - Sidebar nav lives in `core/templates/cotton/sidebar/nav.html`, grouped by pillar; unbuilt pillars use `soon="true"`.
@@ -100,8 +110,12 @@ Planned production domain: `usecivicdesk.com`.
   the dashboard header. Accounts: admin / manager / president / treasurer / newcomer (pending) `@civicdesk.test`,
   password `DEV_ACCOUNT_PASSWORD`. Recreate/repair anytime: `manage.py seed_dev_accounts`. Demo users must use
   reserved domains (.test / example.*) so they never receive real email.
-- `python manage.py runserver`, `python manage.py migrate`, `python manage.py init_demo_data`
-- Tests: `.venv/bin/python manage.py test core stratas dockets documents inbox payments` (dev-login tests in
+- `python manage.py runserver`, `python manage.py migrate`
+- Demo data: `manage.py init_demo_data` (DEBUG only, run on an empty/flushed DB, refuses to run twice). DEMO STRATA
+  gets a 5-person council (president, treasurer, vp, secretary, member @civicdesk.test), the manager (plus two
+  other buildings), a pending newcomer, cases in every enforcement stage, summarized documents with saved Q&A,
+  forwarded emails and key dates, all dated relative to today. Content is fictional; keep it that way.
+- Tests: `.venv/bin/python manage.py test core stratas dockets documents inbox payments schedule` (dev-login tests in
   `core/tests_dev.py` use their own urlconf because tests run with DEBUG off) (factories in `core/testing.py`).
 - Quick throwaway DB: `DATABASE_URL="sqlite://:memory:" python manage.py shell -c "..."` (run `migrate` first inside).
 
