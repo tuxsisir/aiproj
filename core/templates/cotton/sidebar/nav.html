@@ -14,6 +14,12 @@ Sidebar grouped by the pillars in docs/VISION.md. Pillars not built yet show as 
             active="{% if name == 'dashboard' %}true{% endif %}"
         />
         <c-sidebar.nav_item
+            href="{% url 'schedule:month' %}"
+            icon="calendar-days"
+            label="Calendar"
+            active="{% if app == 'schedule' %}true{% endif %}"
+        />
+        <c-sidebar.nav_item
             href="{% url 'documents:library' %}#ask"
             icon="sparkles"
             label="Ask the building"
@@ -102,7 +108,7 @@ Sidebar grouped by the pillars in docs/VISION.md. Pillars not built yet show as 
                 active="{% if app == 'inbox' %}true{% endif %}"
             />
             <c-sidebar.nav_item
-                icon="calendar-days"
+                icon="presentation-chart-bar"
                 label="Meetings"
                 soon="true"
             />

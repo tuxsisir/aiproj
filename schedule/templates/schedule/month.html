@@ -1,0 +1,189 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Calendar · {{ month|date:"F Y" }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Calendar</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Every date across the building: key dates and enforcement deadlines. Projects, maintenance and meetings join as they're built.</p>
+    </div>
+    <a
+      href="{% url 'schedule:key_date_create' %}"
+      class="btn-glow inline-flex shrink-0 items-center gap-2 rounded-md bg-slate-900 dark:bg-slate-100 px-3 py-2 text-sm font-semibold text-white dark:text-slate-900 shadow-sm"
+    >
+      {% heroicon_outline "plus" class="h-4 w-4" %}
+      Add key date
+    </a>
+  </div>
+
+  <!-- Month selector -->
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <a
+        href="?month={{ prev_month|date:'Y-m' }}"
+        aria-label="Previous month"
+        class="rounded-md border border-slate-200 dark:border-slate-700 p-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+      >{% heroicon_outline "chevron-left" class="h-5 w-5" %}</a>
+      <h2
+        class="min-w-40 text-center text-xl font-semibold text-slate-900 dark:text-slate-100"
+        style="font-family: 'Fraunces', Georgia, serif;"
+      >{{ month|date:"F Y" }}</h2>
+      <a
+        href="?month={{ next_month|date:'Y-m' }}"
+        aria-label="Next month"
+        class="rounded-md border border-slate-200 dark:border-slate-700 p-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+      >{% heroicon_outline "chevron-right" class="h-5 w-5" %}</a>
+      {% if month != this_month %}
+        <a
+          href="?month={{ this_month|date:'Y-m' }}"
+          class="ml-1 rounded-md px-2 py-1 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+        >Today</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Three-month highlights: click a month to open it -->
+  <div class="grid gap-3 sm:grid-cols-3">
+    {% for m in months %}
+      <a
+        href="?month={{ m.first|date:'Y-m' }}"
+        {% if m.is_current %}aria-current="true"{% endif %}
+        class="card-hover flex flex-col rounded-lg bg-white dark:bg-slate-900 p-4 ring-1 transition
+          {% if m.is_current %}ring-2 ring-amber-400{% else %}ring-slate-200 dark:ring-slate-800 hover:ring-slate-400 dark:hover:ring-slate-600{% endif %}"
+      >
+        <span class="flex items-baseline justify-between gap-2">
+          <span class="font-semibold text-slate-900 dark:text-slate-100">{{ m.first|date:"F" }} <span class="font-normal text-slate-400">{{ m.first|date:"Y" }}</span></span>
+          <span class="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold">
+            {% if m.overdue %}<span class="rounded-full bg-rose-100 dark:bg-rose-950/60 px-2 py-0.5 text-rose-700 dark:text-rose-300">{{ m.overdue }} overdue</span>{% endif %}
+            <span class="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-slate-600 dark:text-slate-300">{{ m.events|length }} date{{ m.events|length|pluralize }}</span>
+          </span>
+        </span>
+        {% if m.events %}
+          <ul class="mt-3 space-y-1.5">
+            {% for event in m.highlights %}
+              <li class="flex items-center gap-2 text-xs {% if event.status == 'done' or event.status == 'past' %}opacity-60{% endif %}">
+                <span class="h-2 w-2 shrink-0 rounded-full {% if event.pillar == 'Enforcement' %}bg-rose-500{% else %}bg-amber-400{% endif %}"></span>
+                <span class="w-11 shrink-0 font-mono text-slate-500 dark:text-slate-400">{{ event.date|date:"M j" }}</span>
+                <span class="truncate text-slate-700 dark:text-slate-200">{{ event.title }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+          {% if m.events|length > 3 %}
+            <span class="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">+{{ m.events|length|add:"-3" }} more</span>
+          {% endif %}
+        {% else %}
+          <span class="mt-3 text-xs text-slate-400 dark:text-slate-500">Nothing scheduled</span>
+        {% endif %}
+      </a>
+    {% endfor %}
+  </div>
+
+  {% if still_overdue %}
+    <section class="rounded-lg border border-rose-200 dark:border-rose-900/60 bg-rose-50/60 dark:bg-rose-950/20 p-4">
+      <h3 class="flex items-center gap-2 text-sm font-semibold text-rose-800 dark:text-rose-200">
+        {% heroicon_outline "exclamation-triangle" class="h-4 w-4" %}
+        Still overdue from earlier
+      </h3>
+      <ul class="mt-2 space-y-1">
+        {% for event in still_overdue %}
+          <li>
+            <a
+              href="{{ event.url }}"
+              class="text-sm text-rose-800 dark:text-rose-200 underline-offset-2 hover:underline"
+            >{{ event.date|date:"M j" }} · {{ event.title }}{% if event.detail %} · {{ event.detail }}{% endif %}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
+  <!-- Legend -->
+  <div class="flex flex-wrap gap-4 text-xs text-slate-500 dark:text-slate-400">
+    <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-amber-400"></span>Key date</span>
+    <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-rose-500"></span>Enforcement</span>
+  </div>
+
+  <!-- Month grid (tablet and up) -->
+  <div class="hidden sm:block overflow-hidden rounded-lg ring-1 ring-slate-200 dark:ring-slate-800 bg-white dark:bg-slate-900">
+    <div class="grid grid-cols-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+      {% for weekday in weekdays %}
+        <div class="px-2 py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ weekday }}</div>
+      {% endfor %}
+    </div>
+    {% for week in weeks %}
+      <div class="grid grid-cols-7 {% if not forloop.last %}border-b border-slate-100 dark:border-slate-800{% endif %}">
+        {% for day, events in week %}
+          <div class="group relative min-h-28 p-1.5 {% if not forloop.last %}border-r border-slate-100 dark:border-slate-800{% endif %} {% if day.month != month.month %}bg-slate-50/60 dark:bg-slate-950/40{% endif %}">
+            <div class="flex items-center justify-between">
+              <span class="inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium
+                {% if day == today %}bg-amber-400 text-slate-900 font-bold{% elif day.month != month.month %}text-slate-400 dark:text-slate-600{% else %}text-slate-700 dark:text-slate-300{% endif %}">{{ day.day }}</span>
+              <a
+                href="{% url 'schedule:key_date_create' %}?date={{ day|date:'Y-m-d' }}"
+                aria-label="Add key date on {{ day|date:'F j' }}"
+                class="opacity-0 group-hover:opacity-100 focus:opacity-100 rounded p-0.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              >{% heroicon_outline "plus" class="h-4 w-4" %}</a>
+            </div>
+            <div class="mt-1 space-y-1">
+              {% for event in events|slice:":3" %}
+                <a
+                  href="{{ event.url }}"
+                  title="{{ event.title }}{% if event.detail %} · {{ event.detail }}{% endif %}"
+                  class="block truncate rounded px-1.5 py-0.5 text-[11px] font-medium leading-tight
+                    {% if event.pillar == 'Enforcement' %}bg-rose-50 text-rose-800 dark:bg-rose-950/50 dark:text-rose-200{% else %}bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200{% endif %}
+                    {% if event.status == 'overdue' %}ring-1 ring-rose-500{% elif event.status == 'done' or event.status == 'past' %}opacity-60{% endif %}"
+                >{% if event.status == 'overdue' %}! {% endif %}{{ event.title }}</a>
+              {% endfor %}
+              {% if events|length > 3 %}
+                <p class="px-1.5 text-[11px] text-slate-500">+{{ events|length|add:"-3" }} more</p>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Events this month: the whole calendar on phones (the grid is hidden there) -->
+  <section class="sm:hidden">
+    <h3 class="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">In {{ month|date:"F" }}</h3>
+    {% if month_events %}
+      <ul class="divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden rounded-lg ring-1 ring-slate-200 dark:ring-slate-800 bg-white dark:bg-slate-900">
+        {% for event in month_events %}
+          <li>
+            <a
+              href="{{ event.url }}"
+              class="flex items-center gap-4 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+            >
+              <span class="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-md text-white
+                {% if event.pillar == 'Enforcement' %}bg-rose-500{% else %}bg-amber-500{% endif %}">
+                <span class="text-[9px] font-bold uppercase leading-none">{{ event.date|date:"M" }}</span>
+                <span class="text-base font-bold leading-tight">{{ event.date.day }}</span>
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{ event.title }}</span>
+                <span class="block truncate text-xs text-slate-500 dark:text-slate-400">
+                  {{ event.pillar }}{% if event.detail %} · {{ event.detail }}{% endif %} ·
+                  {% if event.date == today %}today{% elif event.date > today %}in {{ event.date|timeuntil:today }}{% else %}{{ today|timeuntil:event.date }} ago{% endif %}
+                </span>
+              </span>
+              {% if event.status == 'overdue' %}
+                <span class="shrink-0 rounded-full bg-rose-100 dark:bg-rose-950/50 px-2 py-0.5 text-[11px] font-semibold text-rose-700 dark:text-rose-300">Overdue</span>
+              {% elif event.status == 'soon' %}
+                <span class="shrink-0 rounded-full bg-amber-100 dark:bg-amber-950/50 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300">Due soon</span>
+              {% elif event.status == 'done' %}
+                <span class="shrink-0 rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">Done</span>
+              {% endif %}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="rounded-lg border border-dashed border-slate-300 dark:border-slate-700 px-4 py-8 text-center">
+        <p class="text-sm font-medium text-slate-700 dark:text-slate-200">Nothing on the calendar in {{ month|date:"F" }}.</p>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Add the dates your building can't miss: AGM, insurance renewal, fire inspection, fiscal year start.</p>
+      </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

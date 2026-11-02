@@ -18,6 +18,7 @@ urlpatterns = [
     path("dockets/", include("dockets.urls")),
     path("documents/", include("documents.urls")),
     path("inbox/", include("inbox.urls")),
+    path("calendar/", include("schedule.urls")),
     path("", include("core.urls")),
 ]
 
