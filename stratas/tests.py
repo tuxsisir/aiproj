@@ -93,6 +93,32 @@ class OnboardingTests(TestCase):
         self.assertEqual(Membership.objects.get(user=self.user).status, Status.PENDING)
 
 
+class PlatformAdminTests(TestCase):
+    def setUp(self):
+        self.admin = make_user("admin@example.com", is_staff=True, is_superuser=True)
+        self.client.force_login(self.admin)
+
+    def test_admin_without_a_building_goes_to_django_admin(self):
+        for url in (reverse("dashboard"), reverse("membership_pending")):
+            with self.subTest(url=url):
+                response = self.client.get(url, follow=True)
+                self.assertEqual(response.redirect_chain[-1][0], reverse("admin:index"))
+
+    def test_admin_cannot_open_or_submit_onboarding(self):
+        strata = make_strata("EPS200")
+        self.assertRedirects(self.client.get(reverse("onboarding")), reverse("admin:index"),
+                             fetch_redirect_response=False)
+
+        response = self.client.post(reverse("onboarding"), {"persona": Role.COUNCIL, "plan_number": strata.plan_number})
+        self.assertRedirects(response, reverse("admin:index"), fetch_redirect_response=False)
+        self.assertFalse(Membership.objects.filter(user=self.admin).exists())
+
+
+    def test_admin_with_a_building_uses_the_app_normally(self):
+        make_membership(self.admin, make_strata("EPS201"))
+        self.assertEqual(self.client.get(reverse("dashboard")).status_code, 200)
+
+
 class AdminApprovalTests(TestCase):
     def setUp(self):
         self.admin = make_user("admin@example.com", is_superuser=True, is_staff=True)

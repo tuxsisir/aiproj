@@ -95,6 +95,9 @@ def onboarding_wizard(request):
     Request access to a building (existing or new). Every request waits for platform-admin approval.
     Council members belong to one building; managers may come back here to add more.
     """
+    # The platform admin approves requests and never makes them, even if it also holds a membership.
+    if request.user.is_superuser:
+        return redirect('admin:index')
     memberships = request.user.memberships.all()
     if memberships.pending().exists():
         return redirect('membership_pending')

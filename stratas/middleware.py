@@ -26,7 +26,7 @@ class ActiveStrataMiddleware(MiddlewareMixin):
       1. request.strata -> The active StrataPlan instance (or None)
       2. request.membership -> The ACTIVE Membership linking request.user to request.strata
     Users without an active membership are sent to onboarding, or to the pending page
-    while a membership request awaits approval.
+    while a membership request awaits approval. The platform admin (superuser) goes to Django admin.
     """
     def process_request(self, request):
         request.strata = None
@@ -58,6 +58,8 @@ class ActiveStrataMiddleware(MiddlewareMixin):
             return
 
         if not membership:
+            if request.user.is_superuser:  # the platform admin works in Django admin, not a building
+                return redirect('admin:index')
             if Membership.objects.pending().filter(user=request.user).exists():
                 return redirect('membership_pending')
             return redirect('onboarding')
