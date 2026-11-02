@@ -1,6 +1,7 @@
 import uuid
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -109,7 +110,8 @@ class AuditLog(models.Model):
         ]
 
     def __str__(self):
-        return f"[{self.created_at.strftime('%Y-%m-%d %H:%M')}] {self.actor_email or 'System'} {self.action} on {self.content_type.model} #{self.object_id}"
+        local = timezone.localtime(self.created_at)  # stored in UTC; shown in TIME_ZONE
+        return f"[{local.strftime('%Y-%m-%d %H:%M')}] {self.actor_email or 'System'} {self.action} on {self.content_type.model} #{self.object_id}"
 
     def save(self, *args, **kwargs):
         # Guarantee immutable audit record: prevent updates to existing rows

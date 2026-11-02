@@ -13,4 +13,4 @@ Rules (see `CLAUDE.md` → "Working rules"):
 
 | Date | Action | Target | Why | Approved by | Reversible? / backup |
 |---|---|---|---|---|---|
-| | | | | | |
+| 2026-11-01 | Flushed local dev database | Local Postgres `stratacorp` (all rows) | Start demo data from scratch | Done by the user themselves | Not reversible; rebuilt with `init_demo_data` |
