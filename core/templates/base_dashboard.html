@@ -2,14 +2,18 @@
 <html lang="en">
 <head>
     {% load static %}
-    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/mask@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CivicDesk{% endblock %}</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.17.5/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.17.5/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/mask@3.17.5/dist/cdn.min.js"></script>
+    {% block head_scripts %}{% endblock %}
+
     <!-- Load Cotton UI components before Alpine core so they catch alpine:init -->
     <link rel="stylesheet" href="{% static 'django_cotton_ui/cotton-ui.css' %}">
+    <!-- Tailwind must load after cotton-ui.css: cotton-ui ships its own utilities build, and whichever comes last wins -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
     <link rel="stylesheet" href="{% static 'core/ai.css' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,14 +21,10 @@
     <link rel="stylesheet" href="{% static 'core/alive.css' %}">
     <script defer src="{% static 'core/alive.js' %}"></script>
     <script defer src="{% static 'django_cotton_ui/cotton-ui.min.js' %}"></script>
-    
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <!-- HTMX -->
+
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.17.5/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}CivicDesk Dashboard{% endblock %}</title>
-    
+
     <!-- Mode Toggle Head Script -->
     <c-ui.mode_toggle.head />
 
@@ -46,172 +46,96 @@
          @click="sidebarOpen = false"></div>
 
     <!-- Sidebar -->
-    <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" 
-           class="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 transform transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none flex flex-col">
-        
-        <!-- Sidebar Header (Org Switcher) -->
-        <div class="h-16 flex items-center px-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
+    <aside
+        :class="sidebarOpen ? 'translate-x-0!' : '-translate-x-full!'"
+        class="-translate-x-full lg:translate-x-0 fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-2xl lg:shadow-none transition-transform duration-300 ease-in-out"
+    >
+        <div class="flex h-16 shrink-0 items-center px-5">
+            <a
+                href="{% url 'dashboard' %}"
+                aria-label="CivicDesk overview"
+            ><c-brand.wordmark /></a>
+        </div>
+
+        <div class="px-4 pb-4">
             <c-sidebar.org_switcher />
         </div>
 
-        <!-- Sidebar Navigation -->
-        <nav class="flex-1 overflow-y-auto p-4 space-y-8">
-            <div>
-                <c-sidebar.user_profile />
-            </div>
-            <div>
-                <div class="px-3 mb-3 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Governance & Operations</div>
-                <div class="space-y-1">
-                    <c-sidebar.nav_item href="{% url 'dashboard' %}" icon="layout-dashboard" label="Dashboard" />
-                    <c-sidebar.nav_item 
-                        href="{% url 'dockets:incident_list' %}" 
-                        icon="shield-alert" 
-                        label="Dockets" 
-                        active="{% if 'incident' in request.resolver_match.url_name %}true{% else %}false{% endif %}"
-                    />
-                    <c-sidebar.nav_item 
-                        href="{% url 'dockets:voting_center' %}" 
-                        icon="check-badge" 
-                        label="Council Voting" 
-                        active="{% if request.resolver_match.url_name == 'voting_center' %}true{% else %}false{% endif %}"
-                    />
-                    <c-sidebar.nav_item
-                        href="{% url 'inbox:home' %}"
-                        icon="inbox"
-                        label="Email Inbox"
-                        active="{% if request.resolver_match.app_name == 'inbox' %}true{% else %}false{% endif %}"
-                    />
-                    <c-sidebar.nav_item
-                        href="{% url 'documents:library' %}"
-                        icon="folder-archive"
-                        label="Documents"
-                        active="{% if request.resolver_match.app_name == 'documents' %}true{% else %}false{% endif %}"
-                    />
-                    <c-sidebar.nav_item 
-                        href="{% url 'dockets:bylaw_list' %}" 
-                        icon="book-open" 
-                        label="Bylaw Rules" 
-                        active="{% if 'bylaw' in request.resolver_match.url_name %}true{% else %}false{% endif %}"
-                    />
+        <div class="flex-1 overflow-y-auto px-4 pb-6">
+            <c-sidebar.nav />
+        </div>
 
-                </div>
-            </div>
-            
-            <div>
-                <div class="px-3 mb-3 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Organization</div>
-                <div class="space-y-1">
-                    <c-sidebar.nav_item 
-                      href="{% url 'building_members' %}" 
-                      icon="users" 
-                      label="Strata Members"
-                      active="{% if request.resolver_match.url_name == 'building_members' %}true{% else %}false{% endif %}"
-                    />
-
-                    <c-sidebar.nav_item href="{% url 'payments:subscription_dashboard' %}" icon="credit-card" label="Subscription & Billing" />
-                    <c-sidebar.nav_item href="{% url 'profile_edit' %}" icon="user" label="Profile Settings" />
-                </div>
-            </div>
-        </nav>
+        <div class="shrink-0 border-t border-slate-200 dark:border-slate-800 p-3">
+            <c-sidebar.user_profile />
+        </div>
     </aside>
 
     <!-- Main Content Area -->
-    <div :class="sidebarOpen ? 'lg:pl-64' : 'pl-0'" class="flex flex-col min-h-screen transition-all duration-300 ease-in-out bg-slate-50 dark:bg-slate-900">
-        
-        <!-- Top Navbar -->
-        <header class="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-x-4 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
-            <!-- Sidebar Toggle Button (Always Visible) -->
-            <button @click="sidebarOpen = !sidebarOpen" type="button" class="-m-2.5 p-2.5 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition mr-2">
+    <div
+        :class="sidebarOpen ? '' : 'lg:pl-0!'"
+        class="lg:pl-64 flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900 transition-all duration-300 ease-in-out"
+    >
+
+        <!-- Top bar -->
+        <header class="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-x-3 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 px-4 backdrop-blur-md sm:px-6 lg:px-8">
+            <button
+                @click="sidebarOpen = !sidebarOpen"
+                type="button"
+                class="-m-2.5 rounded-md p-2.5 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-400"
+            >
                 <span class="sr-only">Toggle sidebar</span>
                 {% heroicon_outline "bars-3" class="h-6 w-6" %}
             </button>
 
-            <!-- Branding -->
-            <div class="flex items-center gap-3">
-                <a href="/" class="font-extrabold text-slate-900 dark:text-slate-100 text-xl tracking-tight">CivicDesk</a>
-                <span class="hidden lg:block text-[10px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800">For Strata & Condo Boards</span>
+            <div class="flex min-w-0 flex-1 items-center gap-2 text-sm">
+                <span class="truncate font-semibold text-slate-900 dark:text-slate-100">{{ active_strata.name|default:"No building yet" }}</span>
+                {% if active_strata %}
+                    <span class="hidden sm:inline font-mono text-xs text-slate-400 dark:text-slate-500">{{ active_strata.plan_number }}</span>
+                {% endif %}
+                {% if request.membership %}
+                    <span class="hidden sm:inline-flex items-center rounded-full border border-slate-200 dark:border-slate-700 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                        {{ request.membership.title }}
+                    </span>
+                {% endif %}
             </div>
 
-            <!-- Separator -->
-            <div class="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-2" aria-hidden="true"></div>
-
-            <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-                <!-- Context (Left) -->
-                <div class="flex flex-1 items-center font-medium text-sm text-slate-600 dark:text-slate-400 gap-2 ml-2">
-                    <span class="hidden sm:inline-block">{{ active_strata.plan_number|default:"No Plan" }}</span>
-                    <span class="hidden sm:inline-block text-slate-300 dark:text-slate-600">/</span>
-                    <span class="text-slate-900 dark:text-slate-100">{{ active_strata.name|default:"Unassigned" }}</span>
-                    
-                    {% if request.membership %}
-                        <span class="ml-3 hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border
-                            {% if request.membership.role == 'MANAGER' %}
-                                bg-emerald-50 text-emerald-700 border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800
-                            {% else %}
-                                bg-indigo-50 text-indigo-700 border-indigo-200/60 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800
-                            {% endif %}">
-                            {% if request.membership.role == 'MANAGER' %}
-                                🏢 Licensed Manager
-                            {% else %}
-                                🏛️ Council Board
-                            {% endif %}
-                        </span>
-                    {% endif %}
-                </div>
-                
-                <!-- Navbar Actions (Right) -->
-                <div class="flex items-center gap-x-4 lg:gap-x-6">
-                    <!-- Search -->
-                    <div class="relative hidden md:block">
-                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            {% heroicon_outline "magnifying-glass" class="h-4 w-4 text-slate-400 dark:text-slate-500" %}
-                        </div>
-                        <input type="text" placeholder="Search..." class="block w-64 rounded-md border border-slate-300 dark:border-slate-700 py-1.5 pl-9 pr-3 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 bg-slate-50 dark:bg-slate-900 shadow-inner">
-                        <div class="absolute inset-y-0 right-0 flex py-1.5 pr-2.5">
-                            <kbd class="inline-flex items-center rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1 font-sans text-xs text-slate-400 dark:text-slate-500 font-bold shadow-sm">⌘K</kbd>
+            <div class="flex items-center gap-x-3">
+                {% if dev_accounts %}
+                    <!-- Local dev: switch user -->
+                    <div
+                        class="relative hidden md:block"
+                        x-data="{ open: false }"
+                        @click.outside="open = false"
+                    >
+                        <button
+                            type="button"
+                            @click="open = !open"
+                            class="rounded-md border border-dashed border-amber-400 px-2 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300"
+                        >
+                            Dev: {{ request.user.first_name|default:request.user.email }}
+                        </button>
+                        <div
+                            x-show="open"
+                            x-cloak
+                            class="absolute right-0 z-50 mt-2 w-72 rounded-lg bg-white dark:bg-slate-900 shadow-lg"
+                        >
+                            {% include "dev/login_as.html" %}
                         </div>
                     </div>
+                {% endif %}
 
-                    <!-- Separator -->
-                    <div class="hidden lg:block lg:h-6 lg:w-px lg:bg-slate-200 dark:bg-slate-800" aria-hidden="true"></div>
+                <c-ui.mode_toggle variant="menu" />
 
-                    {% if dev_accounts %}
-                        <!-- Local dev: switch user -->
-                        <div
-                            class="relative hidden md:block"
-                            x-data="{ open: false }"
-                            @click.outside="open = false"
-                        >
-                            <button
-                                type="button"
-                                @click="open = !open"
-                                class="rounded-md border border-dashed border-amber-400 px-2 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300"
-                            >
-                                Dev: {{ request.user.first_name|default:request.user.email }}
-                            </button>
-                            <div
-                                x-show="open"
-                                x-cloak
-                                class="absolute right-0 z-50 mt-2 w-72 rounded-lg bg-white dark:bg-slate-900 shadow-lg"
-                            >
-                                {% include "dev/login_as.html" %}
-                            </div>
-                        </div>
-                    {% endif %}
-
-                    <!-- Mode Toggle -->
-                    <c-ui.mode_toggle variant="menu" />
-                    
-                    <!-- Admin Link (Superusers Only) -->
-                    {% if user.is_superuser %}
-                        <c-ui.button href="{% url 'admin:index' %}" target="_blank" variant="outline" size="sm" class="hidden sm:inline-block shadow-sm font-bold tracking-wide whitespace-nowrap text-slate-700 dark:text-slate-300">
-                            <div class="inline-flex items-center justify-center gap-1.5 w-full h-full">
-                                <span>Admin</span>
-                                {% heroicon_outline "arrow-top-right-on-square" class="h-4 w-4 shrink-0" %}
-                            </div>
-                        </c-ui.button>
-                    {% endif %}
-
-
-                </div>
+                {% if user.is_superuser %}
+                    <a
+                        href="{% url 'admin:index' %}"
+                        target="_blank"
+                        class="hidden sm:inline-flex items-center gap-1.5 rounded-md border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    >
+                        Admin
+                        {% heroicon_outline "arrow-top-right-on-square" class="h-4 w-4" %}
+                    </a>
+                {% endif %}
             </div>
         </header>
 

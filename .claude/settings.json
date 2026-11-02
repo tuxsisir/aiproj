@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "ask": [
+      "Bash(rm *)",
+      "Bash(rmdir *)",
+      "Bash(unlink *)",
+      "Bash(find * -delete*)",
+      "Bash(truncate *)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean *)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git push * --force*)",
+      "Bash(git push * -f*)",
+      "Bash(git checkout -- *)",
+      "Bash(git checkout .)",
+      "Bash(git restore *)",
+      "Bash(git branch -D *)",
+      "Bash(git stash drop*)",
+      "Bash(git stash clear*)",
+      "Bash(git rebase *)",
+      "Bash(dropdb *)",
+      "Bash(psql *)",
+      "Bash(*manage.py flush*)",
+      "Bash(*manage.py migrate * zero*)",
+      "Bash(*manage.py reset_db*)",
+      "Bash(*manage.py sqlflush*)",
+      "Bash(*manage.py dbshell*)"
+    ]
+  }
+}

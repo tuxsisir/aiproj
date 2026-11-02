@@ -1,3 +1,5 @@
+import re
+
 from django.core import mail
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -7,6 +9,7 @@ from core.models import AuditLog
 from core.services import record_audit_log
 from core.testing import make_membership, make_strata, make_user
 from dockets.models import Incident
+from stratas.models import Membership
 from core.email_previews import sample_context
 
 
@@ -130,3 +133,39 @@ class EmailPreviewTests(TestCase):
         response = self.client.get(reverse("email_preview_list"))
         self.assertEqual(response.status_code, 302)
         self.assertIn("/admin/login/", response["Location"])
+
+
+class SidebarTests(TestCase):
+    def setUp(self):
+        self.strata = make_strata()
+        self.user = make_user()
+        make_membership(self.user, self.strata)
+        self.client.force_login(self.user)
+
+    def main_nav(self, url):
+        html = self.client.get(url).content.decode()
+        return re.search(r'<nav\s+aria-label="Main".*?</nav>', html, re.S).group(0)
+
+    def test_groups_pages_by_pillar_and_marks_only_the_current_page(self):
+        nav = self.main_nav(reverse("dockets:incident_list"))
+
+        for group in ("Work", "Enforcement", "Money", "Records", "Building"):
+            self.assertIn(f">{group}</p>", nav)
+        current = re.findall(r'href="([^"]+)"\s+aria-current="page"', nav)
+        self.assertEqual(current, [reverse("dockets:incident_list")])
+
+    def test_unbuilt_pillars_are_labels_not_links(self):
+        nav = self.main_nav(reverse("dashboard"))
+
+        self.assertIn('title="Issues is coming soon"', nav)
+        self.assertNotIn('href="#"', nav)
+
+    def test_billing_is_not_in_the_nav_for_any_role(self):
+        manager = make_user()
+        make_membership(manager, self.strata, role=Membership.Role.MANAGER)
+
+        for user in (self.user, manager):
+            self.client.force_login(user)
+            nav = self.main_nav(reverse("dashboard"))
+            self.assertNotIn(reverse("payments:subscription_dashboard"), nav)
+            self.assertIn(reverse("dockets:voting_center"), nav)

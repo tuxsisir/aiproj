@@ -1,0 +1,124 @@
+{% comment %}
+Sidebar grouped by the pillars in docs/VISION.md. Pillars not built yet show as "Soon" (not links).
+{% endcomment %}
+{% with app=request.resolver_match.app_name name=request.resolver_match.url_name %}
+<nav
+    aria-label="Main"
+    class="space-y-6"
+>
+    <div class="space-y-0.5">
+        <c-sidebar.nav_item
+            href="{% url 'dashboard' %}"
+            icon="squares-2x2"
+            label="Overview"
+            active="{% if name == 'dashboard' %}true{% endif %}"
+        />
+        <c-sidebar.nav_item
+            href="{% url 'documents:library' %}#ask"
+            icon="sparkles"
+            label="Ask the building"
+        />
+    </div>
+
+    <div>
+        <p class="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Work</p>
+        <div class="space-y-0.5">
+            <c-sidebar.nav_item
+                icon="flag"
+                label="Issues"
+                soon="true"
+            />
+            <c-sidebar.nav_item
+                icon="clipboard-document-list"
+                label="Projects"
+                soon="true"
+            />
+            <c-sidebar.nav_item
+                icon="wrench-screwdriver"
+                label="Maintenance"
+                soon="true"
+            />
+        </div>
+    </div>
+
+    <div>
+        <p class="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Enforcement</p>
+        <div class="space-y-0.5">
+            <c-sidebar.nav_item
+                href="{% url 'dockets:incident_list' %}"
+                icon="shield-exclamation"
+                label="Cases"
+                active="{% if app == 'dockets' and 'incident' in name %}true{% endif %}"
+            />
+            <c-sidebar.nav_item
+                href="{% url 'dockets:voting_center' %}"
+                icon="check-badge"
+                label="Council votes"
+                active="{% if name == 'voting_center' %}true{% endif %}"
+            />
+            <c-sidebar.nav_item
+                href="{% url 'dockets:bylaw_list' %}"
+                icon="scale"
+                label="Bylaws"
+                active="{% if app == 'dockets' and 'bylaw' in name %}true{% endif %}"
+            />
+        </div>
+    </div>
+
+    <div>
+        <p class="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Money</p>
+        <div class="space-y-0.5">
+            <c-sidebar.nav_item
+                icon="chart-bar"
+                label="Budget"
+                soon="true"
+            />
+            <c-sidebar.nav_item
+                icon="banknotes"
+                label="Arrears"
+                soon="true"
+            />
+            <c-sidebar.nav_item
+                icon="building-storefront"
+                label="Vendors"
+                soon="true"
+            />
+        </div>
+    </div>
+
+    <div>
+        <p class="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Records</p>
+        <div class="space-y-0.5">
+            <c-sidebar.nav_item
+                href="{% url 'documents:library' %}"
+                icon="folder-open"
+                label="Documents"
+                active="{% if app == 'documents' %}true{% endif %}"
+            />
+            <c-sidebar.nav_item
+                href="{% url 'inbox:home' %}"
+                icon="inbox-arrow-down"
+                label="Forwarded email"
+                active="{% if app == 'inbox' %}true{% endif %}"
+            />
+            <c-sidebar.nav_item
+                icon="calendar-days"
+                label="Meetings"
+                soon="true"
+            />
+        </div>
+    </div>
+
+    <div>
+        <p class="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Building</p>
+        <div class="space-y-0.5">
+            <c-sidebar.nav_item
+                href="{% url 'building_members' %}"
+                icon="users"
+                label="Council & manager"
+                active="{% if name == 'building_members' %}true{% endif %}"
+            />
+        </div>
+    </div>
+</nav>
+{% endwith %}

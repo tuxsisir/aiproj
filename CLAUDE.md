@@ -69,11 +69,24 @@ Planned production domain: `usecivicdesk.com`.
 → (owner portal response) `VOTING_OPEN` → (all council voted) `RESOLVED_FINED` | `RESOLVED_DISMISSED`
 → manager `dispatch_fine_notice` + `generate_fine_pdf`. `RESPONSE_RECEIVED` exists but is unused.
 
+## Working rules (agents)
+- **Only the main agent writes, edits or removes files.** Subagents (`.claude/agents/`: `code-reviewer`,
+  `qa-tester`) only read, run tests and report; throwaway files go in `$TMPDIR`, never the repo.
+- **Before every commit, run `code-reviewer`** on the change and fix Critical/High findings (or tell the human
+  why not). Run `qa-tester` after a feature is complete.
+- **Destructive actions need human approval every time, even in auto mode**: deleting files, rebuilding or
+  flushing a database, reversing migrations, `git reset --hard`, force-push, deleting branches, discarding
+  changes. Say exactly what will go and why, look at it first, prefer a reversible option, then log it in
+  `docs/destructive-actions.md`. `.claude/settings.json` makes Claude Code ask before these commands.
+
 ## Gotchas
 - `record_audit_log`: pass an explicit `AuditLog.Action` for events (CREATE after `objects.create()`, VOTE_CAST…);
   without one it only logs inferred field UPDATEs. Audit logs are viewable read-only in admin.
 - Manual timeline entries go through `dockets.forms.IncidentEventForm` (NOTE / RECURRENCE / EVIDENCE only).
 - `incident.bylaw` is nullable; notice/fine emails dereference it.
+- `cotton-ui.css` ships its own Tailwind utilities build. The Tailwind browser `<script>` must come **after** it in
+  `<head>` (base templates), or its `.hidden`/`.flex`/… override responsive classes like `hidden sm:inline`.
+- Sidebar nav lives in `core/templates/cotton/sidebar/nav.html`, grouped by pillar; unbuilt pillars use `soon="true"`.
 - Documents/inbox tests mock `documents.ai` / `inbox.ai`; never call the real API from tests.
 - Root-level `test_*.py` scripts are NOT tests; they write to the real DB on import. Always run tests with
   app labels (below) so the runner never discovers them.

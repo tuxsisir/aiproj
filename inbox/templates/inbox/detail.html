@@ -1,5 +1,5 @@
 {% extends 'base_dashboard.html' %}
-{% block title %}{{ email.title }} - Email Inbox{% endblock %}
+{% block title %}{{ email.title }} - Forwarded email{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl space-y-6">
@@ -7,7 +7,7 @@
     <a
       href="{% url 'inbox:home' %}"
       class="text-xs font-medium text-slate-500 dark:text-slate-400 hover:underline"
-    >&larr; Email Inbox</a>
+    >&larr; Forwarded email</a>
     <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{{ email.title }}</h1>
     <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
       Forwarded by {{ email.forwarded_by.get_full_name|default:email.from_email }} · {{ email.received_at|date:"M j, Y g:i a" }}
