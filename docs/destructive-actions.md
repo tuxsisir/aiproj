@@ -13,4 +13,5 @@ Rules (see `CLAUDE.md` → "Working rules"):
 
 | Date | Action | Target | Why | Approved by | Reversible? / backup |
 |---|---|---|---|---|---|
+| 2026-11-01 | Flushed local dev database and reseeded demo data | Local Postgres `stratacorp` (demo data only: 8 @civicdesk.test users, 3 buildings, 7 cases, 5 docs, 3 Q&As, 3 emails, 13 key dates, 38 audit entries) | Reseed with the council's first names (Nora, Sandesh, Sisir, Deep, Akhila, Aaron, Allen) plus issues and meetings demo data | The user, in chat (asked, then confirmed) | Backup: `tmp/backups/stratacorp-before-reseed-2026-11-01.sql` (gitignored); restore with `psql stratacorp < file` |
 | 2026-11-01 | Flushed local dev database | Local Postgres `stratacorp` (all rows) | Start demo data from scratch | Done by the user themselves | Not reversible; rebuilt with `init_demo_data` |

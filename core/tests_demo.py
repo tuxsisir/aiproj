@@ -23,7 +23,7 @@ class InitDemoDataTests(TestCase):
         call_command("init_demo_data", stdout=io.StringIO())
 
         strata = StrataPlan.objects.get(plan_number=DEMO_PLAN)
-        self.assertEqual(strata.memberships.active().council().count(), 5)
+        self.assertEqual(strata.memberships.active().council().count(), 7)
         self.assertEqual(strata.memberships.pending().count(), 1)
         self.assertEqual(
             set(strata.incidents.values_list("status", flat=True)),
@@ -31,6 +31,12 @@ class InitDemoDataTests(TestCase):
         )
         self.assertTrue(strata.documents.exists() and strata.document_questions.exists())
         self.assertTrue(strata.inbound_emails.exists() and strata.key_dates.exists())
+        self.assertEqual(strata.issues.open().count(), 5)
+        self.assertFalse(strata.incidents.filter(incident_type="DEFICIENCY").exists())  # those are issues now
+        self.assertEqual(sorted(strata.meetings.values_list("status", flat=True)), ["APPROVED", "HELD", "PLANNED"])
+        upcoming = strata.meetings.get(status="PLANNED")
+        self.assertTrue(upcoming.items.filter(issue__isnull=False).exists())
+        self.assertTrue(upcoming.items.filter(incident__isnull=False, in_camera=True).exists())
         self.assertEqual(
             Membership.objects.filter(user__email="manager@civicdesk.test", status="ACTIVE").count(), 3
         )
