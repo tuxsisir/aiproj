@@ -1,0 +1,17 @@
+.git
+.venv
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+media/
+staticfiles/
+tmp/
+db.sqlite3
+.claude/
+.agy/
+# Leftover dev scripts in the repo root (not part of the app)
+test_*.py
+update_*.py
+strip_dark.py

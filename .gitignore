@@ -269,3 +269,6 @@ tmp/
 
 # macOS
 .DS_Store
+
+# collectstatic output
+staticfiles/

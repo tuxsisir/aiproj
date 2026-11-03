@@ -43,7 +43,7 @@
                     <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Attached File</h3>
                     <div class="flex items-center gap-2 text-sm text-blue-600">
                         {% heroicon_outline "paper-clip" class="h-4 w-4" %}
-                        <a href="{{ submitted_event.evidence_file.url }}" target="_blank" class="hover:underline">View Document</a>
+                        <a href="{% url 'dockets:owner_submission_file' incident.owner_token %}" target="_blank" class="hover:underline">View Document</a>
                     </div>
                 </div>
                 {% endif %}
@@ -116,11 +116,11 @@
                         <div class="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Factual Description</div>
                         <div class="text-sm text-slate-700 whitespace-pre-wrap">{{ incident.description }}</div>
                     </div>
-                    {% if incident.evidence_file %}
+                    {% if incident.evidence_image %}
                     <div class="mt-4 pt-4 border-t border-slate-200">
                         <div class="flex items-center gap-2 text-sm text-blue-600 font-medium">
                             {% heroicon_outline "paper-clip" class="h-4 w-4" %}
-                            <a href="{{ incident.evidence_file.url }}" target="_blank" class="hover:underline">View Evidence Photo/File</a>
+                            <a href="{% url 'dockets:owner_evidence' incident.owner_token %}" target="_blank" class="hover:underline">View Evidence Photo/File</a>
                         </div>
                     </div>
                     {% endif %}

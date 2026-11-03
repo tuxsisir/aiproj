@@ -17,12 +17,21 @@ from core.email_previews import sample_context
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
+def healthz(request):
+    """Platform health check: the app is up and can reach the database."""
+    from django.db import connection
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT 1")
+    return HttpResponse("ok", content_type="text/plain")
+
+
 def landing_page(request):
     """Public landing page."""
     return render(request, "landing.html")
 
 
 from core import overview
+from core.files import serve_upload
 from stratas.decorators import membership_required
 
 
@@ -39,6 +48,12 @@ def dashboard(request):
         "portfolio": overview.portfolio(request.user) if membership.is_manager else None,
         "hour": timezone.localtime().hour,
     })
+
+
+@login_required
+def my_avatar(request):
+    """Your own avatar (uploads are never served publicly)."""
+    return serve_upload(request.user.avatar)
 
 
 @login_required

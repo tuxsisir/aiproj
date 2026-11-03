@@ -1,0 +1,12 @@
+#!/bin/sh
+# Production entrypoint: apply migrations, then serve. Render sets $PORT.
+set -e
+python manage.py migrate --noinput
+mkdir -p "${MEDIA_ROOT:-/app/media}"
+# 2 workers x 8 threads = 16 requests in flight; threads keep pages fast while a slow AI call waits.
+exec gunicorn config.wsgi \
+    --bind "0.0.0.0:${PORT:-10000}" \
+    --workers "${WEB_CONCURRENCY:-2}" \
+    --threads "${GUNICORN_THREADS:-8}" \
+    --timeout 120 \
+    --access-logfile -

@@ -1,3 +1,8 @@
+import shutil
+import tempfile
+import uuid
+
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core import mail
 from django.test import TestCase, override_settings
 from django.utils import timezone
@@ -145,3 +150,55 @@ class DocketEmailTests(TestCase):
         )
         self.assertEqual([m.to for m in mail.outbox], [["council@example.com"]])
         self.assertIn("Council vote needed", mail.outbox[0].subject)
+
+
+EVIDENCE_ROOT = tempfile.mkdtemp()
+
+
+@override_settings(MEDIA_ROOT=EVIDENCE_ROOT)
+class EvidenceFileTests(TestCase):
+    """Evidence is never public: members of the building, or the owner's token link, and nobody else."""
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(EVIDENCE_ROOT, ignore_errors=True)
+
+    def setUp(self):
+        self.strata = make_strata()
+        self.member = make_membership(make_user(), self.strata)
+        self.incident = Incident.objects.create(
+            strata=self.strata, title="Noise", description="Loud", created_by=self.member.user,
+            evidence_image=SimpleUploadedFile("photo.jpg", b"jpeg-bytes", content_type="image/jpeg"))
+        self.statement = IncidentEvent.objects.create(
+            incident=self.incident, event_type=IncidentEvent.EventType.OWNER_STATEMENT, description="Not me",
+            evidence_file=SimpleUploadedFile("reply.html", b"<script>alert(1)</script>", content_type="text/html"))
+
+    def test_members_see_the_evidence(self):
+        self.client.force_login(self.member.user)
+        response = self.client.get(reverse("dockets:incident_evidence", args=[self.incident.pk]))
+        self.assertEqual((response.status_code, response["Content-Type"]), (200, "image/jpeg"))
+        self.assertEqual(b"".join(response.streaming_content), b"jpeg-bytes")
+        self.assertContains(self.client.get(reverse("dockets:incident_detail", args=[self.incident.pk])),
+                            reverse("dockets:incident_evidence", args=[self.incident.pk]))
+
+    def test_uploads_that_could_run_script_are_downloaded_not_shown(self):
+        self.client.force_login(self.member.user)
+        response = self.client.get(reverse("dockets:event_file", args=[self.statement.pk]))
+        self.assertEqual(response["Content-Type"], "application/octet-stream")
+        self.assertTrue(response["Content-Disposition"].startswith("attachment"))
+
+    def test_other_buildings_and_anonymous_users_get_nothing(self):
+        self.client.force_login(make_membership(make_user(), make_strata()).user)
+        self.assertEqual(self.client.get(reverse("dockets:incident_evidence", args=[self.incident.pk])).status_code, 404)
+        self.assertEqual(self.client.get(reverse("dockets:event_file", args=[self.statement.pk])).status_code, 404)
+        self.client.logout()
+        self.assertEqual(self.client.get(reverse("dockets:incident_evidence", args=[self.incident.pk])).status_code, 302)
+
+    def test_owner_link_shows_the_complaint_evidence_and_their_own_file_only(self):
+        token = self.incident.owner_token
+        self.assertEqual(self.client.get(reverse("dockets:owner_evidence", args=[token])).status_code, 200)
+        self.assertEqual(self.client.get(reverse("dockets:owner_submission_file", args=[token])).status_code, 200)
+        self.assertEqual(self.client.get(reverse("dockets:owner_evidence", args=[uuid.uuid4()])).status_code, 404)
+        portal = self.client.get(reverse("dockets:owner_response_portal", args=[token]))  # already replied
+        self.assertContains(portal, reverse("dockets:owner_submission_file", args=[token]))

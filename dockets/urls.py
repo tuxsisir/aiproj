@@ -15,6 +15,8 @@ urlpatterns = [
     path('<uuid:pk>/dispatch-notice/', views.dispatch_section_135, name='dispatch_section_135'),
     path('<uuid:pk>/dispatch-fine/', views.dispatch_fine_notice, name='dispatch_fine_notice'),
     path('<uuid:pk>/pdf/', views.generate_fine_pdf, name='generate_fine_pdf'),
+    path('<uuid:pk>/evidence/', views.incident_evidence, name='incident_evidence'),
+    path('events/<uuid:pk>/file/', views.event_file, name='event_file'),
 
     # Bylaw Management
     path('bylaws/', views.bylaw_list, name='bylaw_list'),
@@ -25,4 +27,6 @@ urlpatterns = [
     # Public Zero-Login Portals
     path('actions/manager/<uuid:token>/', views.manager_magic_action, name='manager_magic_action'),
     path('respond/<uuid:token>/', views.owner_response_portal, name='owner_response_portal'),
+    path('respond/<uuid:token>/evidence/', views.owner_evidence, name='owner_evidence'),
+    path('respond/<uuid:token>/file/', views.owner_submission_file, name='owner_submission_file'),
 ]

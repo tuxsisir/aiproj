@@ -50,7 +50,7 @@
     >
         {% if user.avatar %}
             <img
-                src="{{ user.avatar.url }}"
+                src="{% url 'my_avatar' %}?v={{ user.avatar.name|slugify }}"
                 alt=""
                 class="h-8 w-8 shrink-0 rounded-full object-cover"
             >

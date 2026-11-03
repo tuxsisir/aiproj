@@ -15,9 +15,14 @@ from django.utils import timezone
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.db import IntegrityError
+from core.files import serve_upload
 from core.models import AuditLog
+from stratas.decorators import membership_required
 from core.services import record_audit_log
 from .forms import IncidentEventForm
+
+OWNER_RESPONSES = [IncidentEvent.EventType.OWNER_STATEMENT, IncidentEvent.EventType.HEARING_REQUESTED]
+
 
 @login_required
 def incident_list(request):
@@ -212,10 +217,7 @@ def owner_response_portal(request, token):
     incident = get_object_or_404(Incident, owner_token=token)
     
     # Check existing events
-    existing_event = IncidentEvent.objects.filter(
-        incident=incident, 
-        event_type__in=[IncidentEvent.EventType.OWNER_STATEMENT, IncidentEvent.EventType.HEARING_REQUESTED]
-    ).first()
+    existing_event = IncidentEvent.objects.filter(incident=incident, event_type__in=OWNER_RESPONSES).first()
     
     is_expired = False
     if incident.statutory_deadline:
@@ -550,3 +552,29 @@ def generate_fine_pdf(request, pk):
     response['Content-Disposition'] = f'inline; filename="Strata_Fine_Notice_{incident.unit_number}.pdf"'
     
     return response
+
+
+# Evidence files: never public. Members of the building see them; the owner's token link shows the complaint
+# evidence and the owner's own submission, nothing else.
+
+@membership_required
+def incident_evidence(request, pk):
+    incident = get_object_or_404(Incident, pk=pk, strata=request.strata)
+    return serve_upload(incident.evidence_image)
+
+
+@membership_required
+def event_file(request, pk):
+    event = get_object_or_404(IncidentEvent, pk=pk, incident__strata=request.strata)
+    return serve_upload(event.evidence_file)
+
+
+def owner_evidence(request, token):
+    incident = get_object_or_404(Incident, owner_token=token)
+    return serve_upload(incident.evidence_image)
+
+
+def owner_submission_file(request, token):
+    incident = get_object_or_404(Incident, owner_token=token)
+    event = incident.events.filter(event_type__in=OWNER_RESPONSES).first()
+    return serve_upload(event.evidence_file if event else None)

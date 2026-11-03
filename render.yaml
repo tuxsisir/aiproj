@@ -1,0 +1,57 @@
+# Render Blueprint: one web service (Docker) + Postgres, both in Oregon.
+# Render dashboard → New → Blueprint → pick this repo. Secrets marked `sync: false` are asked for on first deploy.
+services:
+  - type: web
+    name: civicdesk
+    runtime: docker
+    region: oregon
+    plan: starter
+    healthCheckPath: /healthz/
+    autoDeploy: true
+    domains:                   # Render adds www.usecivicdesk.com itself, redirecting to the root domain
+      - usecivicdesk.com
+    disk:                      # uploaded PDFs and evidence files; one instance only while a disk is attached
+      name: media
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: civicdesk-db
+          property: connectionString
+      - key: MEDIA_ROOT
+        value: /var/data/media
+      - key: ALLOWED_HOSTS
+        value: usecivicdesk.com,www.usecivicdesk.com
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://usecivicdesk.com,https://www.usecivicdesk.com
+      - key: SITE_URL
+        value: https://usecivicdesk.com
+      - key: DEFAULT_FROM_EMAIL
+        value: CivicDesk <noreply@usecivicdesk.com>
+      - key: INBOUND_EMAIL_DOMAIN
+        value: inbox.usecivicdesk.com
+      # Secrets: you paste these in the Render dashboard (never committed).
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_REPLY_TO
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: RESEND_INBOUND_SECRET
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        sync: false
+      - key: GOOGLE_OAUTH_SECRET
+        sync: false
+
+databases:
+  - name: civicdesk-db
+    region: oregon
+    plan: basic-256mb
+    databaseName: civicdesk
+    user: civicdesk
